@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Your Home Plan | BuildWise</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <bw-navbar base-path="../"></bw-navbar>
+
+    <main class="builder-page friendly-result-page">
+      <section class="container">
+        <bw-progress current="3"></bw-progress>
+
+        <section class="plan-hero">
+          <div class="plan-hero-copy">
+            <p class="eyebrow-soft">Your BuildWise plan</p>
+            <h1 id="resultTitle">A practical starter home plan is ready.</h1>
+            <p id="resultSubtitle">BuildWise shaped this concept around your budget, rooms, and preferred finish.</p>
+            <div class="plan-actions">
+              <a class="btn btn-outline-dark" id="backToConfig" href="configure.html">Edit Choices</a>
+              <a class="btn btn-outline-dark" href="designs.html">Start New Design</a>
+              <button class="btn btn-dark" type="button" onclick="window.print()">Download Plan</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 2: Generated Visuals (NEW) -->
+        <section class="result-visuals" id="resultVisuals">
+          <div class="result-visual-box">
+            <span class="visual-label">Exterior Render</span>
+            <div class="visual-skeleton" id="houseRenderBox">
+              <img id="houseRenderImg" src="" alt="AI generated house exterior" hidden>
+              <div class="visual-placeholder" id="houseRenderPlaceholder">
+                <span>Exterior render will appear here</span>
+              </div>
+            </div>
+          </div>
+          <div class="result-visual-box">
+            <span class="visual-label">Floor Plan</span>
+            <div class="visual-skeleton" id="floorPlanBox">
+              <img id="floorPlanImg" src="" alt="AI generated floor plan" hidden>
+              <div class="visual-placeholder" id="floorPlanPlaceholder">
+                <span>Floor plan will appear here</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Disclaimer 1: Prominent Scope Warning -->
+        <div class="alert alert-warning mb-3" style="font-size: 0.9rem; border-left: 4px solid #ff9800; display: flex; align-items: center;">
+          <strong>⚠️ NOTE:</strong> &nbsp;Prices reflect rough structural shell only. Excludes doors, windows, plumbing, electrical, and finishing fixtures.
+        </div>
+
+        <!-- Section 3: Quick Stats (EXPANDED) -->
+        <section class="friendly-stats">
+          <article>
+            <span>Target budget</span>
+            <strong id="targetBudget">PHP 0</strong>
+          </article>
+
+          <article class="highlight-estimate stat-card--estimate">
+            <span>Total Cost Estimate</span>
+            <strong id="totalCostEstimate" class="stat-value--estimate">PHP 0</strong>
+          </article>
+          <article class="highlight-estimate stat-card--remaining" id="remainingBudgetBox">
+            <span>Remaining Budget</span>
+            <strong id="remainingBudget" class="stat-value--remaining">PHP 0</strong>
+          </article>
+          <article>
+            <span>Floor area</span>
+            <strong id="resultArea">0 sqm</strong>
+          </article>
+
+          <article>
+            <span>Est. workers</span>
+            <strong id="workerCount">—</strong>
+          </article>
+          <article>
+            <span>Est. build time</span>
+            <strong id="buildDays">—</strong>
+          </article>
+        </section>
+
+        <div class="friendly-result-grid">
+
+
+          <article class="plan-card">
+            <h2>Budget breakdown</h2>
+            <div class="budget-bars" id="budgetBars" style="background-color: white; pointer-events: none; min-height: 150px; border-radius: 8px;">
+            </div>
+            
+            <!-- Disclaimer 2: Labor Logic Explanation -->
+            <p class="text-muted mt-3 mb-0" style="font-size: 0.8rem; border-top: 1px solid #eaeaea; padding-top: 12px; line-height: 1.5;">
+              <strong>How we calculate Labor:</strong><br>
+              Labor estimates are dynamically scaled to industry standards based on structural complexity. Lightweight homes (Amakan/Metal) are estimated at 40% of material costs. Full 1-storey concrete homes require more masonry (45%), while 2-storey and loft structures require heavy formworks and concrete lifting (50%).
+            </p>
+          </article>
+
+          <!-- Section 4: Construction Timeline (NEW) -->
+          <article class="plan-card" id="constructionTimeline">
+            <h2>Construction timeline</h2>
+            <p class="card-note" id="timelineNote">
+              Detailed phase breakdown will be available after cost estimation.
+            </p>
+            <div class="timeline-phases" id="constructionPhases" style="background-color: white; pointer-events: none; min-height: 150px; border-radius: 8px;">
+            </div>
+          </article>
+
+
+
+          <!-- Section 5: Full Materials List (NEW) -->
+          <article class="plan-card plan-card-wide" id="materialsCard">
+            <div class="materials-header">
+              <h2>Materials list</h2>
+              <span class="materials-note" id="materialsNote">
+                Detailed quantities will appear after AI cost estimation runs.
+              </span>
+            </div>
+            <div id="materialsTable" style="background-color: white; pointer-events: none; min-height: 150px; border-radius: 8px;">
+            </div>
+          </article>
+
+          <!-- Section 7: Next steps (KEEP) -->
+          <article class="plan-card next-steps-card">
+            <h2>Next steps</h2>
+            <ol>
+              <li>Review the room count and floor area with your family.</li>
+              <li>Ask a builder to validate the budget against local material prices.</li>
+              <li>Prepare a detailed floor plan and permit-ready drawings.</li>
+            </ol>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <bw-footer base-path="../"></bw-footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Web components -->
+    <script src="../components/navbar.js"></script>
+    <script src="../components/footer.js"></script>
+    <script src="../components/progress.js"></script>
+
+    <!-- Logic -->
+    <script type="module" src="../scripts/result/result.js"></script>
+  </body>
+</html>
