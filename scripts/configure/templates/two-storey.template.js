@@ -39,8 +39,8 @@ export function getTwoStoreyTemplate() {
         <div class="section-label"><span>3</span><div><h3>Rooms</h3><p>2-storey bedroom and CR quantities differ per floor.</p></div></div>
         <div class="room-picker">
           <label><span>Number of Bedrooms (1F)</span><select class="form-select" name="bedrooms1F"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></label>
-          <label><span>Number of Bedrooms (2F)</span><select class="form-select" name="bedrooms2F"><option>0</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></label>
-          <label><span>Number of CRs (1F)</span><select class="form-select" name="crs1F"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label><span>Number of Bedrooms (2F)</span><select class="form-select" name="bedrooms2F"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label><span>Number of CRs (1F)</span><select class="form-select" name="crs1F"><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
           <label><span>Number of CRs (2F)</span><select class="form-select" name="crs2F"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
         </div>
       </section>

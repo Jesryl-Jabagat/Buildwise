@@ -72,6 +72,30 @@ function setupConfigPage() {
   wireBudgetInput(form);
   wireCustomPaintInput(form);
   wireFormSubmit(form);
+
+  // Check if we are in AI mode
+  const setupDataStr = localStorage.getItem('buildwiseSetup');
+  if (setupDataStr) {
+    const setupData = JSON.parse(setupDataStr);
+    
+    // Auto-fill area budget if available
+    const budgetInput = form.querySelector('[name="budgetInput"]');
+    if (budgetInput && setupData.budget) {
+      budgetInput.value = setupData.budget;
+      // Trigger input event to format
+      budgetInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    if (setupData.mode === 'ai') {
+      // Import the AI module and start it
+      import('./ai-suggest.js').then(module => {
+        module.startAiBuilder(form, typeKey, setupData);
+      }).catch(err => {
+        console.error("Failed to load AI Builder module", err);
+        alert("Failed to load AI module. If you are opening this file locally (file:///), your browser might block ES modules. Try using Live Server. Error: " + err.message);
+      });
+    }
+  }
 }
 
 /* --- Boot -------------------------------------------------- */

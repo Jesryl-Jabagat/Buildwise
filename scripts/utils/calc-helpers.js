@@ -80,9 +80,15 @@ export function validateInputs(data, houseType) {
     return "Wall height must be at least 2.0 meters.";
   }
 
-  const tileBreakage = data.tileBreakage !== undefined ? data.tileBreakage : 5;
-  if ((data.applyTilesGround || data.applyTilesSecond) && (tileBreakage < 5 || tileBreakage > 10)) {
-    return "Tile breakage allowance must be between 5% and 10%.";
+  let tileBreakage = data.tileBreakage !== undefined ? data.tileBreakage : 5;
+  // Patch for old cached data where it was stored as a decimal (e.g. 0.15)
+  if (tileBreakage > 0 && tileBreakage <= 1) {
+    tileBreakage = tileBreakage * 100;
+    data.tileBreakage = tileBreakage;
+  }
+  
+  if ((data.applyTilesGround || data.applyTilesSecond) && (tileBreakage < 5 || tileBreakage > 20)) {
+    return "Tile breakage allowance must be between 5% and 20%.";
   }
 
   return null; // Valid
