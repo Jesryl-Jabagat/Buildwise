@@ -16,10 +16,10 @@ export function getHalfMetalTemplate() {
       </div></section>
 
       <section class="form-section"><div class="section-label"><span>2</span><div><h3>Building dimensions and rooms</h3><p>Perimeter is auto-computed from L and W.</p></div></div><div class="row g-3">
-        <div class="col-md-6"><label class="form-label" for="halfMetalLength">Building Length - L</label><div class="input-with-unit"><input class="form-control" id="halfMetalLength" name="length" type="number" min="1" step="0.1" value="9" required><span>m</span></div></div>
+        <div class="col-md-6"><label class="form-label" for="halfMetalLength">Building Length - L</label><div class="input-with-unit"><input class="form-control" id="halfMetalLength" name="length" type="number" min="1" step="0.1" value="8" required><span>m</span></div></div>
         <div class="col-md-6"><label class="form-label" for="halfMetalWidth">Building Width - W</label><div class="input-with-unit"><input class="form-control" id="halfMetalWidth" name="width" type="number" min="1" step="0.1" value="7" required><span>m</span></div></div>
         <div class="col-md-6"><label class="form-label" for="halfMetalBedrooms1F">Number of Bedrooms (1F)</label><select class="form-select" id="halfMetalBedrooms1F" name="bedrooms1F"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
-        <div class="col-md-6"><label class="form-label" for="halfMetalCrs1F">Number of CRs (1F)</label><select class="form-select" id="halfMetalCrs1F" name="crs1F"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></div>
+        <div class="col-md-6"><label class="form-label" for="halfMetalCrs1F">Number of CRs (1F)</label><select class="form-select" id="halfMetalCrs1F" name="crs1F"><option>1</option><option selected>1</option><option>3</option><option>4</option><option>5</option></select></div>
       </div></section>
 
       <section class="form-section"><div class="section-label"><span>3</span><div><h3>Walling and finishes</h3><p>CHB base height is fixed to the corrected engineer default.</p></div></div><div class="row g-3">

@@ -235,32 +235,56 @@ function wireBudgetInput(form) {
 /* --- Custom Paint Color Theme ------------------------------ */
 
 function wireCustomPaintInput(form) {
-  const select = form.querySelector('[name="paintColorTheme"]');
-  if (!select) return;
+  const selects = form.querySelectorAll('select[name^="paintColorTheme"]');
+  if (!selects.length) return;
 
-  const container = document.createElement("div");
-  container.className = "mt-2 custom-paint-container";
-  container.hidden = true;
-  
-  const input = document.createElement("input");
-  input.type = "text";
-  input.name = "customPaintColorTheme";
-  input.className = "form-control";
-  input.placeholder = "Enter custom color";
-  
-  container.appendChild(input);
-  select.parentNode.appendChild(container);
+  selects.forEach(select => {
+    // 1. Colorize dropdown options to match the vibe
+    Array.from(select.options).forEach(opt => {
+      const text = opt.text;
+      if (text.includes('Classic White')) {
+        opt.style.backgroundColor = '#F8F6F0';
+        opt.style.color = '#333';
+      } else if (text.includes('Cream')) {
+        opt.style.backgroundColor = '#E8DCC8';
+        opt.style.color = '#333';
+      } else if (text.includes('Cool Neutrals')) {
+        opt.style.backgroundColor = '#D0D4D8';
+        opt.style.color = '#333';
+      } else if (text.includes('Modern Minimalist')) {
+        opt.style.backgroundColor = '#F0F0F0';
+        opt.style.color = '#111';
+      }
+    });
 
-  select.addEventListener("change", () => {
-    const isCustom = select.value.includes("Custom");
-    container.hidden = !isCustom;
-    if (isCustom) {
-      input.required = true;
-      input.focus();
-    } else {
-      input.required = false;
-      input.value = "";
-    }
+    // 2. Custom input logic
+    if (select.dataset.customWired) return;
+    select.dataset.customWired = "true";
+
+    const container = document.createElement("div");
+    container.className = "mt-2 custom-paint-container";
+    container.hidden = true;
+    
+    const input = document.createElement("input");
+    input.type = "text";
+    input.name = select.name === "paintColorTheme" ? "customPaintColorTheme" : "custom" + select.name.charAt(0).toUpperCase() + select.name.slice(1);
+    input.className = "form-control";
+    input.placeholder = "Enter custom color";
+    
+    container.appendChild(input);
+    select.parentNode.appendChild(container);
+
+    select.addEventListener("change", () => {
+      const isCustom = select.value.includes("Custom");
+      container.hidden = !isCustom;
+      if (isCustom) {
+        input.required = true;
+        input.focus();
+      } else {
+        input.required = false;
+        input.value = "";
+      }
+    });
   });
 }
 
@@ -381,9 +405,9 @@ function getUserInput(form) {
       continue;
     }
 
-    // Clean Percentages (e.g., "10%" -> 0.1)
+    // Clean Percentages (e.g., "10%" -> 10)
     if (cleanVal.endsWith("%")) {
-      data[key] = parseFloat(cleanVal.replace("%", "")) / 100;
+      data[key] = parseFloat(cleanVal.replace("%", ""));
       continue;
     }
 

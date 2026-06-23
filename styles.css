@@ -2153,3 +2153,50 @@ a {
     top: 11px;
   }
 }
+
+/* 3D RENDERER STYLES */
+.render-panel { background: #1a2535; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); position: relative; overflow: hidden; height: 50vh; width: 100%; border: 1px solid rgba(255,255,255,0.08); }
+.controls-hint { position: absolute; bottom: 14px; left: 14px; background: rgba(0,0,0,0.45); color: #ddd; padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; pointer-events: none; z-index: 5; font-weight: 500; backdrop-filter: blur(4px); }
+.render-label { position: absolute; top: 14px; right: 14px; background: rgba(43,92,66,0.75); color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; z-index: 5; text-transform: uppercase; }
+
+/* --- AI Animation Styles --- */
+.ai-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  border-radius: var(--radius);
+}
+.ai-overlay-content {
+  text-align: center;
+}
+.ai-highlight {
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 15px rgba(216, 154, 43, 0.5) !important;
+  transition: all 0.3s ease;
+}
+.ai-tooltip {
+  position: absolute;
+  background: var(--surface);
+  color: var(--text);
+  padding: 10px 15px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--accent);
+  font-size: 14px;
+  max-width: 250px;
+  z-index: 150;
+  animation: fadeInOut 4s ease forwards;
+  pointer-events: none;
+}
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(10px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}

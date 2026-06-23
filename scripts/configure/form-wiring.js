@@ -3,6 +3,8 @@
    Used by: scripts/configure/configure.js
    ============================================================ */
 
+import { houseTypes, currency } from '../house-data.js';
+
 /* --- Advanced Mode Toggle ---------------------------------- */
 
 export function injectAdvancedModeToggle(form) {
@@ -140,7 +142,50 @@ export function wireBudgetInput(form) {
   const budgetInput = form.querySelector('[name="budgetInput"]');
   if (!budgetInput) return;
 
+  const submitBtn = form.querySelector('.create-plan-button');
+  const typeKey = form.dataset.type;
+  const configLimits = houseTypes[typeKey];
+
+  let alertDiv = form.querySelector('.budget-alert-message');
+  if (!alertDiv) {
+    alertDiv = document.createElement('div');
+    alertDiv.className = 'budget-alert-message mt-2 small text-danger fw-medium';
+    alertDiv.style.display = 'none';
+    const wrap = form.querySelector('.config-footer-budget');
+    if (wrap) wrap.appendChild(alertDiv);
+  }
+
+  function validateBudget() {
+    const rawVal = budgetInput.value.replace(/[^\d]/g, "");
+    if (!rawVal) {
+      alertDiv.style.display = 'none';
+      budgetInput.classList.remove('is-invalid');
+      if (submitBtn) submitBtn.disabled = false;
+      return;
+    }
+
+    const budgetNum = Number(rawVal);
+    if (configLimits) {
+      if (budgetNum < configLimits.minBudget) {
+        alertDiv.textContent = `Insufficient budget. The minimum allowable budget for ${configLimits.title} is ${currency.format(configLimits.minBudget)}.`;
+        alertDiv.style.display = 'block';
+        budgetInput.classList.add('is-invalid');
+        if (submitBtn) submitBtn.disabled = true;
+      } else if (configLimits.maxBudget && budgetNum > configLimits.maxBudget) {
+        alertDiv.textContent = `Budget is higher than the allowable limit. The maximum for ${configLimits.title} is ${currency.format(configLimits.maxBudget)}. Consider a more premium configuration.`;
+        alertDiv.style.display = 'block';
+        budgetInput.classList.add('is-invalid');
+        if (submitBtn) submitBtn.disabled = true;
+      } else {
+        alertDiv.style.display = 'none';
+        budgetInput.classList.remove('is-invalid');
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    }
+  }
+
   budgetInput.value = formatBudgetValue(budgetInput.value);
+  validateBudget();
 
   budgetInput.addEventListener("input", function () {
     this.setCustomValidity("");
@@ -161,10 +206,12 @@ export function wireBudgetInput(form) {
       newPos++;
     }
     this.setSelectionRange(newPos, newPos);
+    validateBudget();
   });
 
   budgetInput.addEventListener("blur", function () {
     this.value = formatBudgetValue(this.value.replace(/[^\d]/g, ""));
+    validateBudget();
   });
 }
 

@@ -15,6 +15,7 @@ import {
   writeConstructionPhases,
   setGeneratedImages,
 } from "./result-renderers.js";
+import { initRenderer } from "./renderer3d.js";
 
 /* --- Page Setup -------------------------------------------- */
 
@@ -59,6 +60,14 @@ function setupResultPage() {
     soilCondition:  "Medium / Standard (Typical Inland Soil / Loose Clay)",
   };
 
+  // Patch old cached decimal percentages back to whole numbers
+  if (data.tileBreakage > 0 && data.tileBreakage <= 1) {
+    data.tileBreakage = data.tileBreakage * 100;
+  }
+  if (data.ceilingWastage > 0 && data.ceilingWastage <= 1) {
+    data.ceilingWastage = data.ceilingWastage * 100;
+  }
+
   const budget    = Number(data.budget) || 1500000;
   const roomCount = Number(data.bedrooms) + Number(data.bathrooms);
 
@@ -80,55 +89,71 @@ function setupResultPage() {
   // Run Estimator
   const estimateData = generateEstimate(data);
 
-  // Total Cost Estimate
-  setText("totalCostEstimate", currency.format(estimateData.summary.grandTotal));
+  if (estimateData.error) {
+    console.error("Estimation error:", estimateData.error);
+    setText("totalCostEstimate", "Estimation Error");
+    setText("remainingBudget", "N/A");
+    
+    const feasibilityNote = document.createElement("div");
+    feasibilityNote.className = "alert mt-3 mb-0 alert-danger";
+    feasibilityNote.style.fontSize = "14px";
+    feasibilityNote.innerHTML = `<strong>Error:</strong> ${estimateData.error}`;
+    const heroCopy = document.querySelector(".plan-hero-copy");
+    if (heroCopy) heroCopy.appendChild(feasibilityNote);
+  } else {
+    // Total Cost Estimate
+    setText("totalCostEstimate", currency.format(estimateData.summary.grandTotal));
 
-  // Remaining Budget
-  const remainingBudget = budget - estimateData.summary.grandTotal;
-  setText("remainingBudget", currency.format(remainingBudget));
+    // Remaining Budget
+    const remainingBudget = budget - estimateData.summary.grandTotal;
+    setText("remainingBudget", currency.format(remainingBudget));
 
-  const remainingBudgetBox = document.getElementById("remainingBudgetBox");
-  if (remainingBudgetBox) {
-    if (remainingBudget < 0) {
-      remainingBudgetBox.classList.add("stat-card--over-budget");
-      document.getElementById("remainingBudget").classList.add("stat-value--over-budget");
-    } else {
-      remainingBudgetBox.classList.add("stat-card--remaining");
-      document.getElementById("remainingBudget").classList.add("stat-value--remaining");
+    const remainingBudgetBox = document.getElementById("remainingBudgetBox");
+    if (remainingBudgetBox) {
+      if (remainingBudget < 0) {
+        remainingBudgetBox.classList.add("stat-card--over-budget");
+        document.getElementById("remainingBudget").classList.add("stat-value--over-budget");
+      } else {
+        remainingBudgetBox.classList.add("stat-card--remaining");
+        document.getElementById("remainingBudget").classList.add("stat-value--remaining");
+      }
+    }
+
+    // Feasibility Note
+    const feasibilityNote = document.createElement("div");
+    feasibilityNote.className = "alert mt-3 mb-0";
+    feasibilityNote.style.fontSize = "14px";
+
+    if (estimateData.feasibility.status.includes("[OK]"))          feasibilityNote.classList.add("alert-success");
+    else if (estimateData.feasibility.status.includes("[WARNING]"))feasibilityNote.classList.add("alert-warning");
+    else                                                            feasibilityNote.classList.add("alert-secondary");
+
+    feasibilityNote.innerHTML = `<strong>${estimateData.feasibility.status}</strong>: ${estimateData.feasibility.message}`;
+
+    const heroCopy = document.querySelector(".plan-hero-copy");
+    if (heroCopy) heroCopy.appendChild(feasibilityNote);
+
+    // Materials Table
+    writeMaterialsTable(estimateData.materialsList);
+
+    // Budget Bars
+    const colorClasses = ["bg-success", "bg-info", "bg-warning", "bg-primary", "bg-secondary", "bg-dark"];
+    const budgetRows   = estimateData.materialsList.map((cat, idx) => [cat.category, cat.total, colorClasses[idx % colorClasses.length]]);
+    budgetRows.push(["Labor Estimate",    estimateData.summary.laborEstimate, "bg-secondary"]);
+    budgetRows.push(["Contingency (10%)", estimateData.summary.contingency,   "bg-danger"]);
+
+    writeBudgetBars(budgetRows, estimateData.summary.grandTotal);
+
+    // Forecasting
+    if (estimateData.forecasting) {
+      setText("workerCount", `${estimateData.forecasting.stats.workers} workers`);
+      setText("buildDays",   `${estimateData.forecasting.stats.buildDays} days`);
+      writeConstructionPhases(estimateData.forecasting.phases);
     }
   }
 
-  // Feasibility Note
-  const feasibilityNote = document.createElement("div");
-  feasibilityNote.className = "alert mt-3 mb-0";
-  feasibilityNote.style.fontSize = "14px";
-
-  if (estimateData.feasibility.status.includes("[OK]"))          feasibilityNote.classList.add("alert-success");
-  else if (estimateData.feasibility.status.includes("[WARNING]"))feasibilityNote.classList.add("alert-warning");
-  else                                                            feasibilityNote.classList.add("alert-secondary");
-
-  feasibilityNote.innerHTML = `<strong>${estimateData.feasibility.status}</strong>: ${estimateData.feasibility.message}`;
-
-  const heroCopy = document.querySelector(".plan-hero-copy");
-  if (heroCopy) heroCopy.appendChild(feasibilityNote);
-
-  // Materials Table
-  writeMaterialsTable(estimateData.materialsList);
-
-  // Budget Bars
-  const colorClasses = ["bg-success", "bg-info", "bg-warning", "bg-primary", "bg-secondary", "bg-dark"];
-  const budgetRows   = estimateData.materialsList.map((cat, idx) => [cat.category, cat.total, colorClasses[idx % colorClasses.length]]);
-  budgetRows.push(["Labor Estimate",    estimateData.summary.laborEstimate, "bg-secondary"]);
-  budgetRows.push(["Contingency (10%)", estimateData.summary.contingency,   "bg-danger"]);
-
-  writeBudgetBars(budgetRows, estimateData.summary.grandTotal);
-
-  // Forecasting
-  if (estimateData.forecasting) {
-    setText("workerCount", `${estimateData.forecasting.stats.workers} workers`);
-    setText("buildDays",   `${estimateData.forecasting.stats.buildDays} days`);
-    writeConstructionPhases(estimateData.forecasting.phases);
-  }
+  // Initialize 3D renderer
+  initRenderer(data);
 }
 
 /* --- Backend Integration API ------------------------------- */
