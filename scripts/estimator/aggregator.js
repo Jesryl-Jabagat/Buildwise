@@ -154,7 +154,7 @@ export function generateEstimate(data) {
 
   let laborMultiplier = 0;
   if (typeKey === "half-amakan" || typeKey === "half-metal") {
-    laborMultiplier = 0.40;
+    laborMultiplier = 0.30; // Dropped for budget optimization
   } else if (typeKey === "chb") {
     laborMultiplier = 0.45;
   } else if (typeKey === "loft" || typeKey === "two-storey") {
@@ -166,7 +166,12 @@ export function generateEstimate(data) {
   const laborEstimate = totalMaterialsCost * laborMultiplier;
   const subTotal = totalMaterialsCost + laborEstimate;
   
-  const contingency = subTotal * 0.10;
+  let contingencyMultiplier = 0.10;
+  if (typeKey === "half-amakan" || typeKey === "half-metal") {
+    contingencyMultiplier = 0.05; // Tighter contingency for budget
+  }
+  
+  const contingency = subTotal * contingencyMultiplier;
   const grandTotal = subTotal + contingency;
 
   const budgetInput = data.budget || 0;

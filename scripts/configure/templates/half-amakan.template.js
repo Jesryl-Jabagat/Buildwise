@@ -21,9 +21,9 @@ export function getHalfAmakanTemplate() {
       <section class="form-section">
         <div class="section-label"><span>2</span><div><h3>Floor Plan &amp; Dimensions</h3><p>Set lengths, widths and rooms.</p></div></div>
         <div class="row g-3">
-          <div class="col-md-6"><label class="form-label" for="halfAmakanLength">Length (m)</label><input class="form-control" id="halfAmakanLength" name="length" type="number" min="1" step="0.5" value="8" required></div>
-          <div class="col-md-6"><label class="form-label" for="halfAmakanWidth">Width (m)</label><input class="form-control" id="halfAmakanWidth" name="width" type="number" min="1" step="0.5" value="7" required></div>
-          <div class="col-md-6"><label class="form-label" for="halfAmakanBedrooms1F">Bedrooms (1F)</label><select class="form-select room-picker" id="halfAmakanBedrooms1F" name="bedrooms1F"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></div>
+          <div class="col-md-6"><label class="form-label" for="halfAmakanLength">Length (m)</label><input class="form-control" id="halfAmakanLength" name="length" type="number" min="1" step="0.5" value="5" required></div>
+          <div class="col-md-6"><label class="form-label" for="halfAmakanWidth">Width (m)</label><input class="form-control" id="halfAmakanWidth" name="width" type="number" min="1" step="0.5" value="6" required></div>
+          <div class="col-md-6"><label class="form-label" for="halfAmakanBedrooms1F">Bedrooms (1F)</label><select class="form-select room-picker" id="halfAmakanBedrooms1F" name="bedrooms1F"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
           <div class="col-md-6"><label class="form-label" for="halfAmakanCrs1F">Comfort Rooms (1F)</label><select class="form-select room-picker" id="halfAmakanCrs1F" name="crs1F"><option>0</option><option selected>1</option><option>2</option><option>3</option></select></div>
         </div>
       </section>
@@ -31,7 +31,7 @@ export function getHalfAmakanTemplate() {
       <section class="form-section">
         <div class="section-label"><span>3</span><div><h3>Walls, Ceiling &amp; Finishes</h3><p>Adjust finishes and ceiling types.</p></div></div>
         <div class="row g-3">
-          <div class="col-md-6"><label class="form-label" for="halfAmakanChbBaseWallHeight">CHB Base Wall Height (m)</label><input class="form-control" id="halfAmakanChbBaseWallHeight" name="chbBaseWallHeight" type="number" min="0" step="0.1" value="1.5" required></div>
+          <div class="col-md-6"><label class="form-label" for="halfAmakanChbBaseWallHeight">CHB Base Wall Height (m)</label><input class="form-control" id="halfAmakanChbBaseWallHeight" name="chbBaseWallHeight" type="number" min="0" step="0.1" value="0.9" required></div>
           <div class="col-md-6"><label class="form-label" for="halfAmakanWallingTypeAboveChb">Walling Type Above CHB</label><select class="form-select" id="halfAmakanWallingTypeAboveChb" name="wallingTypeAboveChb"><option selected>Amakan Sheets</option><option>Plywood</option><option>Hardiflex / Fiber Cement Board</option></select></div>
           <div class="col-md-6"><div class="bw-toggle-field"><span class="form-label">Include Plastering</span><label class="bw-toggle"><input type="hidden" name="includePlastering" value="No"><input type="checkbox" class="bw-toggle-input" data-on="Yes" data-off="No"><span class="bw-toggle-track"></span><span class="bw-toggle-status">No</span></label></div></div>
           <div class="col-md-6"><div class="bw-toggle-field"><span class="form-label">Include Painting</span><label class="bw-toggle"><input type="hidden" name="includePainting" value="No"><input type="checkbox" class="bw-toggle-input" data-on="Yes" data-off="No"><span class="bw-toggle-track"></span><span class="bw-toggle-status">No</span></label></div></div>

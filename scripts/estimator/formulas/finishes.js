@@ -10,10 +10,10 @@ export function calcPlastering(wallArea) {
 }
 
 export function calcPainting(wallArea) {
-  const paintArea = wallArea * 2;
+  // 30 sqm/gal coverage. Factor of 2 accounts for both sides and 2 coats.
   return {
-    primer: Math.ceil(paintArea / 30) * 2,
-    topcoat: Math.ceil(paintArea / 30) * 2
+    primer: Math.ceil((wallArea / 30) * 2),
+    topcoat: Math.ceil((wallArea / 30) * 2)
   };
 }
 

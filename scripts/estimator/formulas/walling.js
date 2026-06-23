@@ -26,13 +26,14 @@ export function calcHalfCHBWalls(length, width, chbBaseWallHeight) {
 }
 
 export function calcLightWalls(length, width, effectiveWallHeight, wallingMaterialType) {
-  const totalWallLength = (length + width) * 2;
+  const perimeter = (length + width) * 2;
   
-  // Upper Wall (Amakan/Metal Sheets): totalLightweightSheets = Math.ceil(totalWallLength / 2.4);
-  const totalLightweightSheets = Math.ceil(totalWallLength / 2.4);
+  // New formula: ROUNDUP(Perimeter ÷ 1.2) × ROUNDUP(1.8 ÷ 2.4) × 1.05
+  const sheetBase = Math.ceil(perimeter / 1.2) * Math.ceil(effectiveWallHeight / 2.4);
+  const totalLightweightSheets = Math.ceil(sheetBase * 1.05);
   
-  // Steel Tubing for Upper Frame: totalRectangularTubes = Math.ceil(totalWallLength / 1.2);
-  const totalRectangularTubes = Math.ceil(totalWallLength / 1.2);
+  // Steel Tubing for Upper Frame: ROUNDUP(Perimeter ÷ 1.2)
+  const totalRectangularTubes = Math.ceil(perimeter / 1.2);
 
   const res = {
     amakanSheets: 0,
@@ -43,10 +44,12 @@ export function calcLightWalls(length, width, effectiveWallHeight, wallingMateri
 
   if (wallingMaterialType === "amakan") {
     res.amakanSheets = totalLightweightSheets;
-    res.cocoLumber = totalRectangularTubes * 4; // keeping the coco lumber conversion from tubes as the old code had ((studs)*2)*4
+    // Budget Coco Lumber framing: 2 board feet per linear meter of perimeter for studs/nailers
+    res.cocoLumber = Math.ceil(perimeter * 2);
   } else if (wallingMaterialType === "metalCladding") {
     res.metalCladdingSheets = totalLightweightSheets;
-    res.rectTube = totalRectangularTubes;
+    // Budget Metal Cladding: spacing every 1.5m instead of 1.2m
+    res.rectTube = Math.ceil(perimeter / 1.5);
   }
 
   return res;

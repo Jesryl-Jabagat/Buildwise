@@ -71,13 +71,13 @@ function setupResultPage() {
   const budget    = Number(data.budget) || 1500000;
   const roomCount = Number(data.bedrooms) + Number(data.bathrooms);
 
-  setText("resultTitle",    `${data.title} plan for ${data.familySize.toLowerCase()}`);
-  setText("resultSubtitle", `A ${data.floorArea} sqm home concept with ${data.bedrooms} bedroom(s), ${data.bathrooms} bathroom(s), and ${data.finishLevel.toLowerCase()}.`);
+  setText("resultTitle",    `${data.title} plan for ${(data.familySize || "your family").toLowerCase()}`);
+  setText("resultSubtitle", `A ${data.floorArea} sqm home concept with ${data.bedrooms} bedroom(s), ${data.bathrooms} bathroom(s), and ${(data.finishLevel || "standard finish").toLowerCase()}.`);
   setText("targetBudget",   currency.format(budget));
   setText("resultArea",     `${data.floorArea} sqm`);
   setText("resultRooms",    `${roomCount} rooms`);
-  setText("resultFamily",   data.familySize);
-  setText("layoutSummary",  `BuildWise recommends a simple, easy-to-build layout using ${data.mainMaterial.toLowerCase()} and a ${data.roofStyle.toLowerCase()}.`);
+  setText("resultFamily",   data.familySize || "Your family");
+  setText("layoutSummary",  `BuildWise recommends a simple, easy-to-build layout using ${(data.mainMaterial || fallbackType.material[0] || "standard materials").toLowerCase()} and a ${(data.roofStyle || "standard roof").toLowerCase()}.`);
 
   const configLink = document.getElementById("backToConfig");
   if (configLink) {

@@ -13,10 +13,20 @@ export function estimate(data) {
   const mezzanineWidth = data.mezzanineWidth || 0;
   const floor2Area = mezzanineLength * mezzanineWidth;
   
+  if (floor2Area > (L * W * 0.50)) {
+    return "Error: Mezzanine area cannot exceed 50% of the ground floor area.";
+  }
+  
   const D = F.calcGlobalDerived(L, W, wallHeight, data.soilCondition);
   const sections = [];
 
   sections.push(F.calcFootingsAndColumns2Storey(D.numCols, D.soilMultiplier));
+  
+  if (mezzanineLength > 0) {
+    const mezzanineCols = Math.ceil(mezzanineLength / 3) + 1;
+    sections.push(F.calcColumns2Storey2F(mezzanineCols, D.soilMultiplier));
+  }
+  
   sections.push(F.calcBeams2Storey(D.numBeams));
   sections.push(F.calcGroundSlab(D.floorArea));
   if (floor2Area > 0) {

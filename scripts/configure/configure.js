@@ -90,6 +90,10 @@ function setupConfigPage() {
       // Import the AI module and start it
       import('./ai-suggest.js').then(module => {
         module.startAiBuilder(form, typeKey, setupData);
+        
+        // Prevent AI from running again if the user navigates back (Edit Choices)
+        setupData.mode = 'manual';
+        localStorage.setItem('buildwiseSetup', JSON.stringify(setupData));
       }).catch(err => {
         console.error("Failed to load AI Builder module", err);
         alert("Failed to load AI module. If you are opening this file locally (file:///), your browser might block ES modules. Try using Live Server. Error: " + err.message);
