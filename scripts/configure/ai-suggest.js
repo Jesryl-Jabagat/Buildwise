@@ -1,42 +1,44 @@
-import { OPENROUTER_API_KEY } from '../env.js';
+import { CONNECTOR } from "../env.js";
 
 /**
  * Extracts form schema (fields and available options) to send to Gemini.
  */
 function extractFormSchema(form) {
   const schema = [];
-  
+
   // Get all select inputs
-  form.querySelectorAll('select[name]').forEach(select => {
-    const options = Array.from(select.querySelectorAll('option')).map(o => o.value || o.text);
+  form.querySelectorAll("select[name]").forEach((select) => {
+    const options = Array.from(select.querySelectorAll("option")).map(
+      (o) => o.value || o.text,
+    );
     schema.push({
       name: select.name,
-      type: 'select',
+      type: "select",
       options: options,
-      currentValue: select.value
+      currentValue: select.value,
     });
   });
 
   // Get all number inputs (dimensions)
-  form.querySelectorAll('input[type="number"][name]').forEach(input => {
+  form.querySelectorAll('input[type="number"][name]').forEach((input) => {
     schema.push({
       name: input.name,
-      type: 'number',
+      type: "number",
       min: input.min,
-      currentValue: input.value
+      currentValue: input.value,
     });
   });
 
   // Get all toggles (they use hidden inputs in this system to store Yes/No)
-  form.querySelectorAll('input[type="hidden"][name]').forEach(hidden => {
+  form.querySelectorAll('input[type="hidden"][name]').forEach((hidden) => {
     // Check if it belongs to a toggle
-    const toggle = hidden.parentElement.querySelector('.bw-toggle-input');
+    const toggle = hidden.parentElement.querySelector(".bw-toggle-input");
     if (toggle) {
       schema.push({
         name: hidden.name,
-        type: 'toggle',
+        type: "toggle",
         options: [toggle.dataset.on, toggle.dataset.off],
-        currentValue: hidden.value
+        currentValue: hidden.value,
       });
     }
   });
@@ -84,26 +86,26 @@ Example:
  */
 async function fetchAiConfiguration(prompt) {
   const url = `https://openrouter.ai/api/v1/chat/completions`;
-  
+
   const response = await fetch(url, {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-      'HTTP-Referer': window.location.href,
-      'X-Title': 'BuildWise AI'
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${CONNECTOR}`,
+      "HTTP-Referer": window.location.href,
+      "X-Title": "BuildWise AI",
     },
     body: JSON.stringify({
       model: "google/gemini-2.5-flash", // You can change this to any OpenRouter model like openai/gpt-4o-mini
       max_tokens: 1500, // Added to prevent OpenRouter from trying to reserve 65k tokens which causes credit errors
-      messages: [{ role: "user", content: prompt }]
-    })
+      messages: [{ role: "user", content: prompt }],
+    }),
   });
 
   if (!response.ok) {
     const errText = await response.text();
     alert("API Request failed: " + errText);
-    throw new Error('API Request failed');
+    throw new Error("API Request failed");
   }
 
   const data = await response.json();
@@ -112,11 +114,18 @@ async function fetchAiConfiguration(prompt) {
     // OpenRouter returns text in choices[0].message.content
     rawText = data.choices[0].message.content;
     // Strip markdown backticks if AI still added them
-    const cleanText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const cleanText = rawText
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
     return JSON.parse(cleanText);
-  } catch(e) {
+  } catch (e) {
     console.error("Failed to parse AI response", e);
-    alert("Failed to parse AI response. Raw text was: " + rawText.substring(0, 100) + "...");
+    alert(
+      "Failed to parse AI response. Raw text was: " +
+        rawText.substring(0, 100) +
+        "...",
+    );
     return null;
   }
 }
@@ -125,16 +134,16 @@ async function fetchAiConfiguration(prompt) {
  * Helper to show the floating tooltip.
  */
 function showTooltip(element, text) {
-  const tooltip = document.createElement('div');
-  tooltip.className = 'ai-tooltip';
+  const tooltip = document.createElement("div");
+  tooltip.className = "ai-tooltip";
   tooltip.innerText = text;
-  
+
   const rect = element.getBoundingClientRect();
-  tooltip.style.top = (window.scrollY + rect.top - 40) + 'px';
-  tooltip.style.left = (window.scrollX + rect.right + 20) + 'px';
-  
+  tooltip.style.top = window.scrollY + rect.top - 40 + "px";
+  tooltip.style.left = window.scrollX + rect.right + 20 + "px";
+
   document.body.appendChild(tooltip);
-  
+
   // Cleanup after animation
   setTimeout(() => {
     if (tooltip.parentNode) tooltip.parentNode.removeChild(tooltip);
@@ -145,21 +154,23 @@ function showTooltip(element, text) {
  * Helper to find the DOM element for a given name.
  */
 function getElementForName(form, name) {
-  let el = form.querySelector(`select[name="${name}"], input[type="number"][name="${name}"]`);
+  let el = form.querySelector(
+    `select[name="${name}"], input[type="number"][name="${name}"]`,
+  );
   let isToggle = false;
   let toggleCheckbox = null;
-  
+
   if (!el) {
     el = form.querySelector(`input[type="hidden"][name="${name}"]`);
     if (el) {
-      toggleCheckbox = el.parentElement.querySelector('.bw-toggle-input');
+      toggleCheckbox = el.parentElement.querySelector(".bw-toggle-input");
       if (toggleCheckbox) {
         isToggle = true;
         el = toggleCheckbox;
       }
     }
   }
-  
+
   return { el, isToggle, toggleCheckbox };
 }
 
@@ -171,7 +182,7 @@ async function runAnimationLoop(form, suggestions) {
   suggestions.sort((a, b) => {
     const nodeA = getElementForName(form, a.name).el;
     const nodeB = getElementForName(form, b.name).el;
-    
+
     // Use offsetTop relative to the document
     const posA = nodeA ? nodeA.getBoundingClientRect().top + window.scrollY : 0;
     const posB = nodeB ? nodeB.getBoundingClientRect().top + window.scrollY : 0;
@@ -180,43 +191,43 @@ async function runAnimationLoop(form, suggestions) {
 
   for (const suggestion of suggestions) {
     const { name, value, reason } = suggestion;
-    
+
     const { el, isToggle, toggleCheckbox } = getElementForName(form, name);
-    
+
     if (!el) continue;
 
     // Scroll to element smoothly
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+
     // Highlight
-    el.classList.add('ai-highlight');
-    if (isToggle) el.parentElement.classList.add('ai-highlight');
-    
+    el.classList.add("ai-highlight");
+    if (isToggle) el.parentElement.classList.add("ai-highlight");
+
     // Small pause to let user see where we are
-    await new Promise(r => setTimeout(r, 600));
+    await new Promise((r) => setTimeout(r, 600));
 
     // Change value
     if (isToggle) {
-      const isChecking = (value === toggleCheckbox.dataset.on);
+      const isChecking = value === toggleCheckbox.dataset.on;
       if (toggleCheckbox.checked !== isChecking) {
         toggleCheckbox.checked = isChecking;
-        toggleCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+        toggleCheckbox.dispatchEvent(new Event("change", { bubbles: true }));
       }
     } else {
       el.value = value;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
     // Show Tooltip
     showTooltip(isToggle ? toggleCheckbox.parentElement : el, reason);
-    
+
     // Pause to let them read
-    await new Promise(r => setTimeout(r, 1400));
-    
+    await new Promise((r) => setTimeout(r, 1400));
+
     // Remove highlight
-    el.classList.remove('ai-highlight');
-    if (isToggle) el.parentElement.classList.remove('ai-highlight');
+    el.classList.remove("ai-highlight");
+    if (isToggle) el.parentElement.classList.remove("ai-highlight");
   }
 }
 
@@ -224,50 +235,53 @@ async function runAnimationLoop(form, suggestions) {
  * Entry point.
  */
 export async function startAiBuilder(form, typeKey, setupData) {
-  const overlay = document.getElementById('aiOverlay');
-  if (overlay) overlay.style.display = 'flex';
-  
+  const overlay = document.getElementById("aiOverlay");
+  if (overlay) overlay.style.display = "flex";
+
   // Ensure advanced mode is open so we can interact with all fields
-  const advancedToggle = document.getElementById('advancedModeToggle');
+  const advancedToggle = document.getElementById("advancedModeToggle");
   if (advancedToggle && !advancedToggle.checked) {
     advancedToggle.checked = true;
-    advancedToggle.dispatchEvent(new Event('change', { bubbles: true }));
+    advancedToggle.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
   try {
     const schema = extractFormSchema(form);
     const prompt = buildPrompt(typeKey, setupData, schema);
-    
+
     const suggestions = await fetchAiConfiguration(prompt);
-    
+
     if (suggestions && suggestions.length > 0) {
       // Hide the loading spinner, but keep the dark overlay so they can't click
-      const spinner = overlay.querySelector('.spinner-border');
-      if (spinner) spinner.style.display = 'none';
-      const text = overlay.querySelector('h3');
-      if (text) text.innerText = 'AI Architect is building...';
-      
+      const spinner = overlay.querySelector(".spinner-border");
+      if (spinner) spinner.style.display = "none";
+      const text = overlay.querySelector("h3");
+      if (text) text.innerText = "AI Architect is building...";
+
       // Let overlay be click-through so they can see tooltips properly
-      overlay.style.pointerEvents = 'none';
-      overlay.style.background = 'rgba(0,0,0,0.4)';
-      
+      overlay.style.pointerEvents = "none";
+      overlay.style.background = "rgba(0,0,0,0.4)";
+
       await runAnimationLoop(form, suggestions);
-      
+
       // Submit the form
-      const submitBtn = form.querySelector('.create-plan-button');
+      const submitBtn = form.querySelector(".create-plan-button");
       if (submitBtn) {
-        submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        submitBtn.classList.add('ai-highlight');
-        await new Promise(r => setTimeout(r, 1000));
+        submitBtn.scrollIntoView({ behavior: "smooth", block: "center" });
+        submitBtn.classList.add("ai-highlight");
+        await new Promise((r) => setTimeout(r, 1000));
         submitBtn.click();
       }
     } else {
       alert("AI failed to generate suggestions. Please customize manually.");
-      if (overlay) overlay.style.display = 'none';
+      if (overlay) overlay.style.display = "none";
     }
   } catch (err) {
     console.error("AI Error", err);
-    alert("There was an error communicating with the AI. Proceeding to manual mode. Error: " + err.message);
-    if (overlay) overlay.style.display = 'none';
+    alert(
+      "There was an error communicating with the AI. Proceeding to manual mode. Error: " +
+        err.message,
+    );
+    if (overlay) overlay.style.display = "none";
   }
 }
