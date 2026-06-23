@@ -140,6 +140,6 @@ export function wireFormSubmit(form) {
     console.log("Extracted Form Data:", data);
 
     localStorage.setItem("buildwiseResult", JSON.stringify(data));
-    window.location.href = `result.html?type=${encodeURIComponent(data.typeKey)}`;
+    window.location.href = `analyzing.html?type=${encodeURIComponent(data.typeKey)}`;
   });
 }

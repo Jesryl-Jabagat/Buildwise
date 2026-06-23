@@ -336,7 +336,12 @@ function wireFloorAreaDisplay(form) {
 
   // Attach listeners
   l1Input.addEventListener("input", updateArea);
-  w1Input.addEventListener("input", updateArea);
+  w1Input.addEventListener("input", () => {
+    if (w2Input && form.dataset.type === "loft") {
+      w2Input.value = w1Input.value;
+    }
+    updateArea();
+  });
   if (l2Input && w2Input) {
     l2Input.addEventListener("input", updateArea);
     w2Input.addEventListener("input", updateArea);

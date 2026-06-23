@@ -25,10 +25,10 @@ export function getTwoStoreyTemplate() {
       <section class="form-section">
         <div class="section-label"><span>2</span><div><h3>Ground and second floor dimensions</h3><p>Separate L and W are required for footing, slab, perimeter, and ceiling formulas.</p></div></div>
         <div class="row g-3">
-          <div class="col-md-6"><label class="form-label" for="twoStoreyLength">Ground Floor Length - L1</label><div class="input-with-unit"><input class="form-control" id="twoStoreyLength" name="length" type="number" min="1" step="0.1" value="10" required><span>m</span></div></div>
-          <div class="col-md-6"><label class="form-label" for="twoStoreyWidth">Ground Floor Width - W1</label><div class="input-with-unit"><input class="form-control" id="twoStoreyWidth" name="width" type="number" min="1" step="0.1" value="8" required><span>m</span></div></div>
-          <div class="col-md-6"><label class="form-label" for="twoStoreySecondFloorLength">2nd Floor Length - L2</label><div class="input-with-unit"><input class="form-control" id="twoStoreySecondFloorLength" name="secondFloorLength" type="number" min="1" step="0.1" value="9"><span>m</span></div></div>
-          <div class="col-md-6"><label class="form-label" for="twoStoreySecondFloorWidth">2nd Floor Width - W2</label><div class="input-with-unit"><input class="form-control" id="twoStoreySecondFloorWidth" name="secondFloorWidth" type="number" min="1" step="0.1" value="8"><span>m</span></div></div>
+          <div class="col-md-6"><label class="form-label" for="twoStoreyLength">Ground Floor Length - L1</label><div class="input-with-unit"><input class="form-control" id="twoStoreyLength" name="length" type="number" min="1" step="0.1" value="5" required><span>m</span></div></div>
+          <div class="col-md-6"><label class="form-label" for="twoStoreyWidth">Ground Floor Width - W1</label><div class="input-with-unit"><input class="form-control" id="twoStoreyWidth" name="width" type="number" min="1" step="0.1" value="5" required><span>m</span></div></div>
+          <div class="col-md-6"><label class="form-label" for="twoStoreySecondFloorLength">2nd Floor Length - L2</label><div class="input-with-unit"><input class="form-control" id="twoStoreySecondFloorLength" name="secondFloorLength" type="number" min="1" step="0.1" value="5"><span>m</span></div></div>
+          <div class="col-md-6"><label class="form-label" for="twoStoreySecondFloorWidth">2nd Floor Width - W2</label><div class="input-with-unit"><input class="form-control" id="twoStoreySecondFloorWidth" name="secondFloorWidth" type="number" min="1" step="0.1" value="5"><span>m</span></div></div>
           <div class="col-md-6"><label class="form-label" for="twoStoreyGroundWallHeight">Ground Wall Height</label><div class="input-with-unit"><input class="form-control" id="twoStoreyGroundWallHeight" name="groundWallHeight" type="number" min="2" step="0.1" value="2.7"><span>m</span></div></div>
           <div class="col-md-6"><label class="form-label" for="twoStoreySecondFloorWallHeight">2nd Floor Wall Height</label><div class="input-with-unit"><input class="form-control" id="twoStoreySecondFloorWallHeight" name="secondFloorWallHeight" type="number" min="2" step="0.1" value="2.7"><span>m</span></div></div>
           <div class="col-md-6"><label class="form-label" for="twoStoreyHasStairs">Has Stairs?</label><select class="form-select" id="twoStoreyHasStairs" name="hasStairs"><option selected>Yes - locked on</option></select></div>
@@ -38,9 +38,9 @@ export function getTwoStoreyTemplate() {
       <section class="form-section">
         <div class="section-label"><span>3</span><div><h3>Rooms</h3><p>2-storey bedroom and CR quantities differ per floor.</p></div></div>
         <div class="room-picker">
-          <label><span>Number of Bedrooms (1F)</span><select class="form-select" name="bedrooms1F"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></label>
-          <label><span>Number of Bedrooms (2F)</span><select class="form-select" name="bedrooms2F"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
-          <label><span>Number of CRs (1F)</span><select class="form-select" name="crs1F"><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label><span>Number of Bedrooms (1F)</span><select class="form-select" name="bedrooms1F"><option selected>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label><span>Number of Bedrooms (2F)</span><select class="form-select" name="bedrooms2F"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label><span>Number of CRs (1F)</span><select class="form-select" name="crs1F"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
           <label><span>Number of CRs (2F)</span><select class="form-select" name="crs2F"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
         </div>
       </section>

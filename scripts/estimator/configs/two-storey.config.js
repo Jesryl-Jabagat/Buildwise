@@ -13,18 +13,27 @@ export function estimate(data) {
   const secondFloorWidth = data.secondFloorWidth || W;
   const secondFloorWallHeight = data.secondFloorWallHeight || 2.7;
   
-  const D = F.calcGlobalDerived(L, W, wallHeight, data.soilCondition);
-  const floor2Area = secondFloorLength * secondFloorWidth;
-  const wall2Area = (2 * (secondFloorLength + secondFloorWidth)) * secondFloorWallHeight;
+  // Independent L1/W1 and L2/W2 calculations
+  const D1 = F.calcGlobalDerived(L, W, wallHeight, data.soilCondition);
+  const D2 = F.calcGlobalDerived(secondFloorLength, secondFloorWidth, secondFloorWallHeight, data.soilCondition);
+  
+  const floor2Area = D2.floorArea;
+  const wall2Area = D2.wallArea;
   
   const sections = [];
 
-  sections.push(F.calcFootingsAndColumns2Storey(D.numCols, D.soilMultiplier));
-  sections.push(F.calcBeams2Storey(D.numBeams));
-  sections.push(F.calcGroundSlab(D.floorArea));
+  // 1F uses Heavy 2-Storey Footing + 1F Heavy Column
+  sections.push(F.calcFootingsAndColumns2Storey(D1.numCols, D1.soilMultiplier));
+  // 2F uses Standard Columns
+  sections.push(F.calcColumns2Storey2F(D2.numCols, D2.soilMultiplier));
+  
+  // Combine beams for both floors
+  sections.push(F.calcBeams2Storey(D1.numBeams + D2.numBeams));
+  
+  sections.push(F.calcGroundSlab(D1.floorArea));
   sections.push(F.calcUpperSlab(floor2Area));
   
-  sections.push(F.calcFullCHBWalls(D.wallArea));
+  sections.push(F.calcFullCHBWalls(D1.wallArea));
   sections.push(F.calcFullCHBWalls(wall2Area));
   
   sections.push(F.calcRoofing(secondFloorLength, secondFloorWidth, data.roofType));
@@ -37,17 +46,17 @@ export function estimate(data) {
   sections.push(F.calcStairs());
 
   if (data.includePlastering) {
-    sections.push(F.calcPlastering(D.wallArea));
+    sections.push(F.calcPlastering(D1.wallArea));
     sections.push(F.calcPlastering(wall2Area));
   }
   if (data.includePainting) {
-    sections.push(F.calcPainting(D.wallArea));
+    sections.push(F.calcPainting(D1.wallArea));
     sections.push(F.calcPainting(wall2Area));
   }
-  if (data.applyTilesGround) sections.push(F.calcTiling(D.floorArea, data.tileSize || "60x60", data.tileBreakage || 5));
+  if (data.applyTilesGround) sections.push(F.calcTiling(D1.floorArea, data.tileSize || "60x60", data.tileBreakage || 5));
   if (data.applyTilesSecond) sections.push(F.calcTiling(floor2Area, data.tileSize || "60x60", data.tileBreakage || 5));
   
-  if (data.hasCeiling || data.groundFloorCeiling) sections.push(F.calcCeiling(D.floorArea, L, W, data.ceilingWastage || 5));
+  if (data.hasCeiling || data.groundFloorCeiling) sections.push(F.calcCeiling(D1.floorArea, L, W, data.ceilingWastage || 5));
   if (data.hasCeiling || data.ceilingSecondFloor) sections.push(F.calcCeiling(floor2Area, secondFloorLength, secondFloorWidth, data.ceilingWastage || 5));
 
   return sumObjects(...sections);

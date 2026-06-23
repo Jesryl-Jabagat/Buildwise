@@ -658,11 +658,11 @@ function buildHouseLogic(configData) {
 
         // --- COMFORT ROOMS (CRs) ---
         if (crs > 0) {
-            let crDepthPercent = 0.25;
-            if (flW <= 7) crDepthPercent = 0.30;
-            if (flW <= 5) crDepthPercent = 0.35;
-            const crDepth = Math.min(2.5, flW * crDepthPercent);
-            const crWidth = Math.min(2.5, (flL - wt*2) / crs);
+            let crDepthPercent = 0.20;
+            if (flW <= 7) crDepthPercent = 0.25;
+            if (flW <= 5) crDepthPercent = 0.25;
+            const crDepth = Math.min(1.6, flW * crDepthPercent);
+            const crWidth = Math.min(1.5, (flL - wt*2) / crs);
             const crFrontZ = flW/2 - wt;
             const crBackZ = crFrontZ - crDepth;
             

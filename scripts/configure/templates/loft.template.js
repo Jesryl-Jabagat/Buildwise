@@ -25,10 +25,10 @@ export function getLoftTemplate() {
       <section class="form-section">
         <div class="section-label"><span>2</span><div><h3>Ground floor and mezzanine</h3><p>Length and width drive area, perimeter, footings, slab, and ceiling formulas.</p></div></div>
         <div class="row g-3">
-          <div class="col-md-6"><label class="form-label" for="loftLength">Ground Floor Length - L</label><div class="input-with-unit"><input class="form-control" id="loftLength" name="length" type="number" min="1" step="0.1" value="10" required><span>m</span></div></div>
-          <div class="col-md-6"><label class="form-label" for="loftWidth">Ground Floor Width - W</label><div class="input-with-unit"><input class="form-control" id="loftWidth" name="width" type="number" min="1" step="0.1" value="8" required><span>m</span></div></div>
-          <div class="col-md-6"><label class="form-label" for="loftMezzanineLength">Mezzanine Length</label><div class="input-with-unit"><input class="form-control" id="loftMezzanineLength" name="mezzanineLength" type="number" min="0" step="0.1" value="5"><span>m</span></div></div>
-          <div class="col-md-6"><label class="form-label" for="loftMezzanineWidth">Mezzanine Width</label><div class="input-with-unit"><input class="form-control" id="loftMezzanineWidth" name="mezzanineWidth" type="number" min="0" step="0.1" value="8"><span>m</span></div></div>
+          <div class="col-md-6"><label class="form-label" for="loftLength">Ground Floor Length - L</label><div class="input-with-unit"><input class="form-control" id="loftLength" name="length" type="number" min="1" step="0.1" value="5" required><span>m</span></div></div>
+          <div class="col-md-6"><label class="form-label" for="loftWidth">Ground Floor Width - W</label><div class="input-with-unit"><input class="form-control" id="loftWidth" name="width" type="number" min="1" step="0.1" value="6" required><span>m</span></div></div>
+          <div class="col-md-6"><label class="form-label" for="loftMezzanineLength">Mezzanine Length</label><div class="input-with-unit"><input class="form-control" id="loftMezzanineLength" name="mezzanineLength" type="number" min="0" step="0.1" value="2.5"><span>m</span></div></div>
+          <div class="col-md-6"><label class="form-label" for="loftMezzanineWidth">Mezzanine Width</label><div class="input-with-unit"><input class="form-control" id="loftMezzanineWidth" name="mezzanineWidth" type="number" value="6" readonly style="background-color: #e9ecef; cursor: not-allowed;"><span>m</span></div><p class="small mt-1 text-muted" style="line-height: 1.2;">Locked to ground floor width.</p></div>
           <div class="col-md-6"><label class="form-label" for="loftGroundWallHeight">Ground Wall Height</label><div class="input-with-unit"><input class="form-control" id="loftGroundWallHeight" name="groundWallHeight" type="number" min="2" step="0.1" value="2.7"><span>m</span></div></div>
           <div class="col-md-6"><label class="form-label" for="loftHasStairs">Has Stairs?</label><select class="form-select" id="loftHasStairs" name="hasStairs"><option selected>Yes - locked on</option></select></div>
         </div>
@@ -37,9 +37,9 @@ export function getLoftTemplate() {
       <section class="form-section">
         <div class="section-label"><span>3</span><div><h3>Rooms</h3><p>Loft uses separate 1F and mezzanine material tables.</p></div></div>
         <div class="room-picker">
-          <label><span>Number of Bedrooms (1F)</span><select class="form-select" name="bedrooms1F"><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
-          <label><span>Number of Bedrooms (2F)</span><select class="form-select" name="bedrooms2F"><option>0</option><option selected>1</option><option>2</option><option>3</option></select></label>
-          <label><span>Number of CRs (1F)</span><select class="form-select" name="crs1F"><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label><span>Number of Bedrooms (1F)</span><select class="form-select" name="bedrooms1F"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label><span>Number of Bedrooms (2F)</span><select class="form-select" name="bedrooms2F"><option selected>0</option><option>1</option><option>2</option><option>3</option></select></label>
+          <label><span>Number of CRs (1F)</span><select class="form-select" name="crs1F"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
           <label><span>Number of CRs (2F)</span><select class="form-select" name="crs2F"><option selected>0</option><option>1</option><option>2</option><option>3</option></select></label>
         </div>
       </section>
