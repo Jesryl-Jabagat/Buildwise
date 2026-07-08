@@ -130,6 +130,44 @@ export function writeConstructionPhases(phases) {
   if (note) note.hidden = true;
 }
 
+/* --- Labor Breakdown --------------------------------------- */
+
+/**
+ * Renders the detailed labor breakdown table.
+ * @param {Array} breakdown - [{ role, dailyWage, days, total }, ...]
+ */
+export function writeLaborBreakdown(breakdown) {
+  const container = document.getElementById("laborBreakdownTable");
+  if (!container || !breakdown?.length) return;
+
+  container.innerHTML = `
+    <table class="materials-tbl mt-3">
+      <thead>
+        <tr>
+          <th style="width: 40%;">Labor Role (DOLE Std)</th>
+          <th style="width: 20%; text-align: center;">Daily Wage</th>
+          <th style="width: 20%; text-align: center;">Est. Days</th>
+          <th style="width: 20%; text-align: right;">Total Bayad</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${breakdown
+          .map(
+            (item) => `
+          <tr>
+            <td>${item.role}</td>
+            <td style="text-align: center;">${currency.format(item.dailyWage)}</td>
+            <td style="text-align: center;">${item.days}</td>
+            <td style="text-align: right;">${currency.format(item.total)}</td>
+          </tr>
+        `,
+          )
+          .join("")}
+      </tbody>
+    </table>
+  `;
+}
+
 /* --- Image Helpers ----------------------------------------- */
 
 /**

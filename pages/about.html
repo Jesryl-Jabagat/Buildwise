@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>About | BuildWise</title>
+    <link rel="icon" type="image/png" href="../assets/logo/logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+      .about-hero {
+        padding: 80px 0 40px;
+        text-align: center;
+      }
+      .about-hero h1 {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        color: var(--primary);
+        font-weight: 900;
+        margin-bottom: 1rem;
+      }
+      .about-hero p {
+        color: var(--text-muted);
+        font-size: 1.2rem;
+        max-width: 700px;
+        margin: 0 auto 3rem;
+      }
+      
+      .section-heading {
+        text-align: center;
+        margin-bottom: 3rem;
+      }
+      .section-heading h2 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+      }
+      .section-heading p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+      }
+
+      /* Premium Formula Cards */
+      .formula-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 2.5rem;
+        margin-top: 2rem;
+      }
+      .formula-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+      }
+      .formula-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(31, 122, 92, 0.08);
+        border-color: rgba(31, 122, 92, 0.3);
+      }
+      .formula-header {
+        background: rgba(31, 122, 92, 0.04);
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .formula-header h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .formula-header .badge-tag {
+        background: rgba(31, 122, 92, 0.1);
+        color: var(--primary);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding: 0.4rem 0.8rem;
+        border-radius: 50px;
+      }
+      .formula-body {
+        padding: 2rem;
+      }
+      .formula-description {
+        color: var(--text-muted);
+        font-size: 1.05rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+      }
+      
+      /* Math Display Block */
+      .math-display {
+        background: #0f172a; /* Sleek dark slate */
+        color: #e2e8f0;
+        padding: 1.8rem 2rem;
+        border-radius: 8px;
+        font-family: 'Fira Code', 'Courier New', monospace;
+        font-size: 1.3rem;
+        text-align: center;
+        margin-bottom: 2.5rem;
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+        border: 1px solid #1e293b;
+        position: relative;
+        overflow-x: auto;
+      }
+      .math-display::before {
+        content: 'CORE FORMULA';
+        position: absolute;
+        top: 0;
+        left: 20px;
+        transform: translateY(-50%);
+        background: #0f172a;
+        padding: 0 10px;
+        font-size: 0.7rem;
+        color: #94a3b8;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        border: 1px solid #1e293b;
+        border-radius: 50px;
+      }
+      .math-display i {
+        font-style: italic;
+        color: #34d399; /* Mint green for variables */
+      }
+      .math-display sub {
+        font-size: 0.65em;
+        color: #94a3b8;
+      }
+      .math-display .op {
+        color: #f87171; /* Soft red for operators */
+        margin: 0 8px;
+      }
+      .math-display .func {
+        color: #60a5fa; /* Blue for functions */
+      }
+
+      /* Variables Grid */
+      .variables-section h4 {
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text);
+        font-weight: 800;
+        margin-bottom: 1.2rem;
+        border-bottom: 2px solid rgba(0,0,0,0.05);
+        padding-bottom: 0.5rem;
+        display: inline-block;
+      }
+      .variable-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.2rem;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .variable-item {
+        background: rgba(0,0,0,0.02);
+        padding: 1.2rem;
+        border-radius: 8px;
+        border-left: 4px solid var(--primary);
+      }
+      .variable-item strong {
+        color: var(--primary);
+        font-family: 'Fira Code', monospace;
+        font-size: 1.05rem;
+        display: block;
+        margin-bottom: 0.4rem;
+      }
+      .variable-item span {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        display: block;
+      }
+
+      /* Engineering Reference Card */
+      .eng-ref-section {
+        padding: 60px 0;
+      }
+      .eng-card {
+        background: var(--surface);
+        border-radius: var(--radius);
+        padding: 40px;
+        box-shadow: var(--shadow);
+        text-align: center;
+        max-width: 600px;
+        margin: 0 auto;
+        border: 1px solid var(--border);
+      }
+      .eng-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(31, 122, 92, 0.1);
+        color: var(--primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+      }
+      .eng-icon svg {
+        width: 40px;
+        height: 40px;
+      }
+      .eng-card h3 {
+        color: var(--text);
+        font-weight: 800;
+        margin-bottom: 5px;
+      }
+      .eng-card .title {
+        color: var(--primary);
+        font-weight: 600;
+        margin-bottom: 20px;
+      }
+      .eng-details {
+        text-align: left;
+        background: rgba(0,0,0,0.04);
+        padding: 20px;
+        border-radius: var(--radius);
+        color: var(--text-muted);
+        font-size: 0.95rem;
+      }
+      .eng-details p {
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .eng-details p:last-child {
+        margin-bottom: 0;
+      }
+      .eng-details strong {
+        color: var(--text);
+      }
+
+      /* Disclaimer */
+      .disclaimer-section {
+        padding: 40px 0 80px;
+      }
+      .disclaimer-box {
+        background-color: rgba(220, 53, 69, 0.05);
+        border-left: 4px solid #dc3545;
+        padding: 2rem;
+        border-radius: 0 var(--radius) var(--radius) 0;
+        color: var(--text);
+      }
+      .disclaimer-box h3 {
+        color: #dc3545;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .disclaimer-box p {
+        margin-bottom: 0.5rem;
+        color: var(--text-muted);
+      }
+
+      /* Materials Reference Section */
+      .materials-ref-section {
+        padding: 60px 0;
+        background: rgba(31, 122, 92, 0.02);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+      }
+      .materials-category-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+      .materials-cat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+        transition: box-shadow 0.3s;
+      }
+      .materials-cat-card:hover {
+        box-shadow: 0 8px 24px rgba(31, 122, 92, 0.07);
+      }
+      .materials-cat-header {
+        background: rgba(31, 122, 92, 0.05);
+        border-bottom: 1px solid var(--border);
+        padding: 1.2rem 1.8rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .materials-cat-header .cat-icon {
+        width: 36px;
+        height: 36px;
+        background: rgba(31, 122, 92, 0.12);
+        color: var(--primary);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .materials-cat-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--text);
+      }
+      .materials-ref-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+      }
+      .materials-ref-table thead tr {
+        background: rgba(0,0,0,0.025);
+      }
+      .materials-ref-table th {
+        padding: 0.8rem 1.5rem;
+        text-align: left;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border);
+      }
+      .materials-ref-table td {
+        padding: 0.85rem 1.5rem;
+        color: var(--text);
+        border-bottom: 1px solid rgba(0,0,0,0.04);
+        vertical-align: middle;
+      }
+      .materials-ref-table tbody tr:last-child td {
+        border-bottom: none;
+      }
+      .materials-ref-table tbody tr:hover {
+        background: rgba(31, 122, 92, 0.03);
+      }
+      .mat-unit-badge {
+        display: inline-block;
+        background: rgba(31, 122, 92, 0.08);
+        color: var(--primary);
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+      }
+      .mat-price {
+        font-weight: 700;
+        color: var(--text);
+        font-family: 'Fira Code', monospace;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <bw-navbar base-path="../"></bw-navbar>
+
+    <main>
+      <!-- Overview Section -->
+      <section class="about-hero container">
+        <h1>About BuildWise</h1>
+        <p>The autonomous platform designed to simplify, optimize, and accurately estimate construction projects. BuildWise solves the complex challenge of architectural planning by combining automated structural models with real-time material and cost approximations.</p>
+      </section>
+
+      <!-- Formula Methodology Section -->
+      <section class="container pb-5">
+        <div class="section-heading">
+          <h2>Formula Methodology</h2>
+          <p>The core mathematical models powering our estimation engine.</p>
+        </div>
+
+        <div class="formula-grid">
+          
+          <!-- 🏠 CHB HOUSE -->
+          <article class="formula-card">
+            <div class="formula-header">
+              <h3>🏠 CHB HOUSE</h3>
+              <span class="badge-tag">Standard Concrete</span>
+            </div>
+            <div class="formula-body">
+              
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">FOUNDATION</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used (Current System)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Cement</td><td class="mat-price" style="text-align:right;">Number of Footings &times; 3 Bags</td></tr>
+                  <tr><td>Sand</td><td class="mat-price" style="text-align:right;">Number of Footings &times; 0.15 cu.m.</td></tr>
+                  <tr><td>3/4 Gravel</td><td class="mat-price" style="text-align:right;">Number of Footings &times; 0.30 cu.m.</td></tr>
+                  <tr><td>16mm Deformed Bar</td><td class="mat-price" style="text-align:right;">Number of Footings &times; Standard Reinforcement</td></tr>
+                  <tr><td>Tie Wire</td><td class="mat-price" style="text-align:right;">Total Reinforcement &times; 3%</td></tr>
+                </tbody>
+              </table>
+              <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;" class="mb-4">Note: The current system assumes a standard footing size rather than computing L &times; W &times; H.</p>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">COLUMNS</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used (Current System)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Cement</td><td class="mat-price" style="text-align:right;">Number of Columns &times; Constant</td></tr>
+                  <tr><td>Sand</td><td class="mat-price" style="text-align:right;">Number of Columns &times; Constant</td></tr>
+                  <tr><td>3/4 Gravel</td><td class="mat-price" style="text-align:right;">Number of Columns &times; Constant</td></tr>
+                  <tr><td>16mm Deformed Bar</td><td class="mat-price" style="text-align:right;">Number of Columns &times; Standard Bars</td></tr>
+                  <tr><td>10mm Stirrups</td><td class="mat-price" style="text-align:right;">Number of Columns &times; Standard Stirrups</td></tr>
+                  <tr><td>Tie Wire</td><td class="mat-price" style="text-align:right;">Steel Weight &times; 3%</td></tr>
+                </tbody>
+              </table>
+              <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;" class="mb-4">Uses predefined material constants for each column instead of calculating concrete volume.</p>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">GROUND FLOOR SLAB</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Concrete</td><td class="mat-price" style="text-align:right;">Floor Area &times; 0.10</td></tr>
+                  <tr><td>Cement</td><td class="mat-price" style="text-align:right;">Concrete Volume &times; 9</td></tr>
+                  <tr><td>Sand</td><td class="mat-price" style="text-align:right;">Concrete Volume &times; 0.50</td></tr>
+                  <tr><td>3/4 Gravel</td><td class="mat-price" style="text-align:right;">Concrete Volume &times; 1.00</td></tr>
+                </tbody>
+              </table>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">SECOND FLOOR SLAB</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Concrete</td><td class="mat-price" style="text-align:right;">Floor Area &times; 0.125</td></tr>
+                  <tr><td>Cement</td><td class="mat-price" style="text-align:right;">Concrete Volume &times; 9</td></tr>
+                  <tr><td>Sand</td><td class="mat-price" style="text-align:right;">Concrete Volume &times; 0.50</td></tr>
+                  <tr><td>3/4 Gravel</td><td class="mat-price" style="text-align:right;">Concrete Volume &times; 1.00</td></tr>
+                </tbody>
+              </table>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">CHB WALL</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>CHB 6"</td><td class="mat-price" style="text-align:right;">Wall Area &times; 12.5 &times; 1.05</td></tr>
+                  <tr><td>Mortar Cement</td><td class="mat-price" style="text-align:right;">Wall Area &times; 0.525</td></tr>
+                  <tr><td>Screened Sand</td><td class="mat-price" style="text-align:right;">Wall Area &times; 0.0438</td></tr>
+                  <tr><td>Plaster Cement</td><td class="mat-price" style="text-align:right;">(Wall Area &times; 2) &times; 0.288</td></tr>
+                  <tr><td>Fine Sand</td><td class="mat-price" style="text-align:right;">(Wall Area &times; 2) &times; 0.016</td></tr>
+                  <tr><td>10mm Vertical Rebar</td><td class="mat-price" style="text-align:right;">Standard Wall Reinforcement</td></tr>
+                  <tr><td>10mm Horizontal Rebar</td><td class="mat-price" style="text-align:right;">Standard Wall Reinforcement</td></tr>
+                </tbody>
+              </table>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">ROOFING</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used (Current System)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Roofing Sheets</td><td class="mat-price" style="text-align:right;">Roof Area &divide; Effective Sheet Coverage</td></tr>
+                  <tr><td>C-Purlins</td><td class="mat-price" style="text-align:right;">Rows per Side &times; 2 &times; (Roof Length &divide; 6m)</td></tr>
+                  <tr><td>Ridge Roll</td><td class="mat-price" style="text-align:right;">Ridge Length</td></tr>
+                  <tr><td>Roofing Screws</td><td class="mat-price" style="text-align:right;">Roof Area &times; Screw Density</td></tr>
+                  <tr><td>Silicone Sealant</td><td class="mat-price" style="text-align:right;">Roof Perimeter &divide; Coverage</td></tr>
+                </tbody>
+              </table>
+              <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;" class="mb-4">Purlins are computed by counting rows based on spacing and converting them into standard 6-meter lengths.</p>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">CEILING</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Ceiling Board</td><td class="mat-price" style="text-align:right;">Ceiling Area &divide; 2.88</td></tr>
+                  <tr><td>Metal Furring</td><td class="mat-price" style="text-align:right;">(Length &divide; 0.40) &times; (Width &divide; 3)</td></tr>
+                  <tr><td>Carrying Channel</td><td class="mat-price" style="text-align:right;">(Width &divide; 1.20) &times; (Length &divide; 6)</td></tr>
+                  <tr><td>Wall Angle</td><td class="mat-price" style="text-align:right;">Perimeter &divide; 3</td></tr>
+                  <tr><td>Blind Rivets</td><td class="mat-price" style="text-align:right;">Ceiling Boards &times; Standard Fasteners</td></tr>
+                </tbody>
+              </table>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">PAINTING</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used (Current System)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Primer</td><td class="mat-price" style="text-align:right;">(Wall Area &divide; 30) &times; 2</td></tr>
+                  <tr><td>Paint</td><td class="mat-price" style="text-align:right;">(Wall Area &divide; 30) &times; 2</td></tr>
+                  <tr><td>Concrete Putty</td><td class="mat-price" style="text-align:right;">Wall Area &divide; Coverage</td></tr>
+                  <tr><td>Sandpaper</td><td class="mat-price" style="text-align:right;">Wall Area &divide; Coverage</td></tr>
+                </tbody>
+              </table>
+              <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;" class="mb-4">The factor of 2 represents both wall sides and two coats in the current implementation.</p>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">PLUMBING</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>PVC Blue Pipe</td><td class="mat-price" style="text-align:right;">Pipe Layout Based on Fixtures</td></tr>
+                  <tr><td>PVC Orange Pipe</td><td class="mat-price" style="text-align:right;">Drain Layout</td></tr>
+                  <tr><td>Elbows</td><td class="mat-price" style="text-align:right;">Pipe Runs &times; Standard Factor</td></tr>
+                  <tr><td>Tee</td><td class="mat-price" style="text-align:right;">Fixture Branch Count</td></tr>
+                  <tr><td>Couplings</td><td class="mat-price" style="text-align:right;">Pipe Count &times; 0.30</td></tr>
+                  <tr><td>PVC Solvent Cement</td><td class="mat-price" style="text-align:right;">Pipe Count &divide; Standard Coverage</td></tr>
+                  <tr><td>Water Closet</td><td class="mat-price" style="text-align:right;">Bathroom Count</td></tr>
+                  <tr><td>Lavatory</td><td class="mat-price" style="text-align:right;">Bathroom Count</td></tr>
+                  <tr><td>Shower Head</td><td class="mat-price" style="text-align:right;">Bathroom Count</td></tr>
+                  <tr><td>Kitchen Sink</td><td class="mat-price" style="text-align:right;">Kitchen Count</td></tr>
+                </tbody>
+              </table>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">ELECTRICAL</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>LED Lights</td><td class="mat-price" style="text-align:right;">Floor Area &divide; 8 sqm</td></tr>
+                  <tr><td>Convenience Outlets</td><td class="mat-price" style="text-align:right;">Standard per Room Type</td></tr>
+                  <tr><td>Switches</td><td class="mat-price" style="text-align:right;">Based on Light Fixtures</td></tr>
+                  <tr><td>THHN 2.0</td><td class="mat-price" style="text-align:right;">Floor Area &times; Lighting Constant</td></tr>
+                  <tr><td>THHN 3.5</td><td class="mat-price" style="text-align:right;">Floor Area &times; Outlet Constant</td></tr>
+                  <tr><td>THHN 5.5</td><td class="mat-price" style="text-align:right;">Floor Area &times; Main Circuit Constant</td></tr>
+                  <tr><td>PVC Conduit</td><td class="mat-price" style="text-align:right;">Total Wire Length &times; 1.10</td></tr>
+                  <tr><td>Utility Box</td><td class="mat-price" style="text-align:right;">Outlet Count + Switch Count</td></tr>
+                  <tr><td>Panel Board</td><td class="mat-price" style="text-align:right;">Standard by House Type</td></tr>
+                  <tr><td>Circuit Breakers</td><td class="mat-price" style="text-align:right;">Circuit Count</td></tr>
+                </tbody>
+              </table>
+
+            </div>
+          </article>
+
+          <!-- 🌿 HALF AMAKAN HOUSE -->
+          <article class="formula-card">
+            <div class="formula-header">
+              <h3>🌿 HALF AMAKAN HOUSE</h3>
+              <span class="badge-tag">Lightweight Material</span>
+            </div>
+            <div class="formula-body">
+              
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">FOUNDATION & STRUCTURAL</h4>
+              <p style="color: var(--text-muted); font-size: 0.95rem;" class="mb-4">Same formulas as CHB House.</p>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">EXTERIOR WALL</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used (Current System)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Amakan Sheets</td><td class="mat-price" style="text-align:right;">Exterior Wall Area &divide; Sheet Coverage</td></tr>
+                  <tr><td>Coco Lumber</td><td class="mat-price" style="text-align:right;">Exterior Wall Perimeter &times; 2 Board Feet</td></tr>
+                  <tr><td>Assorted Nails</td><td class="mat-price" style="text-align:right;">Coco Lumber &times; Standard Factor</td></tr>
+                  <tr><td>Tie Wire</td><td class="mat-price" style="text-align:right;">Standard Fastener Factor</td></tr>
+                </tbody>
+              </table>
+              <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;" class="mb-4">The current implementation estimates framing using Perimeter &times; 2 board feet instead of calculating individual posts and rails.</p>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">INTERIOR WALL</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>CHB</td><td class="mat-price" style="text-align:right;">Wall Area &times; 12.5 &times; 1.05</td></tr>
+                  <tr><td>Mortar Cement</td><td class="mat-price" style="text-align:right;">Wall Area &times; 0.525</td></tr>
+                  <tr><td>Screened Sand</td><td class="mat-price" style="text-align:right;">Wall Area &times; 0.0438</td></tr>
+                  <tr><td>Plaster Cement</td><td class="mat-price" style="text-align:right;">(Wall Area &times; 2) &times; 0.288</td></tr>
+                </tbody>
+              </table>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">ROOF, CEILING, PAINT, PLUMBING & ELECTRICAL</h4>
+              <p style="color: var(--text-muted); font-size: 0.95rem;" class="mb-4">Same formulas as CHB House.</p>
+
+            </div>
+          </article>
+
+          <!-- 🏠 HALF METAL CLADDING HOUSE -->
+          <article class="formula-card">
+            <div class="formula-header">
+              <h3>🏠 HALF METAL CLADDING HOUSE</h3>
+              <span class="badge-tag">Lightweight Modern</span>
+            </div>
+            <div class="formula-body">
+              
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">FOUNDATION & STRUCTURAL</h4>
+              <p style="color: var(--text-muted); font-size: 0.95rem;" class="mb-4">Same formulas as CHB House.</p>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">EXTERIOR WALL</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used (Current System)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Metal Cladding Sheets</td><td class="mat-price" style="text-align:right;">Exterior Wall Area &divide; Effective Sheet Coverage</td></tr>
+                  <tr><td>Rectangular Tubes</td><td class="mat-price" style="text-align:right;">Exterior Wall Perimeter &divide; 1.5</td></tr>
+                  <tr><td>Self-Drilling Screws</td><td class="mat-price" style="text-align:right;">Cladding Area &times; Screw Density</td></tr>
+                  <tr><td>Silicone Sealant</td><td class="mat-price" style="text-align:right;">Panel Joints</td></tr>
+                </tbody>
+              </table>
+              <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;" class="mb-4">Uses the current system's 1.5-meter tube spacing for the exterior frame.</p>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">INTERIOR WALL</h4>
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>CHB</td><td class="mat-price" style="text-align:right;">Wall Area &times; 12.5 &times; 1.05</td></tr>
+                  <tr><td>Mortar Cement</td><td class="mat-price" style="text-align:right;">Wall Area &times; 0.525</td></tr>
+                  <tr><td>Screened Sand</td><td class="mat-price" style="text-align:right;">Wall Area &times; 0.0438</td></tr>
+                </tbody>
+              </table>
+
+              <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">ROOF, CEILING, PAINT, PLUMBING & ELECTRICAL</h4>
+              <p style="color: var(--text-muted); font-size: 0.95rem;" class="mb-4">Same formulas as CHB House.</p>
+
+            </div>
+          </article>
+
+          <!-- 🏢 TWO-STOREY HOUSE -->
+          <article class="formula-card">
+            <div class="formula-header">
+              <h3>🏢 TWO-STOREY HOUSE</h3>
+              <span class="badge-tag">Multi-Level</span>
+            </div>
+            <div class="formula-body">
+              
+              <p style="color: var(--text-muted); font-size: 0.95rem;" class="mb-4">Everything from the CHB House, plus:</p>
+
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Second Floor Slab</td><td class="mat-price" style="text-align:right;">Floor Area &times; 0.125</td></tr>
+                  <tr><td>Upper Columns</td><td class="mat-price" style="text-align:right;">Number of Columns &times; System Constants</td></tr>
+                  <tr><td>Roof Beams</td><td class="mat-price" style="text-align:right;">Number of Beams &times; System Constants</td></tr>
+                  <tr><td>Stairs</td><td class="mat-price" style="text-align:right;">Standard Stair Material Constants</td></tr>
+                  <tr><td>Upper Wall</td><td class="mat-price" style="text-align:right;">Wall Area &times; 12.5 &times; 1.05</td></tr>
+                </tbody>
+              </table>
+
+            </div>
+          </article>
+
+          <!-- 🏡 LOFT HOUSE -->
+          <article class="formula-card">
+            <div class="formula-header">
+              <h3>🏡 LOFT HOUSE</h3>
+              <span class="badge-tag">Partial Upper Level</span>
+            </div>
+            <div class="formula-body">
+              
+              <p style="color: var(--text-muted); font-size: 0.95rem;" class="mb-4">Everything from the CHB House, except:</p>
+
+              <table class="materials-ref-table mb-4">
+                <thead>
+                  <tr>
+                    <th style="width:40%">Material</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Loft Floor</td><td class="mat-price" style="text-align:right;">Loft Area &times; 0.125</td></tr>
+                  <tr><td>Loft Beams</td><td class="mat-price" style="text-align:right;">System Beam Constants</td></tr>
+                  <tr><td>Loft Columns</td><td class="mat-price" style="text-align:right;">System Column Constants</td></tr>
+                  <tr><td>Loft Stairs</td><td class="mat-price" style="text-align:right;">Standard Stair Material Constants</td></tr>
+                </tbody>
+              </table>
+
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- Materials Reference Section -->
+      <section class="materials-ref-section">
+        <div class="container">
+          <div class="section-heading">
+            <h2>Materials Reference</h2>
+            <p>All construction materials used in our estimation engine, with standard base prices.</p>
+          </div>
+
+          <div class="materials-category-grid">
+
+            <!-- Category 1: Structural / Masonry -->
+            <div class="materials-cat-card">
+              <div class="materials-cat-header">
+                <div class="cat-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                  </svg>
+                </div>
+                <h3>Structural / Masonry</h3>
+              </div>
+              <table class="materials-ref-table">
+                <thead>
+                  <tr>
+                    <th style="width:50%">Material</th>
+                    <th style="width:20%">Unit</th>
+                    <th style="width:30%; text-align:right;">Base Price (PHP)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>CHB 4-inch</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱19.50</td></tr>
+                  <tr><td>Cement (Mortar 40kg)</td><td><span class="mat-unit-badge">bags</span></td><td class="mat-price" style="text-align:right;">₱205.00</td></tr>
+                  <tr><td>Cement (Plastering 40kg)</td><td><span class="mat-unit-badge">bags</span></td><td class="mat-price" style="text-align:right;">₱235.00</td></tr>
+                  <tr><td>White Cement (Tile Grout)</td><td><span class="mat-unit-badge">kg</span></td><td class="mat-price" style="text-align:right;">₱27.50</td></tr>
+                  <tr><td>Screened Sand</td><td><span class="mat-unit-badge">cu.m.</span></td><td class="mat-price" style="text-align:right;">₱1,050.00</td></tr>
+                  <tr><td>Fine Sand</td><td><span class="mat-unit-badge">cu.m.</span></td><td class="mat-price" style="text-align:right;">₱1,175.00</td></tr>
+                  <tr><td>3/4 Gravel</td><td><span class="mat-unit-badge">cu.m.</span></td><td class="mat-price" style="text-align:right;">₱1,200.00</td></tr>
+                  <tr><td>16mm Deformed Bar (6m)</td><td><span class="mat-unit-badge">lengths</span></td><td class="mat-price" style="text-align:right;">₱360.00</td></tr>
+                  <tr><td>12mm Deformed Bar (6m)</td><td><span class="mat-unit-badge">lengths</span></td><td class="mat-price" style="text-align:right;">₱215.00</td></tr>
+                  <tr><td>10mm Deformed Bar (6m)</td><td><span class="mat-unit-badge">lengths</span></td><td class="mat-price" style="text-align:right;">₱143.00</td></tr>
+                  <tr><td>G.I. Tie Wire #16</td><td><span class="mat-unit-badge">kg</span></td><td class="mat-price" style="text-align:right;">₱74.00</td></tr>
+                  <tr><td>Phenolic Board 3/4"</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱1,190.00</td></tr>
+                  <tr><td>Coco Lumber</td><td><span class="mat-unit-badge">bd.ft.</span></td><td class="mat-price" style="text-align:right;">₱35.00</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Category 2: Walling / Light Framing -->
+            <div class="materials-cat-card">
+              <div class="materials-cat-header">
+                <div class="cat-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5zM1.5 1a.5.5 0 0 0-.5.5V7h6V1zm7 0v6h6V1.5a.5.5 0 0 0-.5-.5zm6 7h-6v6h4.5a.5.5 0 0 0 .5-.5zM7.5 15v-6h-6v4.5a.5.5 0 0 0 .5.5z"/>
+                  </svg>
+                </div>
+                <h3>Walling / Light Framing</h3>
+              </div>
+              <table class="materials-ref-table">
+                <thead>
+                  <tr>
+                    <th style="width:50%">Material</th>
+                    <th style="width:20%">Unit</th>
+                    <th style="width:30%; text-align:right;">Base Price (PHP)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Amakan Sheet (4×8 ft)</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱200.00</td></tr>
+                  <tr><td>Metal Cladding Sheet</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱735.00</td></tr>
+                  <tr><td>Rectangular Steel Tube 2×3×1.5mm (6m)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱628.00</td></tr>
+                  <tr><td>Fiber Cement Board / Hardiflex</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱1,012.00</td></tr>
+                  <tr><td>Gypsum Board</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱250.00</td></tr>
+                  <tr><td>PVC Board</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱1,750.00</td></tr>
+                  <tr><td>Marine Plywood</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱786.00</td></tr>
+                  <tr><td>Standard Plywood</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱747.00</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Category 3: Roofing -->
+            <div class="materials-cat-card">
+              <div class="materials-cat-header">
+                <div class="cat-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z"/>
+                    <path d="m8 3.293 6 6V13.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5V9.293z"/>
+                  </svg>
+                </div>
+                <h3>Roofing</h3>
+              </div>
+              <table class="materials-ref-table">
+                <thead>
+                  <tr>
+                    <th style="width:50%">Material</th>
+                    <th style="width:20%">Unit</th>
+                    <th style="width:30%; text-align:right;">Base Price (PHP)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Corrugated GI Sheet / Yero</td><td><span class="mat-unit-badge">kilo</span></td><td class="mat-price" style="text-align:right;">₱195.00</td></tr>
+                  <tr><td>Long Span Pre-Painted</td><td><span class="mat-unit-badge">lm</span></td><td class="mat-price" style="text-align:right;">₱344.00</td></tr>
+                  <tr><td>Color Roof Corrugated</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱946.00</td></tr>
+                  <tr><td>Spandrel Panel (PVC)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱268.00</td></tr>
+                  <tr><td>Polycarbonate Sheet</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱1,875.00</td></tr>
+                  <tr><td>Metal Stone-Coated Tile</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱1,496.00</td></tr>
+                  <tr><td>C-Purlin 75×50×15×2mm (6m)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱570.00</td></tr>
+                  <tr><td>C-Purlin 100×50×15×2mm (6m)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱650.00</td></tr>
+                  <tr><td>Ridge Roll / Ridge Cap</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱150.00</td></tr>
+                  <tr><td>Gutter / Eave Flashing (8ft)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱422.00</td></tr>
+                  <tr><td>Tekscrew (EPDM washer)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱4.75</td></tr>
+                  <tr><td>Rubber Washer (EPDM)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱3.00</td></tr>
+                  <tr><td>Silicone Sealant</td><td><span class="mat-unit-badge">tube</span></td><td class="mat-price" style="text-align:right;">₱117.00</td></tr>
+                  <tr><td>Roofing Screw</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱7.00</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Category 4: Finishes -->
+            <div class="materials-cat-card">
+              <div class="materials-cat-header">
+                <div class="cat-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M15.825.14A.5.5 0 0 1 16 .5v14a.5.5 0 0 1-.396.49l-5 1A.5.5 0 0 1 10 15.5V5H5v10.5a.5.5 0 0 1-.604.49l-5-1A.5.5 0 0 1 0 14.5v-14a.5.5 0 0 1 .396-.49l5-1a.5.5 0 0 1 .208 0l4.996 1 5-1a.5.5 0 0 1 .225.03z"/>
+                  </svg>
+                </div>
+                <h3>Finishes</h3>
+              </div>
+              <table class="materials-ref-table">
+                <thead>
+                  <tr>
+                    <th style="width:50%">Material</th>
+                    <th style="width:20%">Unit</th>
+                    <th style="width:30%; text-align:right;">Base Price (PHP)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Floor Tile – Small (7.5–15cm)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱65.00</td></tr>
+                  <tr><td>Floor Tile – Medium (20–30cm)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱100.00</td></tr>
+                  <tr><td>Floor Tile – Large (30–60 / 60×60)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱159.00</td></tr>
+                  <tr><td>Tile Adhesive (25kg bag)</td><td><span class="mat-unit-badge">bags</span></td><td class="mat-price" style="text-align:right;">₱340.00</td></tr>
+                  <tr><td>Concrete Primer</td><td><span class="mat-unit-badge">gal</span></td><td class="mat-price" style="text-align:right;">₱450.00</td></tr>
+                  <tr><td>Architectural Topcoat Paint</td><td><span class="mat-unit-badge">gal</span></td><td class="mat-price" style="text-align:right;">₱700.00</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Category 5: Ceiling -->
+            <div class="materials-cat-card">
+              <div class="materials-cat-header">
+                <div class="cat-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm8.5 9.5a.5.5 0 0 0-1 0v1a.5.5 0 0 0 1 0zm0-10a.5.5 0 0 0-1 0v1a.5.5 0 0 0 1 0zm5 5a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1zm-10 0a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1z"/>
+                  </svg>
+                </div>
+                <h3>Ceiling</h3>
+              </div>
+              <table class="materials-ref-table">
+                <thead>
+                  <tr>
+                    <th style="width:50%">Material</th>
+                    <th style="width:20%">Unit</th>
+                    <th style="width:30%; text-align:right;">Base Price (PHP)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Ceiling Board 3×6 Gypsum</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱250.00</td></tr>
+                  <tr><td>Fiber Cement Board (ceiling)</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱1,012.00</td></tr>
+                  <tr><td>PVC Board (ceiling)</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱1,750.00</td></tr>
+                  <tr><td>Wall Angle (3m)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱65.00</td></tr>
+                  <tr><td>Main Channel / Carrying Channel (3m)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱92.00</td></tr>
+                  <tr><td>Furring (3m)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱55.00</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Category 6: Handrail & Newel Post -->
+            <div class="materials-cat-card">
+              <div class="materials-cat-header">
+                <div class="cat-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H11a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 5 7h2.5V6A1.5 1.5 0 0 1 6 4.5zM8.5 5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5zM3 11.5A1.5 1.5 0 0 1 4.5 10h1A1.5 1.5 0 0 1 7 11.5v1A1.5 1.5 0 0 1 5.5 14h-1A1.5 1.5 0 0 1 3 12.5zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM9 11.5A1.5 1.5 0 0 1 10.5 10h1A1.5 1.5 0 0 1 13 11.5v1A1.5 1.5 0 0 1 11.5 14h-1A1.5 1.5 0 0 1 9 12.5zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z"/>
+                  </svg>
+                </div>
+                <h3>Handrail &amp; Newel Post</h3>
+              </div>
+              <table class="materials-ref-table">
+                <thead>
+                  <tr>
+                    <th style="width:50%">Material</th>
+                    <th style="width:20%">Unit</th>
+                    <th style="width:30%; text-align:right;">Base Price (PHP)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Handrail</td><td><span class="mat-unit-badge">lm</span></td><td class="mat-price" style="text-align:right;">₱450.00</td></tr>
+                  <tr><td>Newel Post</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱1,500.00</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div><!-- /.materials-category-grid -->
+
+          <p class="text-center mt-4" style="font-size:0.88rem; color:var(--text-muted);">
+            * Prices shown are standard base rates. Final costs are adjusted by the selected finish grade: <strong>Basic (×0.85)</strong>, <strong>Standard (×1.00)</strong>, or <strong>Premium (×1.20)</strong>.
+          </p>
+        </div>
+      </section>
+
+      <!-- Engineering Reference Section -->
+      <section class="eng-ref-section container">
+        <div class="section-heading">
+          <h2>Engineering Reference</h2>
+          <p>Our methodology is grounded in professional engineering standards.</p>
+        </div>
+        <div class="eng-card">
+          <div class="eng-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-award-fill" viewBox="0 0 16 16">
+              <path d="m8 0 1.669.864 1.858.282.842 1.68 1.337 1.32L13.4 6l.306 1.854-1.337 1.32-.842 1.68-1.858.282L8 12l-1.669-.864-1.858-.282-.842-1.68-1.337-1.32L2.6 6l-.306-1.854 1.337-1.32.842-1.68L6.331.864z"/>
+              <path d="M4 11.794V16l4-1 4 1v-4.206l-2.018.306L8 13.126 6.018 12.1z"/>
+            </svg>
+          </div>
+          <h3>[Engineer's Full Name]</h3>
+          <p class="title">[Professional Title]</p>
+          <div class="eng-details">
+            <p><strong>License / Registration No:</strong> <span>[0000000]</span></p>
+            <p><strong>Professional ID:</strong> <span>[PRC License / Equivalent]</span></p>
+            <p><strong>Specialization:</strong> <span>[e.g., Structural Engineering]</span></p>
+            <p><strong>Affiliation:</strong> <span>[Organization Name]</span></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Disclaimer Section -->
+      <section class="disclaimer-section container">
+        <div class="disclaimer-box">
+          <h3>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+              <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+            </svg>
+            Disclaimer
+          </h3>
+          <p>The formulas and methodologies utilized in BuildWise are based on universally accepted construction estimation principles and engineering references.</p>
+          <p>However, AI-generated estimates and material summaries are intended solely as <strong>preliminary planning tools</strong>. Environmental factors, soil conditions, local building codes, and material price fluctuations may significantly impact the final requirements.</p>
+          <p><strong>Final architectural plans, structural computations, and project budgets should always be thoroughly reviewed, verified, and approved by a licensed professional engineer or architect prior to the commencement of any construction activities.</strong></p>
+        </div>
+      </section>
+
+    </main>
+
+    <bw-footer base-path="../"></bw-footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../components/navbar.js"></script>
+    <script src="../components/footer.js"></script>
+  </body>
+</html>

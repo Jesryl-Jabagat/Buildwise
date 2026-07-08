@@ -19,7 +19,7 @@ export function getHalfMetalTemplate() {
           <div class="col-md-6"><label class="form-label" for="halfMetalLength">Length (m)</label><input class="form-control" id="halfMetalLength" name="length" type="number" min="1" step="0.5" value="5" required></div>
           <div class="col-md-6"><label class="form-label" for="halfMetalWidth">Width (m)</label><input class="form-control" id="halfMetalWidth" name="width" type="number" min="1" step="0.5" value="6" required></div>
           <div class="col-md-6"><label class="form-label" for="halfMetalBedrooms1F">Bedrooms (1F)</label><select class="form-select room-picker" id="halfMetalBedrooms1F" name="bedrooms1F"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-        <div class="col-md-6"><label class="form-label" for="halfMetalCrs1F">Number of CRs (1F)</label><select class="form-select" id="halfMetalCrs1F" name="crs1F"><option>1</option><option selected>1</option><option>3</option><option>4</option><option>5</option></select></div>
+        <div class="col-md-6"><label class="form-label" for="halfMetalCrs1F">Number of CRs (1F)</label><select class="form-select" id="halfMetalCrs1F" name="crs1F"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></div>
       </div></section>
 
       <section class="form-section"><div class="section-label"><span>3</span><div><h3>Walling and finishes</h3><p>CHB base height is fixed to the corrected engineer default.</p></div></div><div class="row g-3">

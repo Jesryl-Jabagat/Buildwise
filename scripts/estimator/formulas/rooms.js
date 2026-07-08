@@ -27,7 +27,7 @@ export function calcBedroomsTableA(count, wallingMaterialType) {
   return {
     chb: 178 * count,
     cement: 25 * count,
-    sand: 0.5 * count,
+    screenedSand: 0.5 * count,
     gravel: 0.9 * count,
     rebar16mm: 17 * count,
     rebar12mm: 31 * count,

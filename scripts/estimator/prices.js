@@ -54,6 +54,7 @@ export const PRICES = {
   "Floor Tile - Large (30-60 / 60x60)": { unit: "pcs", price: 159 },
   "Tile Adhesive (25kg bag)": { unit: "bags", price: 340 },
   "Concrete Primer": { unit: "gal", price: 450 },
+  "Concrete Putty": { unit: "gal", price: 350 },
   "Architectural Topcoat Paint": { unit: "gal", price: 700 },
 
   // Ceiling
@@ -63,16 +64,71 @@ export const PRICES = {
   "Wall Angle (3m)": { unit: "pcs", price: 65 },
   "Main Channel / Carrying Channel (3m)": { unit: "pcs", price: 92 },
   "Furring (3m)": { unit: "pcs", price: 55 },
+  "Blind Rivets (box)": { unit: "box", price: 250 },
+  "Foil Insulation (roll)": { unit: "roll", price: 1200 },
   
   // Handrail and newel post
-  "Handrail": { unit: "lm", price: 450 }, // Approximation since omitted from price list but exists in CR/stairs
-  "Newel Post": { unit: "pcs", price: 1500 }, // Approximation since omitted from price list but exists in CR/stairs
+  "Handrail": { unit: "lm", price: 450 },
+  "Newel Post": { unit: "pcs", price: 1500 },
+
+  // Structural Earthworks & Support
+  "Excavation / Backfill": { unit: "cu.m.", price: 350 },
+  "Soil Poisoning / Termite Treatment": { unit: "sq.m.", price: 150 },
+  "Formworks (Plywood & Lumber)": { unit: "sq.m.", price: 450 },
+  "Tie Wire #16": { unit: "kg", price: 75 },
+
+  // Doors & Windows
+  "Main Door (Solid Wood Slab)": { unit: "set", price: 4500 },
+  "Bedroom Door (Flush/Panel)": { unit: "set", price: 2500 },
+  "CR Door (PVC/Aluminum)": { unit: "set", price: 1800 },
+  "Door Jamb (Wood/Metal)": { unit: "set", price: 1200 },
+  "Lockset / Doorknob": { unit: "set", price: 650 },
+  "Door Hinges (pair)": { unit: "pair", price: 150 },
+  "Window Frame (Aluminum)": { unit: "lm", price: 350 },
+  "Window Glass Panel (sqm)": { unit: "sq.m.", price: 800 },
+
+  // Painting Accessories
+  "Paint Brush / Roller set": { unit: "set", price: 350 },
+  "Paint Thinner": { unit: "gal", price: 280 },
+  "Sandpaper / Masking Tape": { unit: "lot", price: 500 },
+
+  // Plumbing Materials
+  "PVC Orange Pipes 4\" (Sanitary)": { unit: "pcs", price: 350 },
+  "PVC Orange Pipes 2\" (Drainage)": { unit: "pcs", price: 150 },
+  "PPR Pipes 1/2\" (Water Supply)": { unit: "pcs", price: 180 },
+  "Sanitary Fittings (Orange)": { unit: "pcs", price: 40 },
+  "Water Supply Fittings (PPR)": { unit: "pcs", price: 30 },
+  "PVC Solvent / Teflon Tape": { unit: "lot", price: 150 },
+  "Water Closet (Standard flush)": { unit: "set", price: 4500 },
+  "Lavatory (Wall-hung/Pedestal)": { unit: "set", price: 2200 },
+  "Kitchen Sink (Stainless)": { unit: "set", price: 1800 },
+  "Shower Set (Head & Valve)": { unit: "set", price: 1200 },
+  "Faucets & Angle Valves": { unit: "pcs", price: 350 },
+  "Floor Drain (4x4 Stainless)": { unit: "pcs", price: 150 },
+  "Septic Tank Components (CHB/Cement)": { unit: "lot", price: 8500 },
+
+  // Electrical Materials
+  "PVC Electrical Conduit 1/2\"": { unit: "pcs", price: 75 },
+  "Flexible Hose 1/2\" (50m)": { unit: "roll", price: 400 },
+  "PVC Fittings & Boxes": { unit: "pcs", price: 25 },
+  "THHN Wire 2.0mm² (Lighting)": { unit: "box", price: 3200 },
+  "THHN Wire 3.5mm² (Outlets)": { unit: "box", price: 5000 },
+  "THHN Wire 5.5mm² (AC/Heater)": { unit: "box", price: 6500 },
+  "Switches (1-3 gang)": { unit: "set", price: 250 },
+  "Outlets (2-gang CO)": { unit: "set", price: 250 },
+  "Lighting (LED/Pinlights)": { unit: "pcs", price: 200 },
+  "Panel Board & Circuit Breakers": { unit: "set", price: 2500 },
+  "Electrical Tape": { unit: "roll", price: 50 }
 };
 
 export function getPrice(materialName, grade = "Standard") {
-  const item = PRICES[materialName];
+  let baseName = materialName;
+  if (materialName.startsWith("Architectural Topcoat Paint")) {
+    baseName = "Architectural Topcoat Paint";
+  }
+  const item = PRICES[baseName];
   if (!item) {
-    console.warn(`Price not found for material: ${materialName}`);
+    console.warn(`Price not found for material: ${baseName}`);
     return 0;
   }
   const multiplier = GRADE_MULTIPLIERS[grade] || 1.0;
@@ -80,8 +136,12 @@ export function getPrice(materialName, grade = "Standard") {
 }
 
 export function formatMaterialCost(name, qty, grade = "Standard") {
-  const item = PRICES[name] || { unit: "unit", price: 0 };
-  const unitCost = getPrice(name, grade);
+  let baseName = name;
+  if (name.startsWith("Architectural Topcoat Paint")) {
+    baseName = "Architectural Topcoat Paint";
+  }
+  const item = PRICES[baseName] || { unit: "unit", price: 0 };
+  const unitCost = getPrice(name, grade); // getPrice uses baseName internally now
   const total = qty * unitCost;
   return {
     name,

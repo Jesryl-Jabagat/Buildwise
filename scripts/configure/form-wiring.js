@@ -11,9 +11,11 @@ export function injectAdvancedModeToggle(form) {
   const sections = form.querySelectorAll('.form-section');
   if (sections.length === 0) return;
 
-  // Hide advanced sections (1 = advanced costing, 3 = finishes); show dims (2) and rooms (3)
+  // Hide only the finishes/tiling sections (index 3 and beyond) in basic mode.
+  // Sections 0 (shared costing — soil condition, material grade, roof type),
+  // 1 (dimensions), and 2 (rooms) are always shown.
   sections.forEach((sec, index) => {
-    if (index !== 1 && index !== 2) {
+    if (index >= 3) {
       sec.classList.add('advanced-setting');
       sec.style.display = 'none';
     }
@@ -65,6 +67,9 @@ export function wireToggleSwitches(form) {
     function sync() {
       hidden.value = checkbox.checked ? checkbox.dataset.on : checkbox.dataset.off;
       if (status) status.textContent = checkbox.checked ? "Yes" : "No";
+      // Dispatch a change event on the hidden input so FormData-based listeners
+      // (e.g. live-budget meter) immediately pick up the new value.
+      hidden.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
     checkbox.addEventListener("change", sync);
@@ -115,8 +120,15 @@ export function wireConditionalFields(form) {
   }
 
   form.querySelectorAll(".bw-toggle-input").forEach((checkbox) => {
+    // Run visibility update synchronously AFTER wireToggleSwitches has already
+    // updated the hidden input value (sync runs first, then this listener).
+    // Using setTimeout(0) ensured the hidden value was set before we read FormData.
+    // Now that wireToggleSwitches dispatches a change event on the hidden input,
+    // we need to avoid double-running; simply listen on the checkbox change.
     checkbox.addEventListener("change", () => {
-      setTimeout(updateVisibility, 0);
+      // Hidden input has already been updated by wireToggleSwitches at this point
+      // (same-tick synchronous handler). Run visibility update immediately.
+      updateVisibility();
     });
   });
 

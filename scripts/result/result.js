@@ -13,6 +13,7 @@ import {
   writeBudgetBars,
   writeMaterialsTable,
   writeConstructionPhases,
+  writeLaborBreakdown,
   setGeneratedImages,
 } from "./result-renderers.js";
 import { initRenderer } from "./renderer3d.js";
@@ -144,12 +145,32 @@ function setupResultPage() {
 
     writeBudgetBars(budgetRows, estimateData.summary.grandTotal);
 
+    // Budget Reconciliation Banner
+    if (estimateData.reconciliationNote) {
+      const reconcileBanner = document.getElementById("budget-reconciliation-banner");
+      if (reconcileBanner) {
+        reconcileBanner.style.display = "flex";
+        reconcileBanner.innerHTML = `
+          <span style="font-size:1.2rem; margin-right: 10px;">⚙️</span>
+          <div>
+            <strong>Auto-Adjusted to Fit Budget</strong><br>
+            <span style="font-size:0.88rem;">${estimateData.reconciliationNote}</span>
+          </div>`;
+      }
+    }
+
     // Forecasting
     if (estimateData.forecasting) {
       setText("workerCount", `${estimateData.forecasting.stats.workers} workers`);
       setText("buildDays",   `${estimateData.forecasting.stats.buildDays} days`);
       writeConstructionPhases(estimateData.forecasting.phases);
     }
+    
+    // Labor Breakdown
+    if (estimateData.summary && estimateData.summary.laborBreakdown) {
+      writeLaborBreakdown(estimateData.summary.laborBreakdown);
+    }
+
   }
 
   // Initialize 3D renderer
