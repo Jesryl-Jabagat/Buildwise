@@ -17,31 +17,50 @@ const configs = {
 function generateTimelineAndLabor(laborCost, floorArea) {
   const avgWage = 650;
   const totalManDays = Math.ceil(laborCost / avgWage);
-  let crewSize = 3;
-  if (floorArea >= 30 && floorArea < 60) crewSize = 4;
-  else if (floorArea >= 60 && floorArea < 100) crewSize = 5;
-  else if (floorArea >= 100) crewSize = 6;
-  const buildDays = Math.max(7, Math.ceil(totalManDays / crewSize));
   
-  const phases = [
-    { name: "Phase 1: Foundation & Masonry", days: Math.max(2, Math.ceil(buildDays * 0.20)), workers: crewSize },
-    { name: "Phase 2: Structural Framing & Walling", days: Math.max(2, Math.ceil(buildDays * 0.30)), workers: crewSize },
-    { name: "Phase 3: Roofing & Ceiling", days: Math.max(1, Math.ceil(buildDays * 0.20)), workers: crewSize },
-    { name: "Phase 4: Finishes & Tiling", days: Math.max(1, Math.ceil(buildDays * 0.20)), workers: crewSize },
-    { name: "Phase 5: Plumbing, Elec. & Turnover", days: Math.max(1, Math.floor(buildDays * 0.10)), workers: crewSize }
+  // Base crew size determined by floor area
+  let baseCrew = 3;
+  if (floorArea >= 30 && floorArea < 60) baseCrew = 4;
+  else if (floorArea >= 60 && floorArea < 100) baseCrew = 5;
+  else if (floorArea >= 100) baseCrew = 6;
+  
+  // Define realistic crew fluctuations and man-day allocations per phase
+  // Heavy structural phases need more hands, finishing phases need fewer specialized hands.
+  const phaseLogic = [
+    { name: "Phase 1: Foundation & Masonry",        pct: 0.20, crew: baseCrew + 1, delay: 14, delayNote: "curing & inspection" },
+    { name: "Phase 2: Structural Framing & Walling",pct: 0.35, crew: baseCrew + 1, delay: 21, delayNote: "slab curing & inspection" },
+    { name: "Phase 3: Roofing & Ceiling",           pct: 0.15, crew: Math.max(3, baseCrew - 1), delay: 7, delayNote: "inspection" },
+    { name: "Phase 4: Finishes & Tiling",           pct: 0.20, crew: Math.max(2, baseCrew - 1), delay: 7, delayNote: "drying & inspection" },
+    { name: "Phase 5: Plumbing, Elec. & Turnover",  pct: 0.10, crew: Math.max(2, baseCrew - 2), delay: 7, delayNote: "final inspection" }
   ];
-  return { stats: { workers: crewSize, buildDays: buildDays }, phases: phases };
+  
+  let totalBuildDays = 0;
+  const phases = phaseLogic.map(p => {
+    const manDaysForPhase = totalManDays * p.pct;
+    const activeDays = Math.max(1, Math.ceil(manDaysForPhase / p.crew));
+    const totalDays = activeDays + (p.delay || 0);
+    
+    totalBuildDays += totalDays;
+    
+    const displayName = p.delay ? `${p.name} (incl. ${p.delay}d ${p.delayNote})` : p.name;
+    
+    return { name: displayName, days: totalDays, workers: p.crew };
+  });
+
+  return { 
+    stats: { workers: `${Math.max(2, baseCrew - 2)}-${baseCrew + 1}`, buildDays: totalBuildDays }, 
+    phases: phases 
+  };
 }
 
 const KEY_MAP = {
-  cement: "Cement (Mortar 40kg)",
+  cement: "Cement (Mortar 40kg) (Holcim/Republic)",
   screenedSand: "Screened Sand",
   fineSand: "Fine Sand",
   gravel: "3/4 Gravel",
   rebar16mm: "16mm Deformed Bar (6m)",
   rebar12mm: "12mm Deformed Bar (6m)",
   rebar10mm: "10mm Deformed Bar (6m)",
-  tieWire: "G.I. Tie Wire #16",
   chb: "CHB 4-inch",
   amakanSheets: "Amakan Sheet (4x8 ft)",
   metalCladdingSheets: "Metal Cladding Sheet",
@@ -52,26 +71,58 @@ const KEY_MAP = {
   wallAngles: "Wall Angle (3m)",
   channels: "Main Channel / Carrying Channel (3m)",
   furring: "Furring (3m)",
-  mortarCement: "Cement (Mortar 40kg)",
+  mortarCement: "Cement (Mortar 40kg) (Holcim/Republic)",
   whiteCement: "White Cement (Tile Grout)",
   tileAdhesive: "Tile Adhesive (25kg bag)",
-  primer: "Concrete Primer",
-  topcoat: "Architectural Topcoat Paint",
-  plasterCement: "Cement (Plastering 40kg)",
+  primer: "Concrete Primer (Boysen/Davies)",
+  topcoat: "Architectural Topcoat Paint", // handled dynamically below
+  plasterCement: "Cement (Plastering 40kg) (Holcim/Republic)",
   handrail: "Handrail",
   newelPost: "Newel Post",
   phenolicBoard: "Phenolic Board 3/4\"",
   stairCocoLumber: "Coco Lumber",
   stairAdhesive: "Tile Adhesive (25kg bag)",
   stairGrout: "White Cement (Tile Grout)",
-  stairTiles: "Floor Tile - Large (30-60 / 60x60)"
+  stairTiles: "Floor Tile - Large (30-60 / 60x60)",
+  concretePutty: "Concrete Putty",
+  paintAccessories: "Paint Brush / Roller set",
+  paintThinner: "Paint Thinner",
+  sandpaper: "Sandpaper / Masking Tape",
+  roofingScrews: "Roofing Screw",
+  siliconeSealant: "Silicone Sealant"
+};
+
+// Also map exact returned keys to add brands
+const BRAND_MAP = {
+  "Architectural Topcoat Paint": " (Boysen/Davies)",
+  "PVC Orange Pipes 4\" (Sanitary)": " (Neltex/Emerald)",
+  "PVC Orange Pipes 2\" (Drainage)": " (Neltex/Emerald)",
+  "PPR Pipes 1/2\" (Water Supply)": " (Neltex/Emerald)",
+  "Water Closet (Standard flush)": " (HCG/American Standard)",
+  "Lavatory (Wall-hung/Pedestal)": " (HCG/American Standard)",
+  "PVC Electrical Conduit 1/2\"": " (Neltex/Emerald)",
+  "Flexible Hose 1/2\" (50m)": " (Neltex/Emerald)",
+  "THHN Wire 2.0mm² (Lighting)": " (Phelps Dodge/Philflex/Royu)",
+  "THHN Wire 3.5mm² (Outlets)": " (Phelps Dodge/Philflex/Royu)",
+  "THHN Wire 5.5mm² (AC/Heater)": " (Phelps Dodge/Philflex/Royu)",
+  "Switches (1-3 gang)": " (Royu/Omni/Panasonic)",
+  "Outlets (2-gang CO)": " (Royu/Omni/Panasonic)",
+  "Panel Board & Circuit Breakers": " (Royu/GE)",
+  "Floor Tile - Small (7.5-15cm)": " (Mariwasa/Eurotiles)",
+  "Floor Tile - Medium (20-30cm)": " (Mariwasa/Eurotiles)",
+  "Floor Tile - Large (30-60 / 60x60)": " (Mariwasa/Eurotiles)",
+  "Fiber Cement Board (ceiling)": " (Hardiflex/James Hardie)",
+  "Corrugated GI Sheet / Yero": " (ColorSteel/Union Galvasteel)",
+  "Long Span Pre-Painted": " (ColorSteel/Union Galvasteel)",
+  "Color Roof Corrugated": " (ColorSteel/Union Galvasteel)",
+  "Metal Stone-Coated Tile": " (ColorSteel/Union Galvasteel)"
 };
 
 function getRoofName(rt) {
   const s = String(rt || "").toLowerCase();
+  if (s.includes("color") || s === "3") return "Color Roof Corrugated";
   if (s.includes("corrugated") || s === "1") return "Corrugated GI Sheet / Yero";
   if (s.includes("long") || s === "2") return "Long Span Pre-Painted";
-  if (s.includes("color") || s === "3") return "Color Roof Corrugated";
   if (s.includes("spandrel") || s === "4") return "Spandrel Panel (PVC)";
   if (s.includes("poly") || s === "5") return "Polycarbonate Sheet";
   if (s.includes("stone") || s === "7") return "Metal Stone-Coated Tile";
@@ -94,11 +145,13 @@ function getBoardName(bt) {
 }
 
 function getCategory(key) {
-  if (["cement", "screenedSand", "fineSand", "gravel", "rebar16mm", "rebar12mm", "rebar10mm", "tieWire"].includes(key)) return "Foundation & Structure";
+  if (["cement", "screenedSand", "fineSand", "gravel", "rebar16mm", "rebar12mm", "rebar10mm", "tieWire", "Excavation / Backfill", "Soil Poisoning / Termite Treatment", "Formworks (Plywood & Lumber)", "Tie Wire #16"].includes(key)) return "Foundation & Structure";
   if (["chb", "amakanSheets", "metalCladdingSheets", "cocoLumber", "rectTube"].includes(key)) return "Walling";
-  if (["cPurlins", "ridgeCaps", "roofSheets", "roofLM"].includes(key)) return "Roofing";
+  if (["cPurlins", "ridgeCaps", "roofSheets", "roofLM", "roofingScrews", "siliconeSealant"].includes(key)) return "Roofing";
   if (["handrail", "newelPost", "phenolicBoard", "stairCocoLumber", "stairTiles", "stairAdhesive", "stairGrout"].includes(key)) return "Stairs";
-  return "Finishes";
+  if (["Main Door (Solid Wood Slab)", "Bedroom Door (Flush/Panel)", "CR Door (PVC/Aluminum)", "Door Jamb (Wood/Metal)", "Lockset / Doorknob", "Door Hinges (pair)", "Window Frame (Aluminum)", "Window Glass Panel (sqm)"].includes(key)) return "Doors & Windows";
+  if (["PVC Orange Pipes 4\" (Sanitary)", "PVC Orange Pipes 2\" (Drainage)", "PPR Pipes 1/2\" (Water Supply)", "Sanitary Fittings (Orange)", "Water Supply Fittings (PPR)", "PVC Solvent / Teflon Tape", "Water Closet (Standard flush)", "Lavatory (Wall-hung/Pedestal)", "Kitchen Sink (Stainless)", "Shower Set (Head & Valve)", "Faucets & Angle Valves", "Floor Drain (4x4 Stainless)", "Septic Tank Components (CHB/Cement)", "PVC Electrical Conduit 1/2\"", "Flexible Hose 1/2\" (50m)", "PVC Fittings & Boxes", "THHN Wire 2.0mm² (Lighting)", "THHN Wire 3.5mm² (Outlets)", "THHN Wire 5.5mm² (AC/Heater)", "Switches (1-3 gang)", "Outlets (2-gang CO)", "Lighting (LED/Pinlights)", "Panel Board & Circuit Breakers", "Electrical Tape"].includes(key)) return "Phase 5: Plumbing, Elec. & Turnover";
+  return "Finishes"; // Default for tiles, paint, ceiling
 }
 
 export function generateEstimate(data) {
@@ -111,70 +164,138 @@ export function generateEstimate(data) {
   if (typeof rawQuantities === "string") {
     return { error: rawQuantities };
   }
-  
-  let formattedCategories = [];
-  let totalMaterialsCost = 0;
-  
-  const catMap = {
-    "Foundation & Structure": [],
-    "Walling": [],
-    "Roofing": [],
-    "Stairs": [],
-    "Finishes": []
-  };
 
-  for (const [key, qty] of Object.entries(rawQuantities)) {
-    if (!qty || qty <= 0) continue;
-    
-    let priceName = KEY_MAP[key];
-    if (key === "roofSheets" || key === "roofLM") priceName = getRoofName(data.roofType);
-    if (key === "tiles") priceName = getTileName(data.tileSize);
-    if (key === "boards") priceName = getBoardName(data.boardType);
+  // ── Helper: build formatted categories from a quantities map ──────────────
+  function buildCategories(quantities) {
+    let formattedCategories = [];
+    let totalMaterialsCost = 0;
 
-    if (!priceName) {
-      console.warn(`No price mapping for ${key}`);
-      continue;
+    const catMap = {
+      "Foundation & Structure": [],
+      "Walling": [],
+      "Roofing": [],
+      "Stairs": [],
+      "Doors & Windows": [],
+      "Finishes": [],
+      "Phase 5: Plumbing, Elec. & Turnover": []
+    };
+
+    for (const [key, qty] of Object.entries(quantities)) {
+      if (!qty || qty <= 0) continue;
+
+      let priceName = KEY_MAP[key] || key;
+      if (key === "roofSheets" || key === "roofLM") priceName = getRoofName(data.roofType);
+      if (key === "tiles") priceName = getTileName(data.tileSize);
+      if (key === "boards") priceName = getBoardName(data.boardType);
+      let theme = "";
+      if (key === "topcoat") {
+        theme = data.paintColorTheme || data.paintColorThemeGround || data.paintColorThemeSecond || "Classic White & Off-White";
+        priceName = `Architectural Topcoat Paint (${theme.split(" - ")[0]})`;
+      }
+      if (key === "primer") {
+        priceName = `Concrete Primer`;
+      }
+
+      if (!priceName) {
+        console.warn(`No price mapping for ${key}`);
+        continue;
+      }
+
+      const priced = formatMaterialCost(priceName, Math.round(qty * 100) / 100, grade);
+      
+      // Apply color tint multiplier
+      if (key === "topcoat" && theme) {
+        let tintMult = 1.0;
+        const t = theme.toLowerCase();
+        if (t.includes("cream") || t.includes("cool") || t.includes("pastel")) tintMult = 1.15;
+        if (t.includes("earth") || t.includes("tropical") || t.includes("minimalist")) tintMult = 1.30;
+        
+        priced.unitCost = priced.unitCost * tintMult;
+        priced.total = priced.qty * priced.unitCost;
+      }
+      
+      // Append specific brands if available
+      let baseForBrand = priceName;
+      if (priceName.startsWith("Architectural Topcoat Paint")) baseForBrand = "Architectural Topcoat Paint";
+      if (BRAND_MAP[baseForBrand]) {
+        priced.name += BRAND_MAP[baseForBrand];
+      }
+
+      catMap[getCategory(key)].push(priced);
     }
 
-    const priced = formatMaterialCost(priceName, Math.round(qty * 100) / 100, grade);
-    catMap[getCategory(key)].push(priced);
+    for (const [catName, items] of Object.entries(catMap)) {
+      if (items.length > 0) {
+        const catTotal = items.reduce((acc, curr) => acc + curr.total, 0);
+        formattedCategories.push({
+          category: catName,
+          items: items,
+          total: catTotal
+        });
+        totalMaterialsCost += catTotal;
+      }
+    }
+
+    return { formattedCategories, totalMaterialsCost };
   }
 
-  for (const [catName, items] of Object.entries(catMap)) {
-    if (items.length > 0) {
-      const catTotal = items.reduce((acc, curr) => acc + curr.total, 0);
-      formattedCategories.push({
-        category: catName,
-        items: items,
-        total: catTotal
-      });
-      totalMaterialsCost += catTotal;
-    }
-  }
+  // ── First-pass estimate ────────────────────────────────────────────────────
+  let { formattedCategories, totalMaterialsCost } = buildCategories(rawQuantities);
 
   let laborMultiplier = 0;
   if (typeKey === "half-amakan" || typeKey === "half-metal") {
-    laborMultiplier = 0.30; // Dropped for budget optimization
+    laborMultiplier = 0.30;
   } else if (typeKey === "chb") {
     laborMultiplier = 0.45;
   } else if (typeKey === "loft" || typeKey === "two-storey") {
     laborMultiplier = 0.50;
   } else {
-    laborMultiplier = 0.45; // Default fallback
+    laborMultiplier = 0.45;
   }
-  
-  const laborEstimate = totalMaterialsCost * laborMultiplier;
-  const subTotal = totalMaterialsCost + laborEstimate;
-  
+
   let contingencyMultiplier = 0.10;
   if (typeKey === "half-amakan" || typeKey === "half-metal") {
-    contingencyMultiplier = 0.05; // Tighter contingency for budget
+    contingencyMultiplier = 0.05;
   }
-  
-  const contingency = subTotal * contingencyMultiplier;
-  const grandTotal = subTotal + contingency;
 
-  const budgetInput = data.budget || 0;
+  let laborEstimate = totalMaterialsCost * laborMultiplier;
+
+  // Calculate detailed labor breakdown based on standard DOLE regional wages
+  const laborRoles = [
+    { role: "Foreman / Lead", wage: 850, pct: 0.08 },
+    { role: "Lead Mason", wage: 700, pct: 0.20 },
+    { role: "Lead Carpenter", wage: 700, pct: 0.15 },
+    { role: "Electrician", wage: 750, pct: 0.05 },
+    { role: "Plumber", wage: 750, pct: 0.05 },
+    { role: "Tile Setter", wage: 750, pct: 0.08 },
+    { role: "Painter", wage: 700, pct: 0.05 },
+    { role: "Helper / Ordinary Laborer", wage: 500, pct: 0.34 }
+  ];
+
+  let laborBreakdown = laborRoles.map(r => {
+    const allocatedCost = laborEstimate * r.pct;
+    const days = Math.max(1, Math.ceil(allocatedCost / r.wage));
+    return {
+      role: r.role,
+      dailyWage: r.wage,
+      days: days,
+      total: days * r.wage
+    };
+  });
+
+  // Recalculate laborEstimate exactly from the breakdown
+  laborEstimate = laborBreakdown.reduce((sum, r) => sum + r.total, 0);
+
+  let subTotal = totalMaterialsCost + laborEstimate;
+  let contingency = subTotal * contingencyMultiplier;
+  let grandTotal = subTotal + contingency;
+
+  // ── Budget Reconciliation Pass ─────────────────────────────────────────────
+  // (Removed maximum limit constraint as requested by the user)
+  const budgetInput = Number(data.budget) || 0;
+  let reconciliationNote = null;
+
+  // ── Feasibility Status ─────────────────────────────────────────────────────
   let feasibility = { status: "", message: "" };
 
   if (budgetInput > 0) {
@@ -198,10 +319,13 @@ export function generateEstimate(data) {
     summary: {
       totalMaterials: totalMaterialsCost,
       laborEstimate: laborEstimate,
+      laborBreakdown: laborBreakdown,
       contingency: contingency,
       grandTotal: grandTotal
     },
     feasibility,
-    forecasting
+    forecasting,
+    reconciliationNote,
   };
 }
+

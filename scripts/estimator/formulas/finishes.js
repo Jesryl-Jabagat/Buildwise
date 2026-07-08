@@ -13,7 +13,11 @@ export function calcPainting(wallArea) {
   // 30 sqm/gal coverage. Factor of 2 accounts for both sides and 2 coats.
   return {
     primer: Math.ceil((wallArea / 30) * 2),
-    topcoat: Math.ceil((wallArea / 30) * 2)
+    topcoat: Math.ceil((wallArea / 30) * 2),
+    concretePutty: Math.ceil(wallArea / 25),
+    paintAccessories: Math.ceil(wallArea / 100) || 1,
+    paintThinner: Math.ceil((wallArea / 30) * 0.5),
+    sandpaper: Math.ceil(wallArea / 50) || 1
   };
 }
 
@@ -51,10 +55,12 @@ export function calcTiling(area, tileSizeStr, breakageAllowance = 5) {
 export function calcCeiling(ceilingArea, length, width, wastage = 5) {
   if (ceilingArea <= 0) return {};
   const areaWithWastage = ceilingArea * (1 + wastage / 100);
+  const boards = Math.ceil(areaWithWastage / 2.88);
   return {
-    boards: Math.ceil(areaWithWastage / 2.88),
+    boards: boards,
     wallAngles: Math.ceil(((length + width) * 2) / 3),
     channels: Math.ceil(width / 1.2) * Math.ceil(length / 6),
-    furring: Math.ceil(length / 0.4) * Math.ceil(width / 3)
+    furring: Math.ceil(length / 0.4) * Math.ceil(width / 3),
+    "Foil Insulation (roll)": Math.ceil(ceilingArea / 50) // Assuming 50sqm per roll
   };
 }

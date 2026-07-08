@@ -22,6 +22,7 @@ import {
 } from './form-wiring.js';
 
 import { wireFormSubmit } from './form-validation.js';
+import { initLiveBudgetMeter } from './live-budget.js';
 
 /* --- Template Registry ------------------------------------- */
 
@@ -73,6 +74,10 @@ function setupConfigPage() {
   wireCustomPaintInput(form);
   wireFormSubmit(form);
 
+  // Initialize real-time live budget meter
+  const setupDataForMeter = JSON.parse(localStorage.getItem('buildwiseSetup') || '{}')
+  initLiveBudgetMeter(form, typeKey, setupDataForMeter);
+
   // Check if we are in AI mode
   const setupDataStr = localStorage.getItem('buildwiseSetup');
   if (setupDataStr) {
@@ -87,9 +92,15 @@ function setupConfigPage() {
     }
     
     if (setupData.mode === 'ai') {
+      const isAnalyzingPage = window.location.pathname.includes('analyzing.html');
+      
       // Import the AI module and start it
       import('./ai-suggest.js').then(module => {
-        module.startAiBuilder(form, typeKey, setupData);
+        if (isAnalyzingPage) {
+          module.startAiAnalyzing(form, typeKey, setupData);
+        } else {
+          module.startAiBuilder(form, typeKey, setupData);
+        }
         
         // Prevent AI from running again if the user navigates back (Edit Choices)
         setupData.mode = 'manual';

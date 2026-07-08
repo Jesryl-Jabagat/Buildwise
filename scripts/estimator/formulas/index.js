@@ -4,8 +4,22 @@
      import * as F from '../formulas/index.js';
    ============================================================ */
 
-export * from './structural.js';
+export {
+  calcGlobalDerived,
+  calcFootingsAndColumns1Storey,
+  calcFootingsAndColumns2Storey,
+  calcColumns2Storey2F,
+  calcBeams1Storey,
+  calcBeams2Storey,
+  calcGroundSlab,
+  calcLightweightSlab,
+  calcUpperSlab,
+  calcEarthworks,
+  calcFormworks
+} from './structural.js';
 export * from './walling.js';
 export * from './roofing.js';
 export * from './rooms.js';
 export * from './finishes.js';
+export * from './mepf.js';
+export * from './doors_windows.js';

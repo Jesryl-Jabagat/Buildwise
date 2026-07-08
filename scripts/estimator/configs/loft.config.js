@@ -49,5 +49,16 @@ export function estimate(data) {
   if (data.applyTilesSecond && floor2Area > 0) sections.push(F.calcTiling(floor2Area, data.tileSize || "60x60", data.tileBreakage || 5));
   if (data.hasCeiling) sections.push(F.calcCeiling(D.floorArea, L, W, data.ceilingWastage || 5));
 
+  // Add the new MEPF and structural calculations
+  sections.push(F.calcEarthworks(D.floorArea, D.totalWallLength));
+  sections.push(F.calcFormworks(D.floorArea));
+  
+  const totalBeds = (data.bedrooms || 0) + (data.bedrooms1F || 0) + (data.bedrooms2F || 0);
+  const totalCRs = (data.crs || data.bathrooms || 0) + (data.crs1F || 0) + (data.crs2F || 0);
+  
+  sections.push(F.calcDoorsAndWindows(totalBeds, totalCRs));
+  sections.push(F.calcPlumbing(totalCRs, 1)); // Assuming 1 kitchen
+  sections.push(F.calcElectrical(D.floorArea + floor2Area, totalBeds, totalCRs));
+
   return sumObjects(...sections);
 }

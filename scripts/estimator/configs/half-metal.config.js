@@ -18,6 +18,8 @@ export function estimate(data) {
   sections.push(F.calcLightweightSlab(D.floorArea));
   
   const chbBase = F.calcHalfCHBWalls(L, W, chbBaseWallHeight);
+  const chbWallArea = chbBase.chbWallArea;
+  delete chbBase.chbWallArea;
   sections.push(chbBase);
   sections.push(F.calcLightWalls(L, W, lightWallHeight, "metalCladding"));
   
@@ -28,10 +30,18 @@ export function estimate(data) {
 
   // For budget metal cladding, default to no finishes unless explicitly requested by a higher grade
   const isRaw = data.materialGrade === "Basic" || !data.materialGrade;
-  if (data.includePlastering && !isRaw) sections.push(F.calcPlastering(chbBase.chbWallArea));
-  if (data.includePainting && !isRaw) sections.push(F.calcPainting(chbBase.chbWallArea));
-  if (data.applyTilesGround && !isRaw) sections.push(F.calcTiling(D.floorArea, data.tileSize || "60x60", data.tileBreakage || 5));
-  if (data.hasCeiling && !isRaw) sections.push(F.calcCeiling(D.floorArea, L, W, data.ceilingWastage || 5));
+  if (data.includePlastering && !isRaw) sections.push(F.calcPlastering(chbWallArea));
+  if (data.includePainting && !isRaw) sections.push(F.calcPainting(chbWallArea));
+  if (data.applyTilesGround) sections.push(F.calcTiling(D.floorArea, data.tileSize || "60x60", data.tileBreakage || 5));
+  if (data.hasCeiling) sections.push(F.calcCeiling(D.floorArea, L, W, data.ceilingWastage || 5));
+
+  sections.push(F.calcEarthworks(D.floorArea, D.totalWallLength));
+  sections.push(F.calcFormworks(D.floorArea));
+  const totalBeds = data.bedrooms || 0;
+  const totalCRs = data.bathrooms || data.crs || 0;
+  sections.push(F.calcDoorsAndWindows(totalBeds, totalCRs));
+  sections.push(F.calcPlumbing(totalCRs, 1));
+  sections.push(F.calcElectrical(D.floorArea, totalBeds, totalCRs));
 
   return sumObjects(...sections);
 }

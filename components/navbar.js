@@ -22,8 +22,8 @@ class BuildWiseNavbar extends HTMLElement {
             <span class="hamburger-line"></span>
           </button>
           <div class="bw-nav-links">
-            <a href="${basePath}">How it Works</a>
-            <a href="${basePath}">About</a>
+            <a href="${basePath}pages/how-it-works.html">How it Works</a>
+            <a href="${basePath}pages/about.html">About</a>
           </div>
         </nav>
       </header>

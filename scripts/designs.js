@@ -25,6 +25,12 @@ document.addEventListener("DOMContentLoaded", () => {
       ? `<div style="position:absolute; top:10px; right:10px; background:#e8f5e9; color:#2e7d32; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; border:1px solid #c8e6c9;">✨ Rule-Based AI Pick</div>`
       : '';
       
+    // Check mode
+    const mode = setupDataStr ? JSON.parse(setupDataStr).mode : 'manual';
+    
+    // Determine the target URL based on mode
+    const targetUrl = mode === 'ai' ? `analyzing.html?type=${key}` : `configure.html?type=${key}`;
+    
     html += `
       <div class="col-md-4" style="position:relative;">
         <div class="model-card" style="${cardStyle}">
@@ -33,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <span class="model-card-body">
             <strong>${data.title}</strong>
             <span>${data.description}</span>
-            ${isAllowed ? `<a href="configure.html?type=${key}" class="btn btn-sm btn-dark mt-2" style="position:relative; z-index:2;">CONFIGURE</a>` : `<span class="text-danger small mt-2 d-block">Requires min. ₱${data.minBudget.toLocaleString()}</span>`}
+            ${isAllowed ? `<a href="${targetUrl}" class="btn btn-sm btn-dark mt-2" style="position:relative; z-index:2;">CONFIGURE</a>` : `<span class="text-danger small mt-2 d-block">Requires min. ₱${data.minBudget.toLocaleString()}</span>`}
           </span>
         </div>
       </div>

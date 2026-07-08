@@ -46,7 +46,44 @@ function setupConfigPage() {
   wireFloorAreaDisplay(form);
   wireBudgetInput(form);
   wireCustomPaintInput(form);
+  wireRoomConstraints(form);
   wireFormSubmit(form);
+}
+
+function wireRoomConstraints(form) {
+  function enforceConstraints() {
+    ['1F', '2F'].forEach(floor => {
+      const bedSelect = form.querySelector(`select[name="bedrooms${floor}"]`);
+      const crSelect = form.querySelector(`select[name="crs${floor}"]`);
+      if (!bedSelect || !crSelect) return;
+
+      const beds = parseInt(bedSelect.value) || 0;
+      // Max CRs = 1 (Common) + 1 En-suite per Bedroom
+      const maxCRs = beds + 1;
+      
+      let currentCrVal = parseInt(crSelect.value) || 0;
+      if (currentCrVal > maxCRs) {
+        crSelect.value = maxCRs;
+        alert(`Reduced ${floor} Comfort Rooms to ${maxCRs} because there are only ${beds} bedroom(s). Max CRs allowed is 1 Common + 1 per Bedroom.`);
+      }
+
+      // Disable options that are > maxCRs
+      Array.from(crSelect.options).forEach(opt => {
+        const val = parseInt(opt.value) || 0;
+        opt.disabled = val > maxCRs;
+      });
+    });
+  }
+
+  form.addEventListener('change', (e) => {
+    const target = e.target;
+    if (target.tagName === 'SELECT' && (target.name.startsWith('bedrooms') || target.name.startsWith('crs'))) {
+      enforceConstraints();
+    }
+  });
+
+  // Run initially
+  setTimeout(enforceConstraints, 0);
 }
 
 function injectAdvancedModeToggle(form) {

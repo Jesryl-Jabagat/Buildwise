@@ -38,8 +38,7 @@ export function calcFootingsAndColumns1Storey(numCols, soilMultiplier) {
     cement: (footingCement + columnCement) * soilMultiplier,
     screenedSand: (footingSand + columnSand) * soilMultiplier,
     gravel: (footingGravel + columnGravel) * soilMultiplier,
-    rebar10mm: footingRebar10mm + columnRebar10mm,
-    tieWire: footingTieWire + columnTieWire
+    rebar10mm: footingRebar10mm + columnRebar10mm
   };
 }
 
@@ -64,8 +63,7 @@ export function calcFootingsAndColumns2Storey(numCols, soilMultiplier) {
     screenedSand: (footingSand + columnSand) * soilMultiplier,
     gravel: (footingGravel + columnGravel) * soilMultiplier,
     rebar16mm: footingRebar16mm + columnRebar16mm,
-    rebar12mm: columnRebar12mm,
-    tieWire: footingTieWire + columnTieWire
+    rebar12mm: columnRebar12mm
   };
 }
 
@@ -83,8 +81,7 @@ export function calcColumns2Storey2F(numCols, soilMultiplier) {
     screenedSand: columnSand * soilMultiplier,
     gravel: columnGravel * soilMultiplier,
     rebar16mm: columnRebar16mm,
-    rebar12mm: columnRebar12mm,
-    tieWire: columnTieWire
+    rebar12mm: columnRebar12mm
   };
 }
 
@@ -94,8 +91,7 @@ export function calcBeams1Storey(numBeams) {
     screenedSand: 0.1 * numBeams,
     gravel: 0.2 * numBeams,
     rebar16mm: 6 * numBeams,
-    rebar10mm: 11 * numBeams,
-    tieWire: 0.8 * numBeams
+    rebar10mm: 11 * numBeams
   };
 }
 
@@ -105,8 +101,7 @@ export function calcBeams2Storey(numBeams) {
     screenedSand: 0.3 * numBeams,
     gravel: 0.5 * numBeams,
     rebar16mm: 15 * numBeams,
-    rebar10mm: 23 * numBeams,
-    tieWire: 2.0 * numBeams
+    rebar10mm: 23 * numBeams
   };
 }
 
@@ -135,5 +130,22 @@ export function calcUpperSlab(area) {
     cement: slabVol * 12,
     screenedSand: slabVol * 0.5,
     gravel: slabVol * 1.0
+  };
+}
+
+export function calcEarthworks(floorArea, totalWallLength) {
+  // Excavation based on perimeter (footings) and depth
+  const excavationVol = totalWallLength * 0.8 * 1.0; // 0.8m width, 1.0m depth
+  return {
+    "Excavation / Backfill": excavationVol,
+    "Soil Poisoning / Termite Treatment": floorArea
+  };
+}
+
+export function calcFormworks(floorArea) {
+  // Rough estimate for formworks area based on floor area
+  const formworksArea = floorArea * 1.5; 
+  return {
+    "Formworks (Plywood & Lumber)": formworksArea
   };
 }

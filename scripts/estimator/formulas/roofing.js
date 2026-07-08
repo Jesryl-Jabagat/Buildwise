@@ -13,7 +13,9 @@ export function calcRoofing(length, width, roofType, isLightweight = false, wall
     roofLM: 0,
     cement: 0,
     screenedSand: 0,
-    gravel: 0
+    gravel: 0,
+    roofingScrews: 0,
+    siliconeSealant: 0
   };
 
   // Type 6: Concrete Flat Deck
@@ -53,7 +55,6 @@ export function calcRoofing(length, width, roofType, isLightweight = false, wall
     res.roofSheets = Math.ceil(roofLength / 0.80) * Math.ceil(rafterLength / 2.44) * 2 * wastageFactor;
   } else if (rt.includes("long span") || rt.includes("longspan") || rt === "2") {
     res.roofLM = Math.ceil(roofLength / 1.00) * 2 * pitchFactor * rafterLength; 
-    res.roofSheets = Math.ceil(roofLength / 1.00) * 2 * pitchFactor;
   } else if (rt.includes("spandrel") || rt === "4") {
     res.roofSheets = Math.ceil(roofArea / 0.60) * wastageFactor;
   } else if (rt.includes("polycarbonate") || rt === "5") {
@@ -64,6 +65,12 @@ export function calcRoofing(length, width, roofType, isLightweight = false, wall
     // Default fallback (Long Span)
     res.roofLM = Math.ceil(roofLength / 1.00) * 2 * pitchFactor * rafterLength;
     res.roofSheets = Math.ceil(roofLength / 1.00) * 2 * pitchFactor;
+  }
+
+  // Roofing accessories
+  if (!rt.includes("flat") && !rt.includes("deck") && rt !== "6") {
+    res.roofingScrews = Math.ceil(roofArea * 12); // ~12 screws per sqm
+    res.siliconeSealant = Math.ceil((length + width) * 2 / 10) || 1; // 1 tube per 10m perimeter
   }
 
   return res;

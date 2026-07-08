@@ -55,9 +55,16 @@ export function estimate(data) {
   }
   if (data.applyTilesGround) sections.push(F.calcTiling(D1.floorArea, data.tileSize || "60x60", data.tileBreakage || 5));
   if (data.applyTilesSecond) sections.push(F.calcTiling(floor2Area, data.tileSize || "60x60", data.tileBreakage || 5));
-  
-  if (data.hasCeiling || data.groundFloorCeiling) sections.push(F.calcCeiling(D1.floorArea, L, W, data.ceilingWastage || 5));
-  if (data.hasCeiling || data.ceilingSecondFloor) sections.push(F.calcCeiling(floor2Area, secondFloorLength, secondFloorWidth, data.ceilingWastage || 5));
+  if (data.hasCeiling) sections.push(F.calcCeiling(D1.floorArea, L, W, data.ceilingWastage || 5));
+  if (data.ceilingSecondFloor) sections.push(F.calcCeiling(floor2Area, secondFloorLength, secondFloorWidth, data.ceilingWastage || 5));
+
+  sections.push(F.calcEarthworks(D1.floorArea, D1.totalWallLength));
+  sections.push(F.calcFormworks(D1.floorArea));
+  const totalBeds = (data.bedrooms1F || 0) + (data.bedrooms2F || 0);
+  const totalCRs = (data.crs1F || 0) + (data.crs2F || 0);
+  sections.push(F.calcDoorsAndWindows(totalBeds, totalCRs));
+  sections.push(F.calcPlumbing(totalCRs, 1));
+  sections.push(F.calcElectrical(D1.floorArea + floor2Area, totalBeds, totalCRs));
 
   return sumObjects(...sections);
 }
