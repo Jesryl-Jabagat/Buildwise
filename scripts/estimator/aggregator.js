@@ -16,7 +16,6 @@ const configs = {
 
 function generateTimelineAndLabor(laborCost, floorArea) {
   const avgWage = 650;
-  const totalManDays = Math.ceil(laborCost / avgWage);
   
   // Base crew size determined by floor area
   let baseCrew = 3;
@@ -24,20 +23,23 @@ function generateTimelineAndLabor(laborCost, floorArea) {
   else if (floorArea >= 60 && floorArea < 100) baseCrew = 5;
   else if (floorArea >= 100) baseCrew = 6;
   
-  // Define realistic crew fluctuations and man-day allocations per phase
-  // Heavy structural phases need more hands, finishing phases need fewer specialized hands.
+  // Calculate total working days using crew-weighted daily burn rate
+  // Cap at 90 working days — residential homes rarely exceed 3-4 months active work
+  const dailyBurnRate = baseCrew * avgWage;
+  const totalWorkingDays = Math.min(90, Math.ceil(laborCost / dailyBurnRate));
+  
+  // Define realistic crew fluctuations and day allocations per phase
   const phaseLogic = [
-    { name: "Phase 1: Foundation & Masonry",        pct: 0.20, crew: baseCrew + 1, delay: 14, delayNote: "curing & inspection" },
-    { name: "Phase 2: Structural Framing & Walling",pct: 0.35, crew: baseCrew + 1, delay: 21, delayNote: "slab curing & inspection" },
-    { name: "Phase 3: Roofing & Ceiling",           pct: 0.15, crew: Math.max(3, baseCrew - 1), delay: 7, delayNote: "inspection" },
-    { name: "Phase 4: Finishes & Tiling",           pct: 0.20, crew: Math.max(2, baseCrew - 1), delay: 7, delayNote: "drying & inspection" },
-    { name: "Phase 5: Plumbing, Elec. & Turnover",  pct: 0.10, crew: Math.max(2, baseCrew - 2), delay: 7, delayNote: "final inspection" }
+    { name: "Phase 1: Foundation & Masonry",        pct: 0.20, crew: baseCrew + 1, delay: 7,  delayNote: "curing & inspection" },
+    { name: "Phase 2: Structural Framing & Walling",pct: 0.35, crew: baseCrew + 1, delay: 10, delayNote: "slab curing & inspection" },
+    { name: "Phase 3: Roofing & Ceiling",           pct: 0.15, crew: Math.max(3, baseCrew - 1), delay: 3,  delayNote: "inspection" },
+    { name: "Phase 4: Finishes & Tiling",           pct: 0.20, crew: Math.max(2, baseCrew - 1), delay: 5,  delayNote: "drying & inspection" },
+    { name: "Phase 5: Plumbing, Elec. & Turnover",  pct: 0.10, crew: Math.max(2, baseCrew - 2), delay: 3,  delayNote: "final inspection" }
   ];
   
   let totalBuildDays = 0;
   const phases = phaseLogic.map(p => {
-    const manDaysForPhase = totalManDays * p.pct;
-    const activeDays = Math.max(1, Math.ceil(manDaysForPhase / p.crew));
+    const activeDays = Math.max(1, Math.ceil(totalWorkingDays * p.pct));
     const totalDays = activeDays + (p.delay || 0);
     
     totalBuildDays += totalDays;
@@ -54,7 +56,7 @@ function generateTimelineAndLabor(laborCost, floorArea) {
 }
 
 const KEY_MAP = {
-  cement: "Cement (Mortar 40kg) (Holcim/Republic)",
+  cement: "Cement (Mortar 40kg)",
   screenedSand: "Screened Sand",
   fineSand: "Fine Sand",
   gravel: "3/4 Gravel",
@@ -71,12 +73,12 @@ const KEY_MAP = {
   wallAngles: "Wall Angle (3m)",
   channels: "Main Channel / Carrying Channel (3m)",
   furring: "Furring (3m)",
-  mortarCement: "Cement (Mortar 40kg) (Holcim/Republic)",
+  mortarCement: "Cement (Mortar 40kg)",
   whiteCement: "White Cement (Tile Grout)",
   tileAdhesive: "Tile Adhesive (25kg bag)",
-  primer: "Concrete Primer (Boysen/Davies)",
+  primer: "Concrete Primer",
   topcoat: "Architectural Topcoat Paint", // handled dynamically below
-  plasterCement: "Cement (Plastering 40kg) (Holcim/Republic)",
+  plasterCement: "Cement (Plastering 40kg)",
   handrail: "Handrail",
   newelPost: "Newel Post",
   phenolicBoard: "Phenolic Board 3/4\"",
@@ -94,6 +96,9 @@ const KEY_MAP = {
 
 // Also map exact returned keys to add brands
 const BRAND_MAP = {
+  "Cement (Mortar 40kg)": " (Holcim/Republic)",
+  "Cement (Plastering 40kg)": " (Holcim/Republic)",
+  "Concrete Primer": " (Boysen/Davies)",
   "Architectural Topcoat Paint": " (Boysen/Davies)",
   "PVC Orange Pipes 4\" (Sanitary)": " (Neltex/Emerald)",
   "PVC Orange Pipes 2\" (Drainage)": " (Neltex/Emerald)",
@@ -150,7 +155,8 @@ function getCategory(key) {
   if (["cPurlins", "ridgeCaps", "roofSheets", "roofLM", "roofingScrews", "siliconeSealant"].includes(key)) return "Roofing";
   if (["handrail", "newelPost", "phenolicBoard", "stairCocoLumber", "stairTiles", "stairAdhesive", "stairGrout"].includes(key)) return "Stairs";
   if (["Main Door (Solid Wood Slab)", "Bedroom Door (Flush/Panel)", "CR Door (PVC/Aluminum)", "Door Jamb (Wood/Metal)", "Lockset / Doorknob", "Door Hinges (pair)", "Window Frame (Aluminum)", "Window Glass Panel (sqm)"].includes(key)) return "Doors & Windows";
-  if (["PVC Orange Pipes 4\" (Sanitary)", "PVC Orange Pipes 2\" (Drainage)", "PPR Pipes 1/2\" (Water Supply)", "Sanitary Fittings (Orange)", "Water Supply Fittings (PPR)", "PVC Solvent / Teflon Tape", "Water Closet (Standard flush)", "Lavatory (Wall-hung/Pedestal)", "Kitchen Sink (Stainless)", "Shower Set (Head & Valve)", "Faucets & Angle Valves", "Floor Drain (4x4 Stainless)", "Septic Tank Components (CHB/Cement)", "PVC Electrical Conduit 1/2\"", "Flexible Hose 1/2\" (50m)", "PVC Fittings & Boxes", "THHN Wire 2.0mm² (Lighting)", "THHN Wire 3.5mm² (Outlets)", "THHN Wire 5.5mm² (AC/Heater)", "Switches (1-3 gang)", "Outlets (2-gang CO)", "Lighting (LED/Pinlights)", "Panel Board & Circuit Breakers", "Electrical Tape"].includes(key)) return "Phase 5: Plumbing, Elec. & Turnover";
+  if (["PVC Orange Pipes 4\" (Sanitary)", "PVC Orange Pipes 2\" (Drainage)", "PPR Pipes 1/2\" (Water Supply)", "Sanitary Fittings (Orange)", "Water Supply Fittings (PPR)", "PVC Solvent / Teflon Tape", "Water Closet (Standard flush)", "Lavatory (Wall-hung/Pedestal)", "Kitchen Sink (Stainless)", "Shower Set (Head & Valve)", "Faucets & Angle Valves", "Floor Drain (4x4 Stainless)", "Septic Tank Components (CHB/Cement)"].includes(key)) return "Plumbing";
+  if (["PVC Electrical Conduit 1/2\"", "Flexible Hose 1/2\" (50m)", "PVC Fittings & Boxes", "THHN Wire 2.0mm² (Lighting)", "THHN Wire 3.5mm² (Outlets)", "THHN Wire 5.5mm² (AC/Heater)", "Switches (1-3 gang)", "Outlets (2-gang CO)", "Lighting (LED/Pinlights)", "Panel Board & Circuit Breakers", "Electrical Tape"].includes(key)) return "Electrical";
   return "Finishes"; // Default for tiles, paint, ceiling
 }
 
@@ -177,7 +183,8 @@ export function generateEstimate(data) {
       "Stairs": [],
       "Doors & Windows": [],
       "Finishes": [],
-      "Phase 5: Plumbing, Elec. & Turnover": []
+      "Plumbing": [],
+      "Electrical": []
     };
 
     for (const [key, qty] of Object.entries(quantities)) {

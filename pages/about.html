@@ -394,25 +394,25 @@
                 <thead>
                   <tr>
                     <th style="width:40%">Material</th>
-                    <th style="width:60%; text-align:right;">Formula Used (Current System)</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td>Cement</td><td class="mat-price" style="text-align:right;">Number of Footings &times; 3 Bags</td></tr>
-                  <tr><td>Sand</td><td class="mat-price" style="text-align:right;">Number of Footings &times; 0.15 cu.m.</td></tr>
-                  <tr><td>3/4 Gravel</td><td class="mat-price" style="text-align:right;">Number of Footings &times; 0.30 cu.m.</td></tr>
+                  <tr><td>Cement</td><td class="mat-price" style="text-align:right;">Number of Footings &times; 2&ndash;4 Bags</td></tr>
+                  <tr><td>Sand</td><td class="mat-price" style="text-align:right;">Number of Footings &times; 0.12&ndash;0.25 cu.m.</td></tr>
+                  <tr><td>3/4 Gravel</td><td class="mat-price" style="text-align:right;">Number of Footings &times; 0.18&ndash;0.40 cu.m.</td></tr>
                   <tr><td>16mm Deformed Bar</td><td class="mat-price" style="text-align:right;">Number of Footings &times; Standard Reinforcement</td></tr>
                   <tr><td>Tie Wire</td><td class="mat-price" style="text-align:right;">Total Reinforcement &times; 3%</td></tr>
                 </tbody>
               </table>
-              <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;" class="mb-4">Note: The current system assumes a standard footing size rather than computing L &times; W &times; H.</p>
+              <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;" class="mb-4">Note: The engine assumes a standard footing size scaled by structural requirements rather than computing L &times; W &times; H.</p>
 
               <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">COLUMNS</h4>
               <table class="materials-ref-table mb-4">
                 <thead>
                   <tr>
                     <th style="width:40%">Material</th>
-                    <th style="width:60%; text-align:right;">Formula Used (Current System)</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -482,7 +482,7 @@
                 <thead>
                   <tr>
                     <th style="width:40%">Material</th>
-                    <th style="width:60%; text-align:right;">Formula Used (Current System)</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -517,7 +517,7 @@
                 <thead>
                   <tr>
                     <th style="width:40%">Material</th>
-                    <th style="width:60%; text-align:right;">Formula Used (Current System)</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -538,18 +538,19 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td>PVC Blue Pipe</td><td class="mat-price" style="text-align:right;">Pipe Layout Based on Fixtures</td></tr>
-                  <tr><td>PVC Orange Pipe</td><td class="mat-price" style="text-align:right;">Drain Layout</td></tr>
-                  <tr><td>Elbows</td><td class="mat-price" style="text-align:right;">Pipe Runs &times; Standard Factor</td></tr>
-                  <tr><td>Tee</td><td class="mat-price" style="text-align:right;">Fixture Branch Count</td></tr>
-                  <tr><td>Couplings</td><td class="mat-price" style="text-align:right;">Pipe Count &times; 0.30</td></tr>
-                  <tr><td>PVC Solvent Cement</td><td class="mat-price" style="text-align:right;">Pipe Count &divide; Standard Coverage</td></tr>
+                  <tr><td>Sanitary Pipes (4" Orange)</td><td class="mat-price" style="text-align:right;">Bathroom Count &times; 2</td></tr>
+                  <tr><td>Drainage Pipes (2" Orange)</td><td class="mat-price" style="text-align:right;">Total Wet Rooms &times; 3</td></tr>
+                  <tr><td>Water Supply (1/2" PPR)</td><td class="mat-price" style="text-align:right;">Total Wet Rooms &times; 4</td></tr>
+                  <tr><td>Sanitary Fittings</td><td class="mat-price" style="text-align:right;">Total Wet Rooms &times; 5</td></tr>
+                  <tr><td>Water Supply Fittings</td><td class="mat-price" style="text-align:right;">Total Wet Rooms &times; 8</td></tr>
                   <tr><td>Water Closet</td><td class="mat-price" style="text-align:right;">Bathroom Count</td></tr>
                   <tr><td>Lavatory</td><td class="mat-price" style="text-align:right;">Bathroom Count</td></tr>
-                  <tr><td>Shower Head</td><td class="mat-price" style="text-align:right;">Bathroom Count</td></tr>
-                  <tr><td>Kitchen Sink</td><td class="mat-price" style="text-align:right;">Kitchen Count</td></tr>
+                  <tr><td>Kitchen Sink</td><td class="mat-price" style="text-align:right;">Fixed 1 per house</td></tr>
+                  <tr><td>Faucets &amp; Angle Valves</td><td class="mat-price" style="text-align:right;">(Bathroom Count &times; 2) + 1</td></tr>
+                  <tr><td>Floor Drain</td><td class="mat-price" style="text-align:right;">Bathroom Count</td></tr>
                 </tbody>
               </table>
+              <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;" class="mb-4">Note: Septic Tank Components and Shower Sets are explicitly excluded to keep estimates aligned with exterior-only baselines.</p>
 
               <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">ELECTRICAL</h4>
               <table class="materials-ref-table mb-4">
@@ -566,7 +567,7 @@
                   <tr><td>THHN 2.0</td><td class="mat-price" style="text-align:right;">Floor Area &times; Lighting Constant</td></tr>
                   <tr><td>THHN 3.5</td><td class="mat-price" style="text-align:right;">Floor Area &times; Outlet Constant</td></tr>
                   <tr><td>THHN 5.5</td><td class="mat-price" style="text-align:right;">Floor Area &times; Main Circuit Constant</td></tr>
-                  <tr><td>PVC Conduit</td><td class="mat-price" style="text-align:right;">Total Wire Length &times; 1.10</td></tr>
+                  <tr><td>PVC Conduit</td><td class="mat-price" style="text-align:right;">Floor Area &divide; 8 sqm</td></tr>
                   <tr><td>Utility Box</td><td class="mat-price" style="text-align:right;">Outlet Count + Switch Count</td></tr>
                   <tr><td>Panel Board</td><td class="mat-price" style="text-align:right;">Standard by House Type</td></tr>
                   <tr><td>Circuit Breakers</td><td class="mat-price" style="text-align:right;">Circuit Count</td></tr>
@@ -592,7 +593,7 @@
                 <thead>
                   <tr>
                     <th style="width:40%">Material</th>
-                    <th style="width:60%; text-align:right;">Formula Used (Current System)</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -619,6 +620,7 @@
                   <tr><td>Plaster Cement</td><td class="mat-price" style="text-align:right;">(Wall Area &times; 2) &times; 0.288</td></tr>
                 </tbody>
               </table>
+              <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;" class="mb-4">Note: Bedrooms and CRs use a fixed partition standard (e.g., 100 CHB per bedroom, 50 CHB per CR) rather than calculating via wall area.</p>
 
               <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">ROOF, CEILING, PAINT, PLUMBING & ELECTRICAL</h4>
               <p style="color: var(--text-muted); font-size: 0.95rem;" class="mb-4">Same formulas as CHB House.</p>
@@ -642,7 +644,7 @@
                 <thead>
                   <tr>
                     <th style="width:40%">Material</th>
-                    <th style="width:60%; text-align:right;">Formula Used (Current System)</th>
+                    <th style="width:60%; text-align:right;">Formula Used</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -668,6 +670,7 @@
                   <tr><td>Screened Sand</td><td class="mat-price" style="text-align:right;">Wall Area &times; 0.0438</td></tr>
                 </tbody>
               </table>
+              <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;" class="mb-4">Note: Bedrooms and CRs use a fixed partition standard (e.g., 100 CHB per bedroom, 50 CHB per CR) rather than calculating via wall area.</p>
 
               <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">ROOF, CEILING, PAINT, PLUMBING & ELECTRICAL</h4>
               <p style="color: var(--text-muted); font-size: 0.95rem;" class="mb-4">Same formulas as CHB House.</p>
@@ -934,6 +937,74 @@
               </table>
             </div>
 
+            <!-- Category 7: Plumbing -->
+            <div class="materials-cat-card">
+              <div class="materials-cat-header">
+                <div class="cat-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 16a6 6 0 0 0 6-6c0-1.655-1.122-2.904-2.432-4.362C10.254 4.176 8.75 2.503 8 0c-.75 2.503-2.254 4.176-3.568 5.638C3.122 7.096 2 8.345 2 10a6 6 0 0 0 6 6z"/>
+                  </svg>
+                </div>
+                <h3>Plumbing</h3>
+              </div>
+              <table class="materials-ref-table">
+                <thead>
+                  <tr>
+                    <th style="width:50%">Material</th>
+                    <th style="width:20%">Unit</th>
+                    <th style="width:30%; text-align:right;">Base Price (PHP)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>PVC Orange Pipes 4" (Sanitary)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱350.00</td></tr>
+                  <tr><td>PVC Orange Pipes 2" (Drainage)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱150.00</td></tr>
+                  <tr><td>PPR Pipes 1/2" (Water Supply)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱180.00</td></tr>
+                  <tr><td>Sanitary Fittings (Orange)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱40.00</td></tr>
+                  <tr><td>Water Supply Fittings (PPR)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱30.00</td></tr>
+                  <tr><td>PVC Solvent / Teflon Tape</td><td><span class="mat-unit-badge">lot</span></td><td class="mat-price" style="text-align:right;">₱150.00</td></tr>
+                  <tr><td>Water Closet (Standard flush)</td><td><span class="mat-unit-badge">set</span></td><td class="mat-price" style="text-align:right;">₱4,500.00</td></tr>
+                  <tr><td>Lavatory (Wall-hung/Pedestal)</td><td><span class="mat-unit-badge">set</span></td><td class="mat-price" style="text-align:right;">₱2,200.00</td></tr>
+                  <tr><td>Kitchen Sink (Stainless)</td><td><span class="mat-unit-badge">set</span></td><td class="mat-price" style="text-align:right;">₱1,800.00</td></tr>
+                  <tr><td>Faucets &amp; Angle Valves</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱350.00</td></tr>
+                  <tr><td>Floor Drain (4x4 Stainless)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱150.00</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Category 8: Electrical -->
+            <div class="materials-cat-card">
+              <div class="materials-cat-header">
+                <div class="cat-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09z"/>
+                  </svg>
+                </div>
+                <h3>Electrical</h3>
+              </div>
+              <table class="materials-ref-table">
+                <thead>
+                  <tr>
+                    <th style="width:50%">Material</th>
+                    <th style="width:20%">Unit</th>
+                    <th style="width:30%; text-align:right;">Base Price (PHP)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>PVC Electrical Conduit 1/2"</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱75.00</td></tr>
+                  <tr><td>Flexible Hose 1/2" (50m)</td><td><span class="mat-unit-badge">roll</span></td><td class="mat-price" style="text-align:right;">₱400.00</td></tr>
+                  <tr><td>PVC Fittings &amp; Boxes</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱25.00</td></tr>
+                  <tr><td>THHN Wire 2.0mm&sup2; (Lighting)</td><td><span class="mat-unit-badge">box</span></td><td class="mat-price" style="text-align:right;">₱3,200.00</td></tr>
+                  <tr><td>THHN Wire 3.5mm&sup2; (Outlets)</td><td><span class="mat-unit-badge">box</span></td><td class="mat-price" style="text-align:right;">₱5,000.00</td></tr>
+                  <tr><td>THHN Wire 5.5mm&sup2; (AC/Heater)</td><td><span class="mat-unit-badge">box</span></td><td class="mat-price" style="text-align:right;">₱6,500.00</td></tr>
+                  <tr><td>Switches (1-3 gang)</td><td><span class="mat-unit-badge">set</span></td><td class="mat-price" style="text-align:right;">₱250.00</td></tr>
+                  <tr><td>Outlets (2-gang CO)</td><td><span class="mat-unit-badge">set</span></td><td class="mat-price" style="text-align:right;">₱250.00</td></tr>
+                  <tr><td>Lighting (LED/Pinlights)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱200.00</td></tr>
+                  <tr><td>Panel Board &amp; Circuit Breakers</td><td><span class="mat-unit-badge">set</span></td><td class="mat-price" style="text-align:right;">₱2,500.00</td></tr>
+                  <tr><td>Electrical Tape</td><td><span class="mat-unit-badge">roll</span></td><td class="mat-price" style="text-align:right;">₱50.00</td></tr>
+                </tbody>
+              </table>
+            </div>
+
           </div><!-- /.materials-category-grid -->
 
           <p class="text-center mt-4" style="font-size:0.88rem; color:var(--text-muted);">
@@ -955,13 +1026,16 @@
               <path d="M4 11.794V16l4-1 4 1v-4.206l-2.018.306L8 13.126 6.018 12.1z"/>
             </svg>
           </div>
-          <h3>[Engineer's Full Name]</h3>
-          <p class="title">[Professional Title]</p>
+          <h3>Lady Jhanrie Avergonzado Polestico</h3>
+          <p class="title">CIVIL ENGINEER</p>
           <div class="eng-details">
-            <p><strong>License / Registration No:</strong> <span>[0000000]</span></p>
-            <p><strong>Professional ID:</strong> <span>[PRC License / Equivalent]</span></p>
-            <p><strong>Specialization:</strong> <span>[e.g., Structural Engineering]</span></p>
-            <p><strong>Affiliation:</strong> <span>[Organization Name]</span></p>
+            <p><strong>License / Registration No:</strong> <span>0221650</span></p>
+            <p><strong>Registration Date:</strong> <span>06/8/2025</span></p>
+            <p><strong>Valid Until:</strong> <span>02/03/2028</span></p>
+          </div>
+          <div class="eng-id-showcase" style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <img src="../assets/Engineer/frontid.jpg" alt="Engineer Front ID" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 300px; object-fit: contain; transition: transform 0.3s ease;">
+            <img src="../assets/Engineer/backid.jpg" alt="Engineer Back ID" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 300px; object-fit: contain; transition: transform 0.3s ease;">
           </div>
         </div>
       </section>

@@ -34,7 +34,7 @@ export function calcRoofing(length, width, roofType, isLightweight = false, wall
   const roofSpan = width + (2 * 0.60);
   
   const pitchFactor = isLightweight ? 1.03 : 1.05;
-  const wastageFactor = isLightweight ? 1.05 : 1.10;
+  const wastageFactor = isLightweight ? 1.05 : 1.07;
   
   const rafterLength = (roofSpan / 2) * pitchFactor;
   const roofArea = roofLength * roofSpan * pitchFactor;
@@ -62,14 +62,13 @@ export function calcRoofing(length, width, roofType, isLightweight = false, wall
   } else if (rt.includes("stone") || rt === "7") {
     res.roofSheets = Math.ceil(roofArea / 0.50) * wastageFactor;
   } else {
-    // Default fallback (Long Span)
+    // Default fallback (Long Span) — single material only, no double-counting
     res.roofLM = Math.ceil(roofLength / 1.00) * 2 * pitchFactor * rafterLength;
-    res.roofSheets = Math.ceil(roofLength / 1.00) * 2 * pitchFactor;
   }
 
   // Roofing accessories
   if (!rt.includes("flat") && !rt.includes("deck") && rt !== "6") {
-    res.roofingScrews = Math.ceil(roofArea * 12); // ~12 screws per sqm
+    res.roofingScrews = Math.ceil(roofArea * 4); // ~4 screws per sqm (industry standard)
     res.siliconeSealant = Math.ceil((length + width) * 2 / 10) || 1; // 1 tube per 10m perimeter
   }
 

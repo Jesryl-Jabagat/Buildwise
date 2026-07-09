@@ -16,22 +16,22 @@ export function calcBedroomsTableA(count, wallingMaterialType) {
       chb: Math.ceil(chbArea * 12.5 * 1.05) * count,
       cement: chbArea * 0.525 * count,
       screenedSand: chbArea * 0.0438 * count,
-      rebar10mm: Math.ceil((chbArea * 5.43) / 6) * count,
+      rebar10mm: Math.ceil((chbArea * 2.7) / 6) * count,
       amakanSheets: wallingMaterialType === "amakan" ? sheetCount : 0,
       metalCladdingSheets: wallingMaterialType === "metalCladding" ? sheetCount : 0,
       rectTube: Math.ceil(innerPerimeter / 1.2) * count
     };
   }
   
-  // Default CHB Standard Heavy Bedroom (Fixed 4-Wall constants)
+  // Default CHB Residential Bedroom (standard 3m×3m partition walls)
   return {
-    chb: 178 * count,
-    cement: 25 * count,
-    screenedSand: 0.5 * count,
-    gravel: 0.9 * count,
-    rebar16mm: 17 * count,
-    rebar12mm: 31 * count,
-    rebar10mm: 12 * count
+    chb: 100 * count,
+    cement: 12 * count,
+    screenedSand: 0.3 * count,
+    gravel: 0.5 * count,
+    rebar16mm: 6 * count,
+    rebar12mm: 12 * count,
+    rebar10mm: 6 * count
   };
 }
 
@@ -61,16 +61,16 @@ export function calcCRsTableA(count, wallingMaterialType) {
       chb: Math.ceil(wallArea * 12.5 * 1.05) * count,
       cement: wallArea * 0.525 * count,
       screenedSand: wallArea * 0.0438 * count,
-      rebar10mm: Math.ceil((wallArea * 5.43) / 6) * count
+      rebar10mm: Math.ceil((wallArea * 2.7) / 6) * count
     };
   }
   
-  // Default CHB CR
+  // Default CHB CR (residential 1.2m×1.7m)
   return {
-    chb: 71 * count,
-    cement: 7 * count,
-    screenedSand: 0.3 * count,
-    rebar10mm: 5 * count
+    chb: 50 * count,
+    cement: 4 * count,
+    screenedSand: 0.2 * count,
+    rebar10mm: 3 * count
   };
 }
 
