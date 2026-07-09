@@ -8,7 +8,7 @@ export function calcFullCHBWalls(wallArea) {
     chb: totalCHB,
     cement: wallArea * 0.525,
     screenedSand: wallArea * 0.0438,
-    rebar10mm: Math.ceil((wallArea * 2.93 / 6) + (wallArea * 2.50 / 6))
+    rebar10mm: Math.ceil((wallArea * 1.5 / 6) + (wallArea * 1.2 / 6))
   };
 }
 
@@ -21,7 +21,7 @@ export function calcHalfCHBWalls(length, width, chbBaseWallHeight) {
     chb: totalCHB,
     cement: lowerWallAreaSqm * 0.525,
     screenedSand: lowerWallAreaSqm * 0.0438,
-    rebar10mm: Math.ceil((lowerWallAreaSqm * 2.93 / 6) + (lowerWallAreaSqm * 2.50 / 6))
+    rebar10mm: Math.ceil((lowerWallAreaSqm * 1.5 / 6) + (lowerWallAreaSqm * 1.2 / 6))
   };
 }
 
