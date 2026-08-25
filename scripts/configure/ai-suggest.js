@@ -186,7 +186,7 @@ async function makeApiCall(prompt, connectorKey) {
     },
     body: JSON.stringify({
       model: "google/gemini-2.5-flash", // You can change this to any OpenRouter model like openai/gpt-4o-mini
-      max_tokens: 1500, // Kept at 1500 as requested
+      max_tokens: 1000, // Reduced from 1500 because the OpenRouter account is running low on credits
       messages: [{ role: "user", content: prompt }],
     }),
   });
@@ -364,7 +364,7 @@ export async function startAiBuilder(form, typeKey, setupData) {
   if (overlay) overlay.style.display = "flex";
 
   // Ensure advanced mode is open so we can interact with all fields
-  const advancedToggle = document.getElementById("advancedModeToggle");
+  const advancedToggle = document.querySelector(".bw-advanced-toggle-input");
   if (advancedToggle && !advancedToggle.checked) {
     advancedToggle.checked = true;
     advancedToggle.dispatchEvent(new Event("change", { bubbles: true }));
@@ -419,19 +419,121 @@ export async function startAiBuilder(form, typeKey, setupData) {
   }
 }
 
+const AGENT_MAP = {
+  // Architect
+  length: "architect",
+  width: "architect",
+  groundLength: "architect",
+  groundWidth: "architect",
+  secondFloorLength: "architect",
+  secondFloorWidth: "architect",
+  mezzanineLength: "architect",
+  mezzanineWidth: "architect",
+  wallHeight: "architect",
+  bedrooms1F: "architect",
+  bedrooms2F: "architect",
+  crs1F: "architect",
+  crs2F: "architect",
+  roofStyle: "architect",
+  roofType: "architect",
+  wallingTypeAboveChb: "architect",
+  
+  // Structural Engineer
+  soilCondition: "engineer",
+  chbType: "engineer",
+  materialGrade: "engineer",
+  chbBaseWallHeight: "engineer",
+
+  // Interior Designer
+  paintColorTheme: "designer",
+  tileSize: "designer",
+  boardType: "designer",
+  hasCeiling: "designer",
+  includePainting: "designer",
+  includePlastering: "designer",
+  applyTilesGround: "designer",
+  applyTilesSecond: "designer"
+};
+
+const AGENT_PROFILES = {
+  architect: { name: "AI Architect", emoji: "🏗️", color: "var(--primary)", action: "Setting up your floor plan..." },
+  engineer: { name: "Structural Engineer", emoji: "🔧", color: "#5B8DEF", action: "Analyzing soil and materials..." },
+  designer: { name: "Interior Designer", emoji: "🎨", color: "var(--accent)", action: "Selecting finishes..." },
+  optimizer: { name: "Cost Optimizer", emoji: "📐", color: "#E07B5A", action: "Finalizing budget..." }
+};
+
+const AGENT_ORDER = ["architect", "engineer", "designer", "optimizer"];
+
 /**
  * Main animation loop for the dedicated Analyzing page.
  * Applies values silently to the hidden form and renders chat bubbles.
  */
 async function runAnalyzingLoop(form, suggestions) {
   const feed = document.getElementById("aiFeed");
+  const progress = document.getElementById("aiProgress");
+  const header = document.getElementById("aiHeader");
+  const container = document.querySelector(".analyzing-container");
   if (!feed) return;
 
+  // Sort suggestions by agent
+  suggestions.sort((a, b) => {
+    const agentA = AGENT_MAP[a.name] || "optimizer";
+    const agentB = AGENT_MAP[b.name] || "optimizer";
+    return AGENT_ORDER.indexOf(agentA) - AGENT_ORDER.indexOf(agentB);
+  });
+
+  let currentStep = 0;
+  const totalSteps = suggestions.length;
+  let currentAgentKey = null;
+  let isFirstBubble = true;
+
   for (const suggestion of suggestions) {
+    if (isFirstBubble && container) {
+      container.classList.add("has-bubbles");
+      isFirstBubble = false;
+    }
+    
+    currentStep++;
+    if (progress) {
+      progress.innerText = `Step ${currentStep} of ${totalSteps} — Configuring...`;
+    }
     const { name, value, reason } = suggestion;
     const { el, isToggle, toggleCheckbox } = getElementForName(form, name);
 
     if (!el) continue;
+
+    const agentKey = AGENT_MAP[name] || "optimizer";
+    const agent = AGENT_PROFILES[agentKey];
+
+    // Transition header if agent changes
+    if (agentKey !== currentAgentKey) {
+      if (header) {
+        if (container) container.style.setProperty("--orb-color", agent.color);
+        
+        const h2 = header.querySelector("h2");
+        const status = header.querySelector("#aiStatus");
+        
+        if (h2) {
+           h2.style.opacity = 0;
+           setTimeout(() => {
+             h2.innerText = `${agent.emoji} ${agent.name}`;
+             h2.style.opacity = 1;
+           }, 250);
+        }
+        
+        if (status) {
+           status.style.opacity = 0;
+           setTimeout(() => {
+             status.innerText = agent.action;
+             status.style.opacity = 1;
+           }, 250);
+        }
+      }
+      currentAgentKey = agentKey;
+      
+      // Give a tiny bit of extra pause for transition before bubble appears
+      await new Promise(r => setTimeout(r, 600));
+    }
 
     // Apply the value to the hidden form instantly
     if (isToggle) {
@@ -449,14 +551,24 @@ async function runAnalyzingLoop(form, suggestions) {
     // Format the field name to look nicer (e.g. "roofStyle" -> "Roof Style")
     const formattedName = name.replace(/([A-Z])/g, ' $1').trim();
     const finalName = formattedName.charAt(0).toUpperCase() + formattedName.slice(1);
+    
+    // Format the value nicely
+    let displayValue = String(value);
+    if (displayValue === "true") displayValue = "Yes";
+    if (displayValue === "false") displayValue = "No";
+    displayValue = displayValue.replace(/([A-Z])/g, ' $1').trim();
+    displayValue = displayValue.charAt(0).toUpperCase() + displayValue.slice(1);
 
     // Render the chat bubble
     const bubble = document.createElement("div");
     bubble.className = "ai-bubble";
+    bubble.style.setProperty("--agent-color", agent.color);
     bubble.innerHTML = `
-      <div class="ai-bubble-icon">✨</div>
+      <div class="ai-bubble-icon" style="background: color-mix(in srgb, ${agent.color} 20%, transparent)">${agent.emoji}</div>
       <div class="ai-bubble-content">
-        <div class="ai-bubble-field">${finalName}</div>
+        <div class="ai-bubble-field" style="background: ${agent.color}">${finalName}</div>
+        <div class="ai-bubble-value">${displayValue}</div>
+        <span class="agent-tag">${agent.name}</span>
         <div class="ai-bubble-text">${reason}</div>
       </div>
     `;
@@ -476,7 +588,7 @@ async function runAnalyzingLoop(form, suggestions) {
  */
 export async function startAiAnalyzing(form, typeKey, setupData) {
   // Ensure advanced mode is open so we can interact with all fields
-  const advancedToggle = form.querySelector("#advancedModeToggle");
+  const advancedToggle = form.querySelector(".bw-advanced-toggle-input");
   if (advancedToggle && !advancedToggle.checked) {
     advancedToggle.checked = true;
     advancedToggle.dispatchEvent(new Event("change", { bubbles: true }));
@@ -489,22 +601,32 @@ export async function startAiAnalyzing(form, typeKey, setupData) {
     const suggestions = await fetchAiConfiguration(prompt);
 
     if (suggestions && suggestions.length > 0) {
-      // Hide the loading spinner
+      // Hide the loading spinner (legacy)
       const header = document.getElementById("aiHeader");
       if (header) {
         const spinner = header.querySelector(".spinner-grow");
         if (spinner) spinner.style.display = "none";
-        header.querySelector("p").innerText = "Generating configuration...";
+        
+        const progress = header.querySelector("#aiProgress");
+        if (progress) progress.innerText = "Processing configuration...";
+        
+        const status = header.querySelector("#aiStatus");
+        if (status) status.innerText = "Applying optimal materials and styles...";
       }
 
       await runAnalyzingLoop(form, suggestions);
       
       // Update header to complete
       if (header) {
-        header.querySelector("h2").innerText = "Configuration Complete!";
-        header.querySelector("p").innerText = "Redirecting to your results...";
-        header.style.animation = "none";
-        header.style.color = "var(--primary)";
+        header.classList.add("complete");
+        const h2 = header.querySelector("h2");
+        if (h2) h2.innerText = "Configuration Complete!";
+        
+        const progress = header.querySelector("#aiProgress");
+        if (progress) progress.innerText = "Done";
+        
+        const status = header.querySelector("#aiStatus");
+        if (status) status.innerText = "Redirecting to your results...";
       }
 
       await new Promise((r) => setTimeout(r, 1500));
@@ -520,10 +642,14 @@ export async function startAiAnalyzing(form, typeKey, setupData) {
       if (header) {
         const spinner = header.querySelector(".spinner-grow");
         if (spinner) spinner.style.display = "none";
-        header.querySelector("h2").innerText = "AI Unavailable";
-        header.querySelector("p").innerText = "Redirecting to manual mode...";
+        const h2 = header.querySelector("h2");
+        if (h2) {
+          h2.innerText = "AI Unavailable";
+          h2.style.color = "var(--danger)";
+        }
+        const status = header.querySelector("#aiStatus") || header.querySelector("p");
+        if (status) status.innerText = "Redirecting to manual mode...";
         header.style.animation = "none";
-        header.style.color = "var(--danger)";
       }
       setTimeout(() => {
         window.location.href = `designs.html`;
@@ -535,10 +661,14 @@ export async function startAiAnalyzing(form, typeKey, setupData) {
     if (header) {
       const spinner = header.querySelector(".spinner-grow");
       if (spinner) spinner.style.display = "none";
-      header.querySelector("h2").innerText = "AI Unavailable";
-      header.querySelector("p").innerText = "Redirecting to manual mode...";
+      const h2 = header.querySelector("h2");
+      if (h2) {
+        h2.innerText = "AI Unavailable";
+        h2.style.color = "var(--danger)";
+      }
+      const status = header.querySelector("#aiStatus") || header.querySelector("p");
+      if (status) status.innerText = "Redirecting to manual mode...";
       header.style.animation = "none";
-      header.style.color = "var(--danger)";
     }
     setTimeout(() => {
       window.location.href = `designs.html`;

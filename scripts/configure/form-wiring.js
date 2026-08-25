@@ -11,11 +11,18 @@ export function injectAdvancedModeToggle(form) {
   const sections = form.querySelectorAll('.form-section');
   if (sections.length === 0) return;
 
-  // Hide only the finishes/tiling sections (index 3 and beyond) in basic mode.
-  // Sections 0 (shared costing — soil condition, material grade, roof type),
-  // 1 (dimensions), and 2 (rooms) are always shown.
-  sections.forEach((sec, index) => {
-    if (index >= 3) {
+  // Determine which sections to hide based on their title content
+  sections.forEach((sec) => {
+    const title = sec.querySelector('h3')?.textContent.toLowerCase() || '';
+    // Hide anything related to finishes, tiles, plaster, paint, ceiling, or walling.
+    if (
+      title.includes('plaster') || 
+      title.includes('paint') || 
+      title.includes('ceiling') || 
+      title.includes('finish') || 
+      title.includes('tile') || 
+      title.includes('walling')
+    ) {
       sec.classList.add('advanced-setting');
       sec.style.display = 'none';
     }
@@ -23,14 +30,15 @@ export function injectAdvancedModeToggle(form) {
 
   const intro = form.querySelector('.form-intro');
   if (intro) {
+    const uniqueId = 'advancedToggle_' + Math.random().toString(36).substr(2, 9);
     const toggleHtml = `
       <div class="bw-mode-banner">
         <div class="bw-mode-banner-text">
           <strong>Basic Mode</strong>
           <span>Only Dimensions &amp; Rooms shown. The system optimizes the rest.</span>
         </div>
-        <label class="bw-mode-switch">
-          <input type="checkbox" id="advancedModeToggle">
+        <label class="bw-mode-switch" for="${uniqueId}" style="cursor: pointer; position: relative; z-index: 10;">
+          <input type="checkbox" id="${uniqueId}" class="bw-advanced-toggle-input">
           <span class="bw-mode-track"></span>
           <span class="bw-mode-label">Advanced Options</span>
         </label>
@@ -38,10 +46,11 @@ export function injectAdvancedModeToggle(form) {
     `;
     intro.insertAdjacentHTML('afterend', toggleHtml);
 
-    const toggle = form.querySelector('#advancedModeToggle');
+    const toggleInput = form.querySelector(`#${uniqueId}`);
     const banner = form.querySelector('.bw-mode-banner');
     const bannerTitle = banner.querySelector('strong');
-    toggle.addEventListener('change', (e) => {
+    
+    toggleInput.addEventListener('change', (e) => {
       const isAdvanced = e.target.checked;
       form.querySelectorAll('.advanced-setting').forEach(sec => {
         sec.style.display = isAdvanced ? 'block' : 'none';
@@ -272,9 +281,9 @@ export function wireFloorAreaDisplay(form) {
   const container = document.createElement("div");
   container.className = "col-12 mt-3";
   container.innerHTML = `
-    <div class="alert alert-success d-flex align-items-center py-2 mb-0" style="background-color: #e8f5e9; border: 1px solid #c8e6c9; color: #2e7d32;">
+    <div class="alert d-flex align-items-center py-2 mb-0" style="background-color: color-mix(in srgb, var(--primary) 15%, transparent); border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent); color: var(--primary); border-radius: 12px;">
       <strong class="me-2">Estimated Total Floor Area:</strong>
-      <span id="liveFloorAreaDisplay">0.00 sqm</span>
+      <span id="liveFloorAreaDisplay" style="font-weight: 800;">0.00 sqm</span>
     </div>
   `;
 

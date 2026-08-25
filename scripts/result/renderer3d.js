@@ -10,15 +10,15 @@ const mapType = (tk) => {
 };
 
 const mapPaintColor = (theme) => {
-    if (!theme) return '#E8E4DC';
-    if (theme.includes('Classic White')) return '#F0F0F0';
-    if (theme.includes('Cream')) return '#E8E4DC';
-    if (theme.includes('Earth Tones')) return '#C8A288';
-    if (theme.includes('Cool Neutrals')) return '#B0B8C0';
-    if (theme.includes('Pastel')) return '#C1D3E0';
-    if (theme.includes('Tropical')) return '#FFF9D2';
-    if (theme.includes('Modern Minimalist')) return '#FFFFFF';
-    return '#E8E4DC';
+    if (!theme) return '#D8D4CC'; // Darkened from #E8E4DC
+    if (theme.includes('Classic White')) return '#E0E0E0'; // Darkened from #F0F0F0
+    if (theme.includes('Cream')) return '#D8D4CC';
+    if (theme.includes('Earth Tones')) return '#B89278'; // Darkened from #C8A288
+    if (theme.includes('Cool Neutrals')) return '#A0A8B0'; // Darkened from #B0B8C0
+    if (theme.includes('Pastel')) return '#B1C3D0'; // Darkened from #C1D3E0
+    if (theme.includes('Tropical')) return '#EFE9C2'; // Darkened from #FFF9D2
+    if (theme.includes('Modern Minimalist')) return '#F0F0F0'; // Darkened from #FFFFFF
+    return '#D8D4CC';
 };
 
 export function initRenderer(configData) {
@@ -34,60 +34,110 @@ export function initRenderer(configData) {
 //  THREE.JS SCENE SETUP
 // ============================================================
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87CEEB); // Sky blue
 
-// Hemisphere light for realistic sky/ground bounce
-const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x4a7c4a, 0.6);
+// 1. Golden Hour Sky Gradient
+const canvas = document.createElement('canvas');
+canvas.width = 2;
+canvas.height = 512;
+const context = canvas.getContext('2d');
+const gradient = context.createLinearGradient(0, 0, 0, 512);
+gradient.addColorStop(0, '#2a4b7c'); // Deep azure blue top
+gradient.addColorStop(0.5, '#7b92a9'); // Soft lavender mid
+gradient.addColorStop(1, '#e8c3a0'); // Warm glowing peach horizon
+context.fillStyle = gradient;
+context.fillRect(0, 0, 2, 512);
+const skyTex = new THREE.CanvasTexture(canvas);
+scene.background = skyTex;
+
+// Distant linear fog: starts far away so the house stays completely clear when zooming out
+scene.fog = new THREE.Fog(0xe8c3a0, 100, 400);
+
+// Hemisphere light for realistic sky/ground bounce (peach sky, dark green ground)
+const hemiLight = new THREE.HemisphereLight(0xe8c3a0, 0x1f421b, 0.65);
 scene.add(hemiLight);
 
-// Primary sun
-const sunLight = new THREE.DirectionalLight(0xfff4e0, 1.1);
-sunLight.position.set(20, 30, 15);
-sunLight.castShadow = false;
-sunLight.shadow.mapSize.width = 4096;
-sunLight.shadow.mapSize.height = 4096;
+// Primary Key Light (Warm Golden Hour Sun)
+const sunLight = new THREE.DirectionalLight(0xffeedd, 1.8); 
+sunLight.position.set(25, 20, 15); // Lower, softer sunset angle
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
 sunLight.shadow.camera.near = 0.5;
 sunLight.shadow.camera.far = 100;
-sunLight.shadow.camera.left = -25;
-sunLight.shadow.camera.right = 25;
-sunLight.shadow.camera.top = 25;
-sunLight.shadow.camera.bottom = -25;
-sunLight.shadow.bias = -0.0003;
+sunLight.shadow.camera.left = -20;
+sunLight.shadow.camera.right = 20;
+sunLight.shadow.camera.top = 20;
+sunLight.shadow.camera.bottom = -20;
+sunLight.shadow.bias = -0.0005;
 scene.add(sunLight);
 
-// Soft fill light from opposite side
-const fillLight = new THREE.DirectionalLight(0xc8d8ff, 0.35);
-fillLight.position.set(-15, 15, -10);
+// Soft fill light (lavender/blue from the sky)
+const fillLight = new THREE.DirectionalLight(0x7b92a9, 0.35); 
+fillLight.position.set(-20, 15, -20);
 scene.add(fillLight);
 
 // ============================================================
 //  ENVIRONMENT
 // ============================================================
+
+function makeGrassTex() {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 512;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#2d5a27'; ctx.fillRect(0,0,512,512); // Base dark forest green
+    // Add noise/variation
+    for(let i=0; i<15000; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        const r = Math.random() > 0.5 ? '#3a7233' : '#1f421b'; // Lighter and darker green speckles
+        ctx.fillStyle = r;
+        ctx.fillRect(x, y, 2, 2);
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(10, 10);
+    return t;
+}
+
 function makeGround() {
-    const lawnGeo = new THREE.PlaneGeometry(60, 60);
-    const lawnMat = new THREE.MeshStandardMaterial({ color: 0x4a8c4a, roughness: 1.0 });
+    const lawnGeo = new THREE.PlaneGeometry(1000, 1000); // Massive ground plane to hit the far fog
+    const grassTex = makeGrassTex();
+    grassTex.repeat.set(100, 100); // Scale the texture repeat up to match the larger size
+    const lawnMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: grassTex, roughness: 1.0 });
     const lawn = new THREE.Mesh(lawnGeo, lawnMat);
     lawn.rotation.x = -Math.PI / 2;
     lawn.receiveShadow = true;
     scene.add(lawn);
+
+    // Concrete path/driveway leading to the +X front face
+    const pathGeo = new THREE.PlaneGeometry(15, 4); // Wider to accommodate varying door Z positions
+    const pathMat = new THREE.MeshStandardMaterial({ color: 0xa0a0a0, roughness: 0.9 });
+    const path = new THREE.Mesh(pathGeo, pathMat);
+    path.rotation.x = -Math.PI / 2;
+    path.position.set(10, 0.02, 0); // Extending out along +X
+    path.receiveShadow = true;
+    scene.add(path);
 }
 makeGround();
 
 function makeTree(x, z, h) {
     const trunkGeo = new THREE.CylinderGeometry(0.18, 0.22, h * 0.4, 8);
-    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3d1e, roughness: 1 });
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3520, roughness: 1 }); // Deep brown
     const trunk = new THREE.Mesh(trunkGeo, trunkMat);
     trunk.position.set(x, h * 0.2, z);
     trunk.castShadow = true;
     scene.add(trunk);
-    const topGeo = new THREE.SphereGeometry(h * 0.3, 8, 6);
-    const topMat = new THREE.MeshStandardMaterial({ color: 0x2d6e2d, roughness: 1 });
+    
+    const topGeo = new THREE.SphereGeometry(h * 0.35, 12, 10);
+    const topMat = new THREE.MeshStandardMaterial({ color: 0x2d5a27, roughness: 0.9 }); // Dark rich green
     const top = new THREE.Mesh(topGeo, topMat);
-    top.position.set(x, h * 0.55, z);
+    top.position.set(x, h * 0.5, z);
     top.castShadow = true;
     scene.add(top);
 }
-// Trees removed per user request
+// Add trees around the property, spaced nicely
+makeTree(-9, -7, 5.5);
+makeTree(11, -4, 4.5);
+makeTree(-10, 8, 3.5);
 
 // ============================================================
 //  RENDERERS
@@ -101,10 +151,11 @@ cameraExt.layers.enableAll();
 const rendererExt = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 rendererExt.setSize(extContainer.clientWidth, extContainer.clientHeight);
 rendererExt.setPixelRatio(window.devicePixelRatio);
-rendererExt.shadowMap.enabled = false;
+rendererExt.shadowMap.enabled = true;
 rendererExt.shadowMap.type = THREE.PCFSoftShadowMap;
 rendererExt.toneMapping = THREE.ACESFilmicToneMapping;
-rendererExt.toneMappingExposure = 1.0;
+rendererExt.toneMappingExposure = 0.85;
+rendererExt.outputEncoding = THREE.sRGBEncoding;
 extContainer.appendChild(rendererExt.domElement);
 
 const controlsExt = new THREE.OrbitControls(cameraExt, rendererExt.domElement);
@@ -133,8 +184,8 @@ if (fpContainer1) {
     rendererFP1.setSize(fpContainer1.clientWidth, fpContainer1.clientHeight);
     rendererFP1.setPixelRatio(window.devicePixelRatio);
     rendererFP1.shadowMap.enabled = false;
-    rendererFP1.toneMapping = THREE.ACESFilmicToneMapping;
-    rendererFP1.toneMappingExposure = 1.0;
+    rendererFP1.toneMapping = THREE.NoToneMapping;
+    rendererFP1.outputEncoding = THREE.sRGBEncoding;
     fpContainer1.appendChild(rendererFP1.domElement);
 }
 
@@ -155,8 +206,8 @@ if (fpContainer2) {
     rendererFP2.setSize(fpContainer2.clientWidth || 300, fpContainer2.clientHeight || 300);
     rendererFP2.setPixelRatio(window.devicePixelRatio);
     rendererFP2.shadowMap.enabled = false;
-    rendererFP2.toneMapping = THREE.ACESFilmicToneMapping;
-    rendererFP2.toneMappingExposure = 1.0;
+    rendererFP2.toneMapping = THREE.NoToneMapping;
+    rendererFP2.outputEncoding = THREE.sRGBEncoding;
     fpContainer2.appendChild(rendererFP2.domElement);
 }
 
@@ -180,25 +231,25 @@ houseGroup.add(wallGroup, roofGroup, slabGroup, columnGroup, blueprintGroup);
 scene.add(houseGroup);
 
 // Blueprint Materials
-const fpWallMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+const fpWallMat = new THREE.MeshBasicMaterial({ color: 0x222222 }); // Deep charcoal
 const fpSlabMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-const fpWindowMat = new THREE.MeshBasicMaterial({ color: 0xc8d8e8 });
-const fpLineMat = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+const fpWindowMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const fpLineMat = new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 });
 
 // Furniture Materials
-const bedMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-const woodMat = new THREE.MeshLambertMaterial({ color: 0x8b5a2b });
-const sofaMat = new THREE.MeshLambertMaterial({ color: 0x4a5a6a });
-const kitMat = new THREE.MeshLambertMaterial({ color: 0xdddddd });
-const plantMat = new THREE.MeshLambertMaterial({ color: 0x4caf50 });
+const bedMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0.0 });
+const woodMat = new THREE.MeshStandardMaterial({ color: 0x806044, roughness: 0.7, metalness: 0.0 });
+const sofaMat = new THREE.MeshStandardMaterial({ color: 0x4a5a6a, roughness: 0.9, metalness: 0.0 });
+const kitMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.4, metalness: 0.1 });
+const plantMat = new THREE.MeshStandardMaterial({ color: 0x4caf50, roughness: 0.8, metalness: 0.0 });
 // ============================================================
 //  TEXTURE GENERATORS
 // ============================================================
 function makeCHBTex() {
     const c = document.createElement('canvas'); c.width = 512; c.height = 512;
     const ctx = c.getContext('2d');
-    ctx.fillStyle = '#b0a898'; ctx.fillRect(0,0,512,512);
-    ctx.strokeStyle = '#8a8070'; ctx.lineWidth = 6;
+    ctx.fillStyle = '#888880'; ctx.fillRect(0,0,512,512);
+    ctx.strokeStyle = '#6a6a60'; ctx.lineWidth = 6;
     const rowH = 80;
     const blkW = 160;
     for(let y=0;y<=512;y+=rowH){ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(512,y);ctx.stroke(); }
@@ -313,9 +364,9 @@ function makeYeroTex() {
     const waveW = 32; // Wider wave in pixels
     for(let x=0; x<512; x++) {
         const wave = (Math.sin(x / waveW * Math.PI * 2) + 1) / 2;
-        // Much higher contrast: deep dark grey valleys, bright white peaks
-        const shade = Math.floor(60 + wave * 195); 
-        ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade + 10})`; 
+        // Grey base instead of bright white, higher contrast
+        const shade = Math.floor(40 + wave * 160); 
+        ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade + 15})`; 
         ctx.fillRect(x, 0, 1, 512); 
     }
     const t = new THREE.CanvasTexture(c);
@@ -366,7 +417,7 @@ const plywoodTex   = makePlywoodTex();
 const hardiflexTex = makeHardiflexTex();
 const textureLoader = new THREE.TextureLoader();
 textureLoader.setCrossOrigin('anonymous');
-const amakanTex = textureLoader.load('../assets/amakan skin.png');
+const amakanTex = textureLoader.load('../assets/amakan_skin.png');
 amakanTex.wrapS = amakanTex.wrapT = THREE.RepeatWrapping;
 amakanTex.repeat.set(4, 4);
 const metalTex = makeMetalTex();
@@ -498,7 +549,7 @@ function buildFurniture(type, cx, cz, rotY, layer, param=null, cy=0) {
         const console = new THREE.Mesh(new THREE.BoxGeometry(cW, 0.5, 0.4), woodMat);
         console.position.y = 0.25;
         const tW = Math.min(1.2, cW - 0.1);
-        const tv = new THREE.Mesh(new THREE.BoxGeometry(tW, 0.7, 0.05), new THREE.MeshLambertMaterial({color:0x111111}));
+        const tv = new THREE.Mesh(new THREE.BoxGeometry(tW, 0.7, 0.05), new THREE.MeshStandardMaterial({color:0x111111, roughness: 0.2, metalness: 0.8}));
         tv.position.set(0, 0.95, 0);
         grp.add(console); grp.add(tv);
 
@@ -528,7 +579,7 @@ function buildFurniture(type, cx, cz, rotY, layer, param=null, cy=0) {
         const kW = param || 2.0;
         const counter = new THREE.Mesh(new THREE.BoxGeometry(kW, 0.9, 0.6), kitMat);
         counter.position.y = 0.45;
-        const sink = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.02, 0.4), new THREE.MeshLambertMaterial({color:0x999999}));
+        const sink = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.02, 0.4), new THREE.MeshStandardMaterial({color:0x999999, roughness: 0.2, metalness: 0.8}));
         sink.position.set(kW/4, 0.91, 0);
         grp.add(counter); grp.add(sink);
 
@@ -758,6 +809,14 @@ function buildHouseLogic(configData) {
     const applyTiles2= isTrue(configData.applyTilesSecond);
     const roofType   = configData.roofStyle || 'Corrugated GI Sheet / Yero';
 
+    // Update shadow camera bounds based on actual house dimensions
+    const maxDim = Math.max(L, W) * 0.75 + 5; // Add some padding for the surrounding ground
+    sunLight.shadow.camera.left = -maxDim;
+    sunLight.shadow.camera.right = maxDim;
+    sunLight.shadow.camera.top = maxDim;
+    sunLight.shadow.camera.bottom = -maxDim;
+    sunLight.shadow.camera.updateProjectionMatrix();
+
     const bed1 = parseInt(configData.bedrooms1F || 0);
     const cr1  = parseInt(configData.crs1F || 0);
     const bed2 = parseInt(configData.bedrooms2F || 0);
@@ -767,47 +826,47 @@ function buildHouseLogic(configData) {
     // --- MATERIALS ---
     let wallMat;
     if (painting) {
-        wallMat = new THREE.MeshStandardMaterial({ color: paintColor, roughness: 0.55, metalness: 0.0 });
+        wallMat = new THREE.MeshStandardMaterial({ color: paintColor, roughness: 0.75, metalness: 0.0 });
     } else if (plastering) {
-        wallMat = new THREE.MeshStandardMaterial({ color: '#D0CCC4', roughness: 0.75 });
+        wallMat = new THREE.MeshStandardMaterial({ color: '#D0CCC4', roughness: 0.80, metalness: 0.0 });
     } else {
-        wallMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.9, map: chbTex });
+        wallMat = new THREE.MeshStandardMaterial({ color: 0x888880, roughness: 0.85, metalness: 0.0, map: chbTex });
     }
 
     let roofMat;
     if (roofType === "Polycarbonate Sheet Roofing") {
         roofMat = new THREE.MeshStandardMaterial({ color: 0x4aa0d0, roughness: 0.2, transparent: true, opacity: 0.65, side: THREE.DoubleSide });
     } else if (roofType === "Concrete Flat Deck Roof") {
-        roofMat = new THREE.MeshStandardMaterial({ color: 0xc8c0b0, roughness: 0.95, side: THREE.DoubleSide });
+        roofMat = new THREE.MeshStandardMaterial({ color: 0xc8c0b0, roughness: 0.95, metalness: 0.0, side: THREE.DoubleSide });
     } else if (roofType === "Metal Stone-Coated / Tile Roof") {
-        roofMat = new THREE.MeshStandardMaterial({ color: 0xa05a40, roughness: 0.8, side: THREE.DoubleSide });
+        roofMat = new THREE.MeshStandardMaterial({ color: 0xa05a40, roughness: 0.8, metalness: 0.0, side: THREE.DoubleSide });
     } else if (roofType === "Long Span Pre-Painted Roofing" || roofType === "Color Roof / Pre-painted Corrugated") {
-        roofMat = new THREE.MeshStandardMaterial({ color: 0x8b3a3a, roughness: 0.7, map: roofTex, side: THREE.DoubleSide }); // Painted Red
+        roofMat = new THREE.MeshStandardMaterial({ color: 0x8b3a3a, roughness: 0.45, metalness: 0.35, map: roofTex, side: THREE.DoubleSide }); // Painted Red
     } else if (roofType === "Spandrel Ceiling Roof") {
-        roofMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9, map: roofTex, side: THREE.DoubleSide }); // Beige
+        roofMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.6, metalness: 0.1, map: roofTex, side: THREE.DoubleSide }); // Beige
     } else {
         // Corrugated GI Sheet / Yero
-        roofMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.85, roughness: 0.2, map: yeroTex, side: THREE.DoubleSide }); // Shiny bright silver with Yero texture
+        roofMat = new THREE.MeshStandardMaterial({ color: 0xa8b4bc, roughness: 0.35, metalness: 0.55, map: yeroTex, side: THREE.DoubleSide }); // Steel grey-blue
     }
     let wallMat2;
     if (painting2) {
-        wallMat2 = new THREE.MeshStandardMaterial({ color: paintColor2, roughness: 0.55, metalness: 0.0 });
+        wallMat2 = new THREE.MeshStandardMaterial({ color: paintColor2, roughness: 0.75, metalness: 0.0 });
     } else if (plastering2) {
-        wallMat2 = new THREE.MeshStandardMaterial({ color: '#D0CCC4', roughness: 0.75 });
+        wallMat2 = new THREE.MeshStandardMaterial({ color: '#D0CCC4', roughness: 0.80, metalness: 0.0 });
     } else {
-        wallMat2 = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.9, map: chbTex });
+        wallMat2 = new THREE.MeshStandardMaterial({ color: 0x888880, roughness: 0.85, metalness: 0.0, map: chbTex });
     }
 
-    const fascMat    = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 }); // fascia boards
-    const colMat     = new THREE.MeshStandardMaterial({ color: paintColor, roughness: 0.5 });
-    const concMat    = new THREE.MeshStandardMaterial({ color: 0xc8c0b0, roughness: 0.95 });
-    const slabMat    = applyTiles ? new THREE.MeshStandardMaterial({ color: 0xe8e0d0, roughness: 0.4, map: makeDynamicTileTex(configData.tileSize, L, W) }) : concMat;
-    const slabMat2   = applyTiles2 ? new THREE.MeshStandardMaterial({ color: 0xe8e0d0, roughness: 0.4, map: makeDynamicTileTex(configData.tileSize, L2, W2) }) : concMat;
-    const ceilingMat = new THREE.MeshStandardMaterial({ color: 0xf8f6f2, roughness: 1.0 });
-    const glassMat   = new THREE.MeshStandardMaterial({ color: 0x8ab4c8, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.45 });
-    const frameMat   = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4 });
-    const doorMat    = new THREE.MeshStandardMaterial({ color: 0x4a3520, roughness: 0.7 });
-    const doorGlsMat = new THREE.MeshStandardMaterial({ color: 0x90b8cc, roughness: 0.05, transparent: true, opacity: 0.5 });
+    const fascMat    = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }); // fascia boards
+    const colMat     = new THREE.MeshStandardMaterial({ color: paintColor, roughness: 0.85 });
+    const concMat    = new THREE.MeshStandardMaterial({ color: 0xc8c0b0, roughness: 0.95, metalness: 0.0 });
+    const slabMat    = applyTiles ? new THREE.MeshStandardMaterial({ color: 0xe8e0d0, roughness: 0.6, metalness: 0.0, map: makeDynamicTileTex(configData.tileSize, L, W) }) : concMat;
+    const slabMat2   = applyTiles2 ? new THREE.MeshStandardMaterial({ color: 0xe8e0d0, roughness: 0.6, metalness: 0.0, map: makeDynamicTileTex(configData.tileSize, L2, W2) }) : concMat;
+    const ceilingMat = new THREE.MeshStandardMaterial({ color: 0xf8f6f2, roughness: 1.0, metalness: 0.0 });
+    const glassMat   = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1, metalness: 0.95, transparent: true, opacity: 0.95 }); // Very dark tinted privacy glass
+    const frameMat   = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4, metalness: 0.6 });
+    const doorMat    = new THREE.MeshStandardMaterial({ color: 0x4a3520, roughness: 0.7, metalness: 0.0 });
+    const doorGlsMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1, metalness: 0.95, transparent: true, opacity: 0.95 });
     const knobMat    = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.3 });
 
     let lightMat = null;
@@ -1766,7 +1825,9 @@ function animate() {
 
     // 2. Blueprint Render (2D Floor Plan) — switch scene to blueprint mode
     const bg = scene.background;
-    scene.background = new THREE.Color(0xffffff);
+    const oldFog = scene.fog;
+    scene.background = new THREE.Color(0xffffff); // Crisp paper white
+    scene.fog = null; // Fixes the bug where 3D fog bleeds into the 2D floor plan
     
     // Force visibility for blueprint render (ignoring X-Ray)
     roofGroup.visible = false;
@@ -1783,8 +1844,8 @@ function animate() {
         oldMats.set(c, c.material);
         oldVis.set(c, c.visible);
         if (c.userData.type === "stair") { c.visible = false; }
-        else if (c.material.opacity === 0.45) { c.material = fpWindowMat; } 
-        else if (c.material.color.getHex() === 0x4a3520 || c.material.opacity === 0.5) { c.material = fpSlabMat; } 
+        else if (c.material.opacity === 0.95) { c.material = fpWindowMat; } 
+        else if (c.material.color.getHex() === 0x4a3520) { c.material = fpSlabMat; } 
         else if (c.material.color.getHex() === 0x222222) { c.visible = false; } 
         else { c.material = fpWallMat; }
     });
@@ -1855,6 +1916,7 @@ function animate() {
 
     // Restore state
     scene.background = bg;
+    scene.fog = oldFog;
     blueprintGroup.visible = false;
 
     wallGroup.children.forEach(c => { c.material = oldMats.get(c); c.visible = oldVis.get(c); });
@@ -1908,13 +1970,14 @@ window.addEventListener('resize', () => {
     bbox.getSize(size);
     const maxDim = Math.max(size.x, size.y, size.z) || 10;
 
-    // Position camera at a cinematic diagonal angle and aim at house center
+    // Position camera exactly at human eye-level, perfectly straight on the front facade
     cameraExt.position.set(
-        center.x + maxDim * 1.55,
-        center.y + maxDim * 0.55,
-        center.z + maxDim * 0.85
+        center.x + maxDim * 1.2, // Distance from the front
+        1.6, // Exact human eye level (1.6 meters)
+        center.z // Perfectly aligned with the center, no offset
     );
-    controlsExt.target.copy(center);
+    // Target the front of the house at roughly the same height, so the camera looks horizontally, not down
+    controlsExt.target.set(center.x, 2.0, center.z);
     cameraExt.near = 0.1;
     cameraExt.far  = maxDim * 20;
     cameraExt.updateProjectionMatrix();

@@ -10,7 +10,7 @@ export function getChbTemplate() {
 
       <section class="form-section">
         <div class="section-label"><span>1</span><div><h3>General Settings</h3><p>Shared costing inputs.</p></div></div>
-        <div class="row g-3">
+        <div class="row g-4">
           <div class="col-md-6"><div class="bw-toggle-field"><span class="form-label">Include Tools &amp; Consumables</span><label class="bw-toggle"><input type="hidden" name="includeTools" value="No - reference only"><input type="checkbox" class="bw-toggle-input" data-on="Yes" data-off="No - reference only"><span class="bw-toggle-track"></span><span class="bw-toggle-status">No</span></label></div></div>
           <div class="col-md-6"><label class="form-label" for="chbRoofType">Roof Type</label><select class="form-select" id="chbRoofType" name="roofType"><option>Corrugated GI Sheet / Yero</option><option selected>Long Span Pre-Painted Roofing</option><option>Color Roof / Pre-painted Corrugated</option><option>Spandrel Ceiling Roof</option><option>Polycarbonate Sheet Roofing</option><option>Concrete Flat Deck Roof</option><option>Metal Stone-Coated / Tile Roof</option></select></div>
           <div class="col-md-6"><label class="form-label" for="chbMaterialGrade">Material Grade</label><select class="form-select" id="chbMaterialGrade" name="materialGrade"><option>Basic</option><option selected>Standard</option><option>Premium</option></select></div>
@@ -20,7 +20,7 @@ export function getChbTemplate() {
 
       <section class="form-section">
         <div class="section-label"><span>2</span><div><h3>Dimensions &amp; Layout</h3><p>Set lengths, widths and rooms.</p></div></div>
-        <div class="row g-3">
+        <div class="row g-4">
           <div class="col-md-6"><label class="form-label" for="chbLength">Building Length - L</label><div class="input-with-unit"><input class="form-control" id="chbLength" name="length" type="number" min="1" step="0.5" value="5" required><span>m</span></div></div>
           <div class="col-md-6"><label class="form-label" for="chbWidth">Building Width - W</label><div class="input-with-unit"><input class="form-control" id="chbWidth" name="width" type="number" min="1" step="0.5" value="6" required><span>m</span></div></div>
           <div class="col-md-6"><label class="form-label" for="chbBedrooms1F">Number of Bedrooms (1F)</label><select class="form-select room-picker" id="chbBedrooms1F" name="bedrooms1F"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
@@ -32,7 +32,7 @@ export function getChbTemplate() {
 
       <section class="form-section">
         <div class="section-label"><span>3</span><div><h3>Plastering, Painting &amp; Ceiling</h3><p>Adjust finishes and ceiling types.</p></div></div>
-        <div class="row g-3">
+        <div class="row g-4">
           <div class="col-md-6"><div class="bw-toggle-field"><span class="form-label">Include Plastering</span><label class="bw-toggle"><input type="hidden" name="includePlastering" value="No"><input type="checkbox" class="bw-toggle-input" data-on="Yes" data-off="No"><span class="bw-toggle-track"></span><span class="bw-toggle-status">No</span></label></div></div>
           <div class="col-md-6"><div class="bw-toggle-field"><span class="form-label">Include Painting</span><label class="bw-toggle"><input type="hidden" name="includePainting" value="No"><input type="checkbox" class="bw-toggle-input" data-on="Yes" data-off="No"><span class="bw-toggle-track"></span><span class="bw-toggle-status">No</span></label></div></div>
           <div class="col-md-6"><div class="bw-toggle-field"><span class="form-label">Has Ceiling</span><label class="bw-toggle"><input type="hidden" name="hasCeiling" value="No"><input type="checkbox" class="bw-toggle-input" data-on="Yes" data-off="No"><span class="bw-toggle-track"></span><span class="bw-toggle-status">No</span></label></div></div>
@@ -44,7 +44,7 @@ export function getChbTemplate() {
 
       <section class="form-section">
         <div class="section-label"><span>4</span><div><h3>Tiling</h3><p>Tile sizes and allowances.</p></div></div>
-        <div class="row g-3">
+        <div class="row g-4">
           <div class="col-md-6 conditional-field" data-condition="showTiles"><label class="form-label" for="chbTileSize">Tile Size</label><select class="form-select" id="chbTileSize" name="tileSize"><option>7.5x7.5 - 177.8/sqm</option><option>10x10 - 100/sqm</option><option>10.6x10.6 - 88.4/sqm</option><option>10x20 - 50/sqm</option><option>15x15 - 44.44/sqm</option><option>15x20 - 33.33/sqm</option><option>15x30 - 22.22/sqm</option><option>20x20 - 25/sqm</option><option>20x30 - 16.66/sqm</option><option>20x40 - 12.5/sqm</option><option>25x25 - 16/sqm</option><option selected>30x30 - 11/sqm</option><option>30x60 - 5.56/sqm</option><option>40x40 - 6.25/sqm</option><option>50x50 - 4/sqm</option><option>60x60 - 2.78/sqm</option></select></div>
           <div class="col-md-6 conditional-field" data-condition="showTiles"><label class="form-label" for="chbTileBreakage">Tile Breakage</label><select class="form-select" id="chbTileBreakage" name="tileBreakage"><option>5%</option><option selected>10%</option><option>15%</option><option>20%</option></select></div>
           <div class="col-md-6"><div class="bw-toggle-field"><span class="form-label">Apply Tiles on Ground Floor</span><label class="bw-toggle"><input type="hidden" name="applyTilesGround" value="No"><input type="checkbox" class="bw-toggle-input" data-on="Yes" data-off="No"><span class="bw-toggle-track"></span><span class="bw-toggle-status">No</span></label></div></div>

@@ -1,392 +1,99 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>About | BuildWise</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buildwise | About</title>
     <link rel="icon" type="image/png" href="../assets/logo/logo.png">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.css">
-    <style>
-      .about-hero {
-        padding: 80px 0 40px;
-        text-align: center;
-      }
-      .about-hero h1 {
-        font-size: clamp(2.5rem, 5vw, 4rem);
-        color: var(--primary);
-        font-weight: 900;
-        margin-bottom: 1rem;
-      }
-      .about-hero p {
-        color: var(--text-muted);
-        font-size: 1.2rem;
-        max-width: 700px;
-        margin: 0 auto 3rem;
-      }
-      
-      .section-heading {
-        text-align: center;
-        margin-bottom: 3rem;
-      }
-      .section-heading h2 {
-        font-size: 2.5rem;
-        font-weight: 800;
-        color: var(--text);
-        margin-bottom: 0.5rem;
-      }
-      .section-heading p {
-        color: var(--text-muted);
-        font-size: 1.1rem;
-      }
-
-      /* Premium Formula Cards */
-      .formula-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 2.5rem;
-        margin-top: 2rem;
-      }
-      .formula-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        overflow: hidden;
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-      }
-      .formula-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 30px rgba(31, 122, 92, 0.08);
-        border-color: rgba(31, 122, 92, 0.3);
-      }
-      .formula-header {
-        background: rgba(31, 122, 92, 0.04);
-        padding: 1.5rem 2rem;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .formula-header h3 {
-        margin: 0;
-        font-size: 1.3rem;
-        font-weight: 800;
-        color: var(--text);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .formula-header .badge-tag {
-        background: rgba(31, 122, 92, 0.1);
-        color: var(--primary);
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        padding: 0.4rem 0.8rem;
-        border-radius: 50px;
-      }
-      .formula-body {
-        padding: 2rem;
-      }
-      .formula-description {
-        color: var(--text-muted);
-        font-size: 1.05rem;
-        line-height: 1.6;
-        margin-bottom: 2rem;
-      }
-      
-      /* Math Display Block */
-      .math-display {
-        background: #0f172a; /* Sleek dark slate */
-        color: #e2e8f0;
-        padding: 1.8rem 2rem;
-        border-radius: 8px;
-        font-family: 'Fira Code', 'Courier New', monospace;
-        font-size: 1.3rem;
-        text-align: center;
-        margin-bottom: 2.5rem;
-        box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
-        border: 1px solid #1e293b;
-        position: relative;
-        overflow-x: auto;
-      }
-      .math-display::before {
-        content: 'CORE FORMULA';
-        position: absolute;
-        top: 0;
-        left: 20px;
-        transform: translateY(-50%);
-        background: #0f172a;
-        padding: 0 10px;
-        font-size: 0.7rem;
-        color: #94a3b8;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        border: 1px solid #1e293b;
-        border-radius: 50px;
-      }
-      .math-display i {
-        font-style: italic;
-        color: #34d399; /* Mint green for variables */
-      }
-      .math-display sub {
-        font-size: 0.65em;
-        color: #94a3b8;
-      }
-      .math-display .op {
-        color: #f87171; /* Soft red for operators */
-        margin: 0 8px;
-      }
-      .math-display .func {
-        color: #60a5fa; /* Blue for functions */
-      }
-
-      /* Variables Grid */
-      .variables-section h4 {
-        font-size: 0.95rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--text);
-        font-weight: 800;
-        margin-bottom: 1.2rem;
-        border-bottom: 2px solid rgba(0,0,0,0.05);
-        padding-bottom: 0.5rem;
-        display: inline-block;
-      }
-      .variable-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.2rem;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .variable-item {
-        background: rgba(0,0,0,0.02);
-        padding: 1.2rem;
-        border-radius: 8px;
-        border-left: 4px solid var(--primary);
-      }
-      .variable-item strong {
-        color: var(--primary);
-        font-family: 'Fira Code', monospace;
-        font-size: 1.05rem;
-        display: block;
-        margin-bottom: 0.4rem;
-      }
-      .variable-item span {
-        color: var(--text-muted);
-        font-size: 0.95rem;
-        line-height: 1.5;
-        display: block;
-      }
-
-      /* Engineering Reference Card */
-      .eng-ref-section {
-        padding: 60px 0;
-      }
-      .eng-card {
-        background: var(--surface);
-        border-radius: var(--radius);
-        padding: 40px;
-        box-shadow: var(--shadow);
-        text-align: center;
-        max-width: 600px;
-        margin: 0 auto;
-        border: 1px solid var(--border);
-      }
-      .eng-icon {
-        width: 80px;
-        height: 80px;
-        background: rgba(31, 122, 92, 0.1);
-        color: var(--primary);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-      }
-      .eng-icon svg {
-        width: 40px;
-        height: 40px;
-      }
-      .eng-card h3 {
-        color: var(--text);
-        font-weight: 800;
-        margin-bottom: 5px;
-      }
-      .eng-card .title {
-        color: var(--primary);
-        font-weight: 600;
-        margin-bottom: 20px;
-      }
-      .eng-details {
-        text-align: left;
-        background: rgba(0,0,0,0.04);
-        padding: 20px;
-        border-radius: var(--radius);
-        color: var(--text-muted);
-        font-size: 0.95rem;
-      }
-      .eng-details p {
-        margin-bottom: 8px;
-        display: flex;
-        justify-content: space-between;
-      }
-      .eng-details p:last-child {
-        margin-bottom: 0;
-      }
-      .eng-details strong {
-        color: var(--text);
-      }
-
-      /* Disclaimer */
-      .disclaimer-section {
-        padding: 40px 0 80px;
-      }
-      .disclaimer-box {
-        background-color: rgba(220, 53, 69, 0.05);
-        border-left: 4px solid #dc3545;
-        padding: 2rem;
-        border-radius: 0 var(--radius) var(--radius) 0;
-        color: var(--text);
-      }
-      .disclaimer-box h3 {
-        color: #dc3545;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .disclaimer-box p {
-        margin-bottom: 0.5rem;
-        color: var(--text-muted);
-      }
-
-      /* Materials Reference Section */
-      .materials-ref-section {
-        padding: 60px 0;
-        background: rgba(31, 122, 92, 0.02);
-        border-top: 1px solid var(--border);
-        border-bottom: 1px solid var(--border);
-      }
-      .materials-category-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
-        margin-top: 2rem;
-      }
-      .materials-cat-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        overflow: hidden;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.03);
-        transition: box-shadow 0.3s;
-      }
-      .materials-cat-card:hover {
-        box-shadow: 0 8px 24px rgba(31, 122, 92, 0.07);
-      }
-      .materials-cat-header {
-        background: rgba(31, 122, 92, 0.05);
-        border-bottom: 1px solid var(--border);
-        padding: 1.2rem 1.8rem;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .materials-cat-header .cat-icon {
-        width: 36px;
-        height: 36px;
-        background: rgba(31, 122, 92, 0.12);
-        color: var(--primary);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-      }
-      .materials-cat-header h3 {
-        margin: 0;
-        font-size: 1.1rem;
-        font-weight: 800;
-        color: var(--text);
-      }
-      .materials-ref-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.95rem;
-      }
-      .materials-ref-table thead tr {
-        background: rgba(0,0,0,0.025);
-      }
-      .materials-ref-table th {
-        padding: 0.8rem 1.5rem;
-        text-align: left;
-        font-size: 0.78rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        color: var(--text-muted);
-        border-bottom: 1px solid var(--border);
-      }
-      .materials-ref-table td {
-        padding: 0.85rem 1.5rem;
-        color: var(--text);
-        border-bottom: 1px solid rgba(0,0,0,0.04);
-        vertical-align: middle;
-      }
-      .materials-ref-table tbody tr:last-child td {
-        border-bottom: none;
-      }
-      .materials-ref-table tbody tr:hover {
-        background: rgba(31, 122, 92, 0.03);
-      }
-      .mat-unit-badge {
-        display: inline-block;
-        background: rgba(31, 122, 92, 0.08);
-        color: var(--primary);
-        font-size: 0.78rem;
-        font-weight: 700;
-        padding: 0.2rem 0.6rem;
-        border-radius: 50px;
-      }
-      .mat-price {
-        font-weight: 700;
-        color: var(--text);
-        font-family: 'Fira Code', monospace;
-        font-size: 0.9rem;
-      }
-    </style>
+    <!-- Shared Styles -->
+    <link rel="stylesheet" href="../styles/tokens.css">
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/components.css?v=8">
+    <link rel="stylesheet" href="../styles/navbar.css?v=3">
+    <link rel="stylesheet" href="../styles/utilities.css?v=3">
+    <link rel="stylesheet" href="../styles/about.css">
   </head>
-  <body>
-    <bw-navbar base-path="../"></bw-navbar>
+  <body class="about-page">
+    <div id="navbar-container"></div>
 
     <main>
-      <!-- Overview Section -->
-      <section class="about-hero container">
-        <h1>About BuildWise</h1>
-        <p>The autonomous platform designed to simplify, optimize, and accurately estimate construction projects. BuildWise solves the complex challenge of architectural planning by combining automated structural models with real-time material and cost approximations.</p>
+      <!-- SECTION 01: HERO -->
+      <section class="about-hero" id="about-hero">
+          <div class="hero-bg" style="background-image: url('../assets/images/services-bg.jpeg');"></div>
+          <div class="hero-overlay"></div>
+          <div class="container hero-content text-center">
+              <h1 class="hero-title">BUILT ON CLARITY.<br>NOT GUESSWORK.</h1>
+              <p class="hero-subtitle mx-auto" style="max-width: 700px;">The autonomous platform designed to simplify, optimize, and accurately estimate construction projects. BuildWise solves the complex challenge of architectural planning by combining automated structural models with real-time material and cost approximations.</p>
+              <div class="mt-5">
+                  <a href="../index.html#home" class="btn btn-outline-white" style="font-size: 1.2rem; padding: 18px 40px;">START BUILDING &rarr;</a>
+              </div>
+          </div>
       </section>
 
-      <!-- Formula Methodology Section -->
-      <section class="container pb-5">
-        <div class="section-heading">
-          <h2>Formula Methodology</h2>
-          <p>The core mathematical models powering our estimation engine.</p>
-        </div>
+      <!-- SECTION 02: THE TEAM -->
+      <section class="brand-section">
+          <div class="container">
+              <span class="section-num">01 / THE TEAM</span>
+              <h2 class="section-title">MEET THE MINDS<br>BEHIND <span>BUILDWISE</span></h2>
+              
+              <div class="team-grid mt-5">
+                  <div class="team-member">
+                      <div class="member-img" style="background-image: url('../assets/team/fritz.jpg');"></div>
+                      <div class="member-info">
+                          <h4>Fritz Wendell M. Pisons</h4>
+                          <p>Project Manager</p>
+                      </div>
+                  </div>
+                  <div class="team-member">
+                      <div class="member-img" style="background-image: url('../assets/team/johnfred.jpg');"></div>
+                      <div class="member-info">
+                          <h4>Johnfred P. Gaper</h4>
+                          <p>Backend Developer</p>
+                      </div>
+                  </div>
+                  <div class="team-member">
+                      <div class="member-img" style="background-image: url('../assets/team/marian.jpg');"></div>
+                      <div class="member-info">
+                          <h4>Marian T. Anud</h4>
+                          <p>AI & System Integration Developer</p>
+                      </div>
+                  </div>
+                  <div class="team-member">
+                      <div class="member-img" style="background-image: url('../assets/team/osman.jpg');"></div>
+                      <div class="member-info">
+                          <h4>Osman V. Lofranco</h4>
+                          <p>Frontend Developer</p>
+                      </div>
+                  </div>
+                  <div class="team-member">
+                      <div class="member-img" style="background-image: url('../assets/team/via.jpg');"></div>
+                      <div class="member-info">
+                          <h4>Via A. Usaraga</h4>
+                          <p>UI/UX Designer & Doc</p>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </section>
 
-        <div class="formula-grid">
+      <!-- SECTION 03: FORMULA METHODOLOGY -->
+      <section class="brand-section" style="border-top: 1px solid var(--color-border); background: rgba(0,0,0,0.2);">
+        <div class="container pb-5">
+          <span class="section-num">02 / HOW WE ESTIMATE</span>
+          <h2 class="section-title">THE MATH BEHIND<br><span>EVERY ESTIMATE</span>.</h2>
+          <p class="section-desc mt-4" style="max-width: 700px; color: var(--color-muted);">The core mathematical models powering our estimation engine. We use transparent, real-world formulas rather than black-box algorithms.</p>
           
-          <!-- 🏠 CHB HOUSE -->
+          <div class="formula-grid mt-5">
+<!-- 🏠 CHB HOUSE -->
           <article class="formula-card">
-            <div class="formula-header">
-              <h3>🏠 CHB HOUSE</h3>
-              <span class="badge-tag">Standard Concrete</span>
-            </div>
+            <details>
+              <summary class="formula-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span class="chevron"></span>
+                  <h3>🏠 CHB HOUSE</h3>
+                </div>
+                <span class="badge-tag">Standard Concrete</span>
+              </summary>
             <div class="formula-body">
               
               <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">FOUNDATION</h4>
@@ -574,15 +281,19 @@
                 </tbody>
               </table>
 
-            </div>
+            </div></details>
           </article>
 
           <!-- 🌿 HALF AMAKAN HOUSE -->
           <article class="formula-card">
-            <div class="formula-header">
-              <h3>🌿 HALF AMAKAN HOUSE</h3>
-              <span class="badge-tag">Lightweight Material</span>
-            </div>
+            <details>
+              <summary class="formula-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span class="chevron"></span>
+                  <h3>🌿 HALF AMAKAN HOUSE</h3>
+                </div>
+                <span class="badge-tag">Lightweight Material</span>
+              </summary>
             <div class="formula-body">
               
               <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">FOUNDATION & STRUCTURAL</h4>
@@ -626,14 +337,19 @@
               <p style="color: var(--text-muted); font-size: 0.95rem;" class="mb-4">Same formulas as CHB House.</p>
 
             </div>
+            </details>
           </article>
 
           <!-- 🏠 HALF METAL CLADDING HOUSE -->
           <article class="formula-card">
-            <div class="formula-header">
-              <h3>🏠 HALF METAL CLADDING HOUSE</h3>
-              <span class="badge-tag">Lightweight Modern</span>
-            </div>
+            <details>
+              <summary class="formula-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span class="chevron"></span>
+                  <h3>🏠 HALF METAL CLADDING HOUSE</h3>
+                </div>
+                <span class="badge-tag">Lightweight Modern</span>
+              </summary>
             <div class="formula-body">
               
               <h4 class="mt-3 mb-2" style="font-weight: 800; color: var(--text); font-size: 1.1rem;">FOUNDATION & STRUCTURAL</h4>
@@ -676,14 +392,19 @@
               <p style="color: var(--text-muted); font-size: 0.95rem;" class="mb-4">Same formulas as CHB House.</p>
 
             </div>
+            </details>
           </article>
 
           <!-- 🏢 TWO-STOREY HOUSE -->
           <article class="formula-card">
-            <div class="formula-header">
-              <h3>🏢 TWO-STOREY HOUSE</h3>
-              <span class="badge-tag">Multi-Level</span>
-            </div>
+            <details>
+              <summary class="formula-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span class="chevron"></span>
+                  <h3>🏢 TWO-STOREY HOUSE</h3>
+                </div>
+                <span class="badge-tag">Multi-Level</span>
+              </summary>
             <div class="formula-body">
               
               <p style="color: var(--text-muted); font-size: 0.95rem;" class="mb-4">Everything from the CHB House, plus:</p>
@@ -704,15 +425,19 @@
                 </tbody>
               </table>
 
-            </div>
+            </div></details>
           </article>
 
           <!-- 🏡 LOFT HOUSE -->
           <article class="formula-card">
-            <div class="formula-header">
-              <h3>🏡 LOFT HOUSE</h3>
-              <span class="badge-tag">Partial Upper Level</span>
-            </div>
+            <details>
+              <summary class="formula-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span class="chevron"></span>
+                  <h3>🏡 LOFT HOUSE</h3>
+                </div>
+                <span class="badge-tag">Partial Upper Level</span>
+              </summary>
             <div class="formula-body">
               
               <p style="color: var(--text-muted); font-size: 0.95rem;" class="mb-4">Everything from the CHB House, except:</p>
@@ -732,33 +457,38 @@
                 </tbody>
               </table>
 
-            </div>
+            </div></details>
           </article>
-
+          </div>
         </div>
       </section>
 
-      <!-- Materials Reference Section -->
-      <section class="materials-ref-section">
+      <!-- SECTION 04: MATERIALS REFERENCE -->
+      <section class="brand-section" style="border-top: 1px solid var(--color-border);">
         <div class="container">
-          <div class="section-heading">
-            <h2>Materials Reference</h2>
-            <p>All construction materials used in our estimation engine, with standard base prices.</p>
-          </div>
+          <span class="section-num">03 / MATERIALS & PRICING</span>
+          <h2 class="section-title">ALL MATERIALS.<br><span>ALL PRICES</span>.</h2>
+          <p class="section-desc mt-4" style="max-width: 700px; color: var(--color-muted);">All construction materials used in our estimation engine, with standard base prices.</p>
 
-          <div class="materials-category-grid">
-
-            <!-- Category 1: Structural / Masonry -->
+          <div class="materials-category-grid mt-5">
+<!-- Category 1: Structural / Masonry -->
             <div class="materials-cat-card">
-              <div class="materials-cat-header">
+              <details>
+                <summary class="materials-cat-header" style="display:flex; align-items:center; gap:12px;">
+                  <span class="chevron"></span>
+                  <div style="display:flex; align-items:center; gap:15px; width:100%;">
+                    
                 <div class="cat-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
                   </svg>
-                </div>
-                <h3>Structural / Masonry</h3>
-              </div>
+                
+                  </div>
+                  <h3>Structural / Masonry</h3>
+                  </div>
+                </summary>
+                <div class="materials-cat-body">
               <table class="materials-ref-table">
                 <thead>
                   <tr>
@@ -783,18 +513,26 @@
                   <tr><td>Coco Lumber</td><td><span class="mat-unit-badge">bd.ft.</span></td><td class="mat-price" style="text-align:right;">₱35.00</td></tr>
                 </tbody>
               </table>
+            </div></details>
             </div>
 
             <!-- Category 2: Walling / Light Framing -->
             <div class="materials-cat-card">
-              <div class="materials-cat-header">
+              <details>
+                <summary class="materials-cat-header" style="display:flex; align-items:center; gap:12px;">
+                  <span class="chevron"></span>
+                  <div style="display:flex; align-items:center; gap:15px; width:100%;">
+                    
                 <div class="cat-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5zM1.5 1a.5.5 0 0 0-.5.5V7h6V1zm7 0v6h6V1.5a.5.5 0 0 0-.5-.5zm6 7h-6v6h4.5a.5.5 0 0 0 .5-.5zM7.5 15v-6h-6v4.5a.5.5 0 0 0 .5.5z"/>
                   </svg>
-                </div>
-                <h3>Walling / Light Framing</h3>
-              </div>
+                
+                  </div>
+                  <h3>Walling / Light Framing</h3>
+                  </div>
+                </summary>
+                <div class="materials-cat-body">
               <table class="materials-ref-table">
                 <thead>
                   <tr>
@@ -814,19 +552,27 @@
                   <tr><td>Standard Plywood</td><td><span class="mat-unit-badge">sheet</span></td><td class="mat-price" style="text-align:right;">₱747.00</td></tr>
                 </tbody>
               </table>
+            </div></details>
             </div>
 
             <!-- Category 3: Roofing -->
             <div class="materials-cat-card">
-              <div class="materials-cat-header">
+              <details>
+                <summary class="materials-cat-header" style="display:flex; align-items:center; gap:12px;">
+                  <span class="chevron"></span>
+                  <div style="display:flex; align-items:center; gap:15px; width:100%;">
+                    
                 <div class="cat-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z"/>
                     <path d="m8 3.293 6 6V13.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5V9.293z"/>
                   </svg>
-                </div>
-                <h3>Roofing</h3>
-              </div>
+                
+                  </div>
+                  <h3>Roofing</h3>
+                  </div>
+                </summary>
+                <div class="materials-cat-body">
               <table class="materials-ref-table">
                 <thead>
                   <tr>
@@ -852,18 +598,26 @@
                   <tr><td>Roofing Screw</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱7.00</td></tr>
                 </tbody>
               </table>
+            </div></details>
             </div>
 
             <!-- Category 4: Finishes -->
             <div class="materials-cat-card">
-              <div class="materials-cat-header">
+              <details>
+                <summary class="materials-cat-header" style="display:flex; align-items:center; gap:12px;">
+                  <span class="chevron"></span>
+                  <div style="display:flex; align-items:center; gap:15px; width:100%;">
+                    
                 <div class="cat-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M15.825.14A.5.5 0 0 1 16 .5v14a.5.5 0 0 1-.396.49l-5 1A.5.5 0 0 1 10 15.5V5H5v10.5a.5.5 0 0 1-.604.49l-5-1A.5.5 0 0 1 0 14.5v-14a.5.5 0 0 1 .396-.49l5-1a.5.5 0 0 1 .208 0l4.996 1 5-1a.5.5 0 0 1 .225.03z"/>
                   </svg>
-                </div>
-                <h3>Finishes</h3>
-              </div>
+                
+                  </div>
+                  <h3>Finishes</h3>
+                  </div>
+                </summary>
+                <div class="materials-cat-body">
               <table class="materials-ref-table">
                 <thead>
                   <tr>
@@ -881,18 +635,26 @@
                   <tr><td>Architectural Topcoat Paint</td><td><span class="mat-unit-badge">gal</span></td><td class="mat-price" style="text-align:right;">₱700.00</td></tr>
                 </tbody>
               </table>
+            </div></details>
             </div>
 
             <!-- Category 5: Ceiling -->
             <div class="materials-cat-card">
-              <div class="materials-cat-header">
+              <details>
+                <summary class="materials-cat-header" style="display:flex; align-items:center; gap:12px;">
+                  <span class="chevron"></span>
+                  <div style="display:flex; align-items:center; gap:15px; width:100%;">
+                    
                 <div class="cat-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm8.5 9.5a.5.5 0 0 0-1 0v1a.5.5 0 0 0 1 0zm0-10a.5.5 0 0 0-1 0v1a.5.5 0 0 0 1 0zm5 5a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1zm-10 0a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1z"/>
                   </svg>
-                </div>
-                <h3>Ceiling</h3>
-              </div>
+                
+                  </div>
+                  <h3>Ceiling</h3>
+                  </div>
+                </summary>
+                <div class="materials-cat-body">
               <table class="materials-ref-table">
                 <thead>
                   <tr>
@@ -910,18 +672,26 @@
                   <tr><td>Furring (3m)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱55.00</td></tr>
                 </tbody>
               </table>
+            </div></details>
             </div>
 
             <!-- Category 6: Handrail & Newel Post -->
             <div class="materials-cat-card">
-              <div class="materials-cat-header">
+              <details>
+                <summary class="materials-cat-header" style="display:flex; align-items:center; gap:12px;">
+                  <span class="chevron"></span>
+                  <div style="display:flex; align-items:center; gap:15px; width:100%;">
+                    
                 <div class="cat-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
                     <path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H11a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 5 7h2.5V6A1.5 1.5 0 0 1 6 4.5zM8.5 5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5zM3 11.5A1.5 1.5 0 0 1 4.5 10h1A1.5 1.5 0 0 1 7 11.5v1A1.5 1.5 0 0 1 5.5 14h-1A1.5 1.5 0 0 1 3 12.5zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM9 11.5A1.5 1.5 0 0 1 10.5 10h1A1.5 1.5 0 0 1 13 11.5v1A1.5 1.5 0 0 1 11.5 14h-1A1.5 1.5 0 0 1 9 12.5zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z"/>
                   </svg>
-                </div>
-                <h3>Handrail &amp; Newel Post</h3>
-              </div>
+                
+                  </div>
+                  <h3>Handrail &amp; Newel Post</h3>
+                  </div>
+                </summary>
+                <div class="materials-cat-body">
               <table class="materials-ref-table">
                 <thead>
                   <tr>
@@ -935,18 +705,26 @@
                   <tr><td>Newel Post</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱1,500.00</td></tr>
                 </tbody>
               </table>
+            </div></details>
             </div>
 
             <!-- Category 7: Plumbing -->
             <div class="materials-cat-card">
-              <div class="materials-cat-header">
+              <details>
+                <summary class="materials-cat-header" style="display:flex; align-items:center; gap:12px;">
+                  <span class="chevron"></span>
+                  <div style="display:flex; align-items:center; gap:15px; width:100%;">
+                    
                 <div class="cat-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M8 16a6 6 0 0 0 6-6c0-1.655-1.122-2.904-2.432-4.362C10.254 4.176 8.75 2.503 8 0c-.75 2.503-2.254 4.176-3.568 5.638C3.122 7.096 2 8.345 2 10a6 6 0 0 0 6 6z"/>
                   </svg>
-                </div>
-                <h3>Plumbing</h3>
-              </div>
+                
+                  </div>
+                  <h3>Plumbing</h3>
+                  </div>
+                </summary>
+                <div class="materials-cat-body">
               <table class="materials-ref-table">
                 <thead>
                   <tr>
@@ -969,18 +747,26 @@
                   <tr><td>Floor Drain (4x4 Stainless)</td><td><span class="mat-unit-badge">pcs</span></td><td class="mat-price" style="text-align:right;">₱150.00</td></tr>
                 </tbody>
               </table>
+            </div></details>
             </div>
 
             <!-- Category 8: Electrical -->
             <div class="materials-cat-card">
-              <div class="materials-cat-header">
+              <details>
+                <summary class="materials-cat-header" style="display:flex; align-items:center; gap:12px;">
+                  <span class="chevron"></span>
+                  <div style="display:flex; align-items:center; gap:15px; width:100%;">
+                    
                 <div class="cat-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09z"/>
                   </svg>
-                </div>
-                <h3>Electrical</h3>
-              </div>
+                
+                  </div>
+                  <h3>Electrical</h3>
+                  </div>
+                </summary>
+                <div class="materials-cat-body">
               <table class="materials-ref-table">
                 <thead>
                   <tr>
@@ -1003,64 +789,74 @@
                   <tr><td>Electrical Tape</td><td><span class="mat-unit-badge">roll</span></td><td class="mat-price" style="text-align:right;">₱50.00</td></tr>
                 </tbody>
               </table>
+            </div></details>
             </div>
+          </div>
 
-          </div><!-- /.materials-category-grid -->
-
-          <p class="text-center mt-4" style="font-size:0.88rem; color:var(--text-muted);">
-            * Prices shown are standard base rates. Final costs are adjusted by the selected finish grade: <strong>Basic (×0.85)</strong>, <strong>Standard (×1.00)</strong>, or <strong>Premium (×1.20)</strong>.
+          <p class="text-center mt-5" style="font-size:0.85rem; color:var(--color-muted); letter-spacing: 1px; border-top: 1px solid var(--color-border); padding-top: 30px;">
+            * PRICES SHOWN ARE STANDARD BASE RATES. FINAL COSTS ARE ADJUSTED BY THE SELECTED FINISH GRADE: <strong style="color: var(--color-text)">BASIC (×0.85)</strong>, <strong style="color: var(--color-text)">STANDARD (×1.00)</strong>, OR <strong style="color: var(--color-text)">PREMIUM (×1.20)</strong>.
           </p>
         </div>
       </section>
 
-      <!-- Engineering Reference Section -->
-      <section class="eng-ref-section container">
-        <div class="section-heading">
-          <h2>Engineering Reference</h2>
-          <p>Our methodology is grounded in professional engineering standards.</p>
-        </div>
-        <div class="eng-card">
-          <div class="eng-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-award-fill" viewBox="0 0 16 16">
-              <path d="m8 0 1.669.864 1.858.282.842 1.68 1.337 1.32L13.4 6l.306 1.854-1.337 1.32-.842 1.68-1.858.282L8 12l-1.669-.864-1.858-.282-.842-1.68-1.337-1.32L2.6 6l-.306-1.854 1.337-1.32.842-1.68L6.331.864z"/>
-              <path d="M4 11.794V16l4-1 4 1v-4.206l-2.018.306L8 13.126 6.018 12.1z"/>
-            </svg>
-          </div>
-          <h3>Lady Jhanrie Avergonzado Polestico</h3>
-          <p class="title">CIVIL ENGINEER</p>
-          <div class="eng-details">
-            <p><strong>License / Registration No:</strong> <span>0221650</span></p>
-            <p><strong>Registration Date:</strong> <span>06/8/2025</span></p>
-            <p><strong>Valid Until:</strong> <span>02/03/2028</span></p>
-          </div>
-          <div class="eng-id-showcase" style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-            <img src="../assets/Engineer/frontid.jpg" alt="Engineer Front ID" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 300px; object-fit: contain; transition: transform 0.3s ease;">
-            <img src="../assets/Engineer/backid.jpg" alt="Engineer Back ID" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 300px; object-fit: contain; transition: transform 0.3s ease;">
+      <!-- SECTION 05: ENGINEERING REFERENCE -->
+      <section class="brand-section" style="border-top: 1px solid var(--color-border); background: rgba(0,0,0,0.2);">
+        <div class="container">
+          <span class="section-num text-center">04 / BACKED BY EXPERTISE</span>
+          <h2 class="section-title text-center mb-5">ENGINEERING<br><span>REFERENCE</span></h2>
+          
+          <div class="eng-card">
+            <h3>Lady Jhanrie Avergonzado Polestico</h3>
+            <p class="title">CIVIL ENGINEER</p>
+            <div class="eng-details">
+              <p><strong>License / Registration No:</strong> <span>0221650</span></p>
+              <p><strong>Registration Date:</strong> <span>06/8/2025</span></p>
+              <p><strong>Valid Until:</strong> <span>02/03/2028</span></p>
+            </div>
+            <div class="eng-id-showcase mt-5" style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+              <img src="../assets/engineer/front.jpeg" alt="Engineer Front ID" style="max-width: 100%; border: 1px solid var(--color-border); width: 280px; object-fit: contain;">
+              <img src="../assets/engineer/back.jpeg" alt="Engineer Back ID" style="max-width: 100%; border: 1px solid var(--color-border); width: 280px; object-fit: contain;">
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- Disclaimer Section -->
-      <section class="disclaimer-section container">
-        <div class="disclaimer-box">
-          <h3>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
-              <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
-            </svg>
-            Disclaimer
-          </h3>
-          <p>The formulas and methodologies utilized in BuildWise are based on universally accepted construction estimation principles and engineering references.</p>
-          <p>However, AI-generated estimates and material summaries are intended solely as <strong>preliminary planning tools</strong>. Environmental factors, soil conditions, local building codes, and material price fluctuations may significantly impact the final requirements.</p>
-          <p><strong>Final architectural plans, structural computations, and project budgets should always be thoroughly reviewed, verified, and approved by a licensed professional engineer or architect prior to the commencement of any construction activities.</strong></p>
+      <!-- SECTION 06: DISCLAIMER -->
+      <section class="brand-section pt-0" style="background: rgba(0,0,0,0.2);">
+        <div class="container">
+          <div class="disclaimer-box">
+            <h3>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+              </svg>
+              DISCLAIMER
+            </h3>
+            <p>The formulas and methodologies utilized in BuildWise are based on universally accepted construction estimation principles and engineering references.</p>
+            <p>However, AI-generated estimates and material summaries are intended solely as <strong>preliminary planning tools</strong>. Environmental factors, soil conditions, local building codes, and material price fluctuations may significantly impact the final requirements.</p>
+            <p><strong>Final architectural plans, structural computations, and project budgets should always be thoroughly reviewed, verified, and approved by a licensed professional engineer or architect prior to the commencement of any construction activities.</strong></p>
+          </div>
         </div>
+      </section>
+
+      <!-- SECTION 07: FINAL CTA -->
+      <section class="cta-section">
+          <div class="hero-bg" style="background-image: url('../assets/images/gallery-1.jpeg');"></div>
+          <div class="hero-overlay" style="background: var(--color-overlay);"></div>
+          <div class="container cta-content text-center" style="position: relative; z-index: 2;">
+              <h2 class="hero-title">READY TO SEE<br>WHAT YOU CAN BUILD?</h2>
+              <p class="hero-subtitle mx-auto">Start with your budget. BuildWise will help you work from there.</p>
+              <div class="mt-5">
+                  <a href="../index.html#home" class="btn btn-outline-white" style="font-size: 1.2rem; padding: 18px 40px;">START BUILDING &rarr;</a>
+              </div>
+          </div>
       </section>
 
     </main>
 
-    <bw-footer base-path="../"></bw-footer>
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../components/navbar.js"></script>
-    <script src="../components/footer.js"></script>
+    <!-- Scripts -->
+    <script src="../scripts/app.js?v=8"></script>
   </body>
 </html>

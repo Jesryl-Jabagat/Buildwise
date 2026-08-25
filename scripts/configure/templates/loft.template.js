@@ -14,7 +14,7 @@ export function getLoftTemplate() {
 
       <section class="form-section">
         <div class="section-label"><span>1</span><div><h3>Shared costing inputs</h3><p>Applies to every house type.</p></div></div>
-        <div class="row g-3">
+        <div class="row g-4">
           <div class="col-md-6"><div class="bw-toggle-field"><span class="form-label">Include Tools &amp; Equipment in Total Cost?</span><label class="bw-toggle"><input type="hidden" name="includeTools" value="No - reference only"><input type="checkbox" class="bw-toggle-input" data-on="Yes" data-off="No - reference only"><span class="bw-toggle-track"></span><span class="bw-toggle-status">No</span></label></div></div>
           <div class="col-md-6"><label class="form-label" for="loftRoofType">Roof Type</label><select class="form-select" id="loftRoofType" name="roofType"><option>Corrugated GI Sheet / Yero</option><option selected>Long Span Pre-Painted Roofing</option><option>Color Roof / Pre-painted Corrugated</option><option>Spandrel Ceiling Roof</option><option>Polycarbonate Sheet Roofing</option><option>Concrete Flat Deck Roof</option><option>Metal Stone-Coated / Tile Roof</option></select></div>
           <div class="col-md-6"><label class="form-label" for="loftMaterialGrade">Material Grade</label><select class="form-select" id="loftMaterialGrade" name="materialGrade"><option>Basic</option><option selected>Standard</option><option>Premium</option></select></div>
@@ -24,11 +24,11 @@ export function getLoftTemplate() {
 
       <section class="form-section">
         <div class="section-label"><span>2</span><div><h3>Ground floor and mezzanine</h3><p>Length and width drive area, perimeter, footings, slab, and ceiling formulas.</p></div></div>
-        <div class="row g-3">
+        <div class="row g-4">
           <div class="col-md-6"><label class="form-label" for="loftLength">Ground Floor Length - L</label><div class="input-with-unit"><input class="form-control" id="loftLength" name="length" type="number" min="1" step="0.1" value="5" required><span>m</span></div></div>
           <div class="col-md-6"><label class="form-label" for="loftWidth">Ground Floor Width - W</label><div class="input-with-unit"><input class="form-control" id="loftWidth" name="width" type="number" min="1" step="0.1" value="6" required><span>m</span></div></div>
           <div class="col-md-6"><label class="form-label" for="loftMezzanineLength">Mezzanine Length</label><div class="input-with-unit"><input class="form-control" id="loftMezzanineLength" name="mezzanineLength" type="number" min="0" step="0.1" value="2.5"><span>m</span></div></div>
-          <div class="col-md-6"><label class="form-label" for="loftMezzanineWidth">Mezzanine Width</label><div class="input-with-unit"><input class="form-control" id="loftMezzanineWidth" name="mezzanineWidth" type="number" value="6" readonly style="background-color: #e9ecef; cursor: not-allowed;"><span>m</span></div><p class="small mt-1 text-muted" style="line-height: 1.2;">Locked to ground floor width.</p></div>
+          <div class="col-md-6"><label class="form-label" for="loftMezzanineWidth">Mezzanine Width</label><div class="input-with-unit"><input class="form-control" id="loftMezzanineWidth" name="mezzanineWidth" type="number" value="6" readonly style="background-color: color-mix(in srgb, var(--surface) 80%, var(--border)); cursor: not-allowed;"><span style="background-color: color-mix(in srgb, var(--surface) 80%, var(--border));">m</span></div><p class="small mt-1 text-muted" style="line-height: 1.2;">Locked to ground floor width.</p></div>
           <div class="col-md-6"><label class="form-label" for="loftGroundWallHeight">Ground Wall Height</label><div class="input-with-unit"><input class="form-control" id="loftGroundWallHeight" name="groundWallHeight" type="number" min="2" step="0.1" value="2.7"><span>m</span></div></div>
           <div class="col-md-6"><label class="form-label" for="loftHasStairs">Has Stairs?</label><select class="form-select" id="loftHasStairs" name="hasStairs"><option selected>Yes - locked on</option></select></div>
         </div>
@@ -46,7 +46,7 @@ export function getLoftTemplate() {
 
       <section class="form-section">
         <div class="section-label"><span>4</span><div><h3>Tiles, ceiling, plaster, and paint</h3><p>Uses the tile table, breakage allowance, and finish toggles from v3.</p></div></div>
-        <div class="row g-3">
+        <div class="row g-4">
           <div class="col-md-6 conditional-field" data-condition="showTiles"><label class="form-label" for="loftTileSize">Tile Size</label><select class="form-select" id="loftTileSize" name="tileSize"><option>7.5x7.5 - 177.8/sqm</option><option>10x10 - 100/sqm</option><option>10.6x10.6 - 88.4/sqm</option><option>10x20 - 50/sqm</option><option>15x15 - 44.44/sqm</option><option>15x20 - 33.33/sqm</option><option>15x30 - 22.22/sqm</option><option>20x20 - 25/sqm</option><option>20x30 - 16.66/sqm</option><option>20x40 - 12.5/sqm</option><option>25x25 - 16/sqm</option><option selected>30x30 - 11/sqm</option><option>30x60 - 5.56/sqm</option><option>40x40 - 6.25/sqm</option><option>50x50 - 4/sqm</option><option>60x60 - 2.78/sqm</option></select></div>
           <div class="col-md-6 conditional-field" data-condition="showTiles"><label class="form-label" for="loftTileBreakage">Breakage Allowance</label><select class="form-select" id="loftTileBreakage" name="tileBreakage"><option selected>5%</option><option>7%</option><option>10%</option></select></div>
           <div class="col-md-6"><div class="bw-toggle-field"><span class="form-label">Apply Tiles to Ground Floor?</span><label class="bw-toggle"><input type="hidden" name="applyTilesGround" value="No"><input type="checkbox" class="bw-toggle-input" data-on="Yes" data-off="No"><span class="bw-toggle-track"></span><span class="bw-toggle-status">No</span></label></div></div>

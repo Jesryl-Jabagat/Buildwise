@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buildwise | Pricing Settings</title>
+    <link rel="icon" type="image/png" href="../assets/logo/logo.png">
+    
+    <link rel="stylesheet" href="../styles/tokens.css">
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/components.css?v=7">
+    <link rel="stylesheet" href="../styles/navbar.css?v=2">
+    <link rel="stylesheet" href="../styles/utilities.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="../styles/settings.css">
+</head>
+<body>
+
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
+
+    <main class="settings-content">
+        <div class="settings-header">
+            <h1>Pricing Settings</h1>
+            <p>Customize the base material prices used across all estimates. These values are saved locally to your browser and will override the default system values.</p>
+        </div>
+        
+        <form id="settings-form">
+            <div id="settings-container">
+                <!-- Javascript will inject cards here based on prices.js -->
+            </div>
+            
+            <div class="settings-card">
+                <div class="settings-actions">
+                    <button type="button" id="btn-reset" class="btn btn-outline-white">Reset to Defaults</button>
+                    <button type="submit" id="btn-save" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
+    
+    <div id="toast-container"></div>
+
+    <!-- The type="module" is necessary to import from prices.js -->
+    <script type="module" src="../scripts/settings.js"></script>
+    <script src="../scripts/app.js?v=7"></script>
+</body>
+</html>

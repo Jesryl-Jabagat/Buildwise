@@ -3,27 +3,18 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Your Home Plan | BuildWise</title>
+    <title>Buildwise | Your Home Plan</title>
     <link rel="icon" type="image/png" href="../assets/logo/logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.css">
+        <link rel="stylesheet" href="../styles/tokens.css">
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/components.css?v=7">
+    <link rel="stylesheet" href="../styles/navbar.css?v=2">
+    <link rel="stylesheet" href="../styles/builder.css?v=7">
+    <link rel="stylesheet" href="../styles/utilities.css">
   </head>
   <body>
-    <!-- TEMPORARY ERROR LOGGER FOR DEBUGGING -->
-    <div id="error-log-overlay" style="position:fixed;top:0;left:0;width:100%;background:red;color:white;z-index:999999;font-family:monospace;padding:10px;display:none;max-height:300px;overflow:auto;"></div>
-    <script>
-      window.addEventListener('error', function(e) {
-        var el = document.getElementById('error-log-overlay');
-        el.style.display = 'block';
-        el.innerHTML += e.message + '<br>' + e.filename + ':' + e.lineno + '<br><hr>';
-      });
-      window.addEventListener('unhandledrejection', function(e) {
-        var el = document.getElementById('error-log-overlay');
-        el.style.display = 'block';
-        el.innerHTML += 'Unhandled Promise: ' + (e.reason && e.reason.stack ? e.reason.stack : e.reason) + '<br><hr>';
-      });
-    </script>
-    <bw-navbar base-path="../"></bw-navbar>
+    <div id="navbar-container"></div>
 
     <main class="builder-page friendly-result-page">
       <section class="container">
@@ -150,7 +141,7 @@
 
           <article class="plan-card">
             <h2>Budget breakdown</h2>
-            <div class="budget-bars" id="budgetBars" style="background-color: white; pointer-events: none; min-height: 150px; border-radius: 8px;">
+            <div class="budget-bars" id="budgetBars" style="pointer-events: none; min-height: 150px; border-radius: 8px;">
             </div>
             
             <!-- Disclaimer 2: Labor Logic Explanation -->
@@ -166,7 +157,7 @@
             <p class="card-note" id="timelineNote">
               Detailed phase breakdown will be available after cost estimation.
             </p>
-            <div class="timeline-phases" id="constructionPhases" style="background-color: white; pointer-events: none; min-height: 150px; border-radius: 8px;">
+            <div class="timeline-phases" id="constructionPhases" style="pointer-events: none; min-height: 150px; border-radius: 8px;">
             </div>
           </article>
           
@@ -176,7 +167,7 @@
               <h2>Detailed Labor List</h2>
               <span class="materials-note">Based on DOLE Regional Wage Rates</span>
             </div>
-            <div id="laborBreakdownTable" style="background-color: white; pointer-events: none; min-height: 150px; border-radius: 8px;">
+            <div id="laborBreakdownTable" style="pointer-events: none; min-height: 150px; border-radius: 8px;">
             </div>
           </article>
 
@@ -190,7 +181,7 @@
                 Detailed quantities will appear after AI cost estimation runs.
               </span>
             </div>
-            <div id="materialsTable" style="background-color: white; pointer-events: none; min-height: 150px; border-radius: 8px;">
+            <div id="materialsTable" style="pointer-events: none; min-height: 150px; border-radius: 8px;">
             </div>
             <div class="mt-3 p-3" style="background-color: rgba(220, 53, 69, 0.05); border-left: 3px solid #dc3545; border-radius: 0 4px 4px 0; font-size: 0.85rem; color: var(--text-muted);">
               <strong>Note:</strong> To keep this budget strictly to essentials (as shown in the 3D exterior render), <strong>Septic Tank Components</strong> and <strong>Shower Sets</strong> have been excluded from this estimate. Please consult your engineer for site-specific septic design and add interior fixtures according to your preference.
@@ -210,15 +201,14 @@
       </section>
     </main>
 
-    <bw-footer base-path="../"></bw-footer>
+    <div id="footer-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
     <!-- Web components -->
-    <script src="../components/navbar.js"></script>
-    <script src="../components/footer.js"></script>
+    <script src="../scripts/app.js?v=7"></script>
     <script src="../components/progress.js"></script>
 
     <!-- Logic -->
@@ -227,69 +217,6 @@
     <!-- PDF Download functionality (Modernized) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script>
-      async function downloadPlan() {
-        const element = document.querySelector('main.builder-page');
-        const btn = document.getElementById('downloadBtn');
-        const originalText = btn.innerText;
-        btn.innerText = 'Generating PDF...';
-        btn.disabled = true;
-
-        // Hide ignored elements
-        const ignored = Array.from(element.querySelectorAll('[data-html2canvas-ignore]'));
-        const originalDisplays = ignored.map(el => el.style.display);
-        ignored.forEach(el => el.style.display = 'none');
-
-        try {
-            // Give the browser a tiny delay to apply display:none
-            await new Promise(r => setTimeout(r, 100));
-
-            // Generate canvas from DOM
-            const canvas = await html2canvas(element, { 
-                scale: 1.5, 
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: '#ffffff'
-            });
-
-            // Extract image data
-            const imgData = canvas.toDataURL('image/jpeg', 0.95);
-
-            // Initialize jsPDF
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('p', 'mm', 'a4');
-
-            // Calculate dimensions for A4
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-            const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-            
-            let heightLeft = imgHeight;
-            let position = 0;
-
-            // Add first page
-            pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-            heightLeft -= pdfHeight;
-
-            // Add subsequent pages if the content is long
-            while (heightLeft > 0) {
-                position = heightLeft - imgHeight;
-                pdf.addPage();
-                pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-                heightLeft -= pdfHeight;
-            }
-
-            pdf.save('BuildWise_Plan.pdf');
-        } catch (err) {
-            console.error("PDF generation error: ", err);
-            alert("Error generating PDF. Please ensure all images are fully loaded.");
-        } finally {
-            // Restore hidden elements
-            ignored.forEach((el, i) => el.style.display = originalDisplays[i]);
-            btn.innerText = originalText;
-            btn.disabled = false;
-        }
-      }
-    </script>
+    <script src="../scripts/result/download.js"></script>
   </body>
 </html>

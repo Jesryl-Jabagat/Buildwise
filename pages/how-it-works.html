@@ -1,149 +1,244 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>How It Works | BuildWise</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buildwise | How It Works</title>
     <link rel="icon" type="image/png" href="../assets/logo/logo.png">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.css">
-    <style>
-      .how-it-works-hero {
-        padding: 80px 0 40px;
-        text-align: center;
-      }
-      .how-it-works-hero h1 {
-        font-size: clamp(2.5rem, 5vw, 4rem);
-        color: var(--primary);
-        font-weight: 900;
-        margin-bottom: 1rem;
-      }
-      .how-it-works-hero p {
-        color: var(--text-muted);
-        font-size: 1.2rem;
-        max-width: 600px;
-        margin: 0 auto 3rem;
-      }
-      .step-card {
-        background: var(--surface);
-        border-radius: var(--radius);
-        padding: 40px 30px;
-        box-shadow: var(--shadow);
-        height: 100%;
-        text-align: center;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-      }
-      .step-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(24, 51, 43, 0.1);
-      }
-      .step-number {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: rgba(31, 122, 92, 0.1);
-        color: var(--primary);
-        font-size: 1.5rem;
-        font-weight: 800;
-        margin-bottom: 20px;
-      }
-      .step-card h3 {
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin-bottom: 15px;
-        color: var(--text);
-      }
-      .step-card p {
-        color: var(--text-muted);
-        font-size: 0.95rem;
-        line-height: 1.6;
-        margin-bottom: 0;
-      }
-      .workflow-section {
-        padding-bottom: 80px;
-      }
-      .launch-cta {
-        text-align: center;
-        padding: 20px 0 100px;
-      }
-      .btn-buildwise {
-        background: var(--text);
-        border: none;
-        padding: 12px 32px;
-        font-weight: 700;
-        border-radius: 50px;
-        color: white;
-        transition: opacity 0.2s;
-        text-decoration: none;
-        display: inline-block;
-      }
-      .btn-buildwise:hover {
-        opacity: 0.9;
-        color: white;
-      }
-    </style>
-  </head>
-  <body>
-    <bw-navbar base-path="../"></bw-navbar>
+    <meta name="description" content="Discover how BuildWise turns your budget and ideas into a complete, smarter construction plan.">
+    <!-- Shared Styles -->
+    <link rel="stylesheet" href="../styles/tokens.css">
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/components.css?v=7">
+    <link rel="stylesheet" href="../styles/navbar.css?v=2">
+    <link rel="stylesheet" href="../styles/utilities.css">
+    <link rel="stylesheet" href="../styles/how-it-works.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="hiw-page">
+    
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
 
     <main>
-      <section class="how-it-works-hero container">
-        <h1>How BuildWise Works</h1>
-        <p>Our intelligent platform simplifies the complex process of construction estimation into four straightforward steps.</p>
-      </section>
-
-      <section class="workflow-section container">
-        <div class="row g-4">
-          <!-- Step 1 -->
-          <div class="col-md-6 col-lg-3">
-            <div class="step-card">
-              <div class="step-number">1</div>
-              <h3>Select Budget</h3>
-              <p>Start by determining your target budget bracket. This helps us tailor the available architectural models and material options to your financial scope.</p>
+        <!-- SECTION 01 — HERO -->
+        <section class="hiw-hero" id="hiw-hero">
+            
+            <div class="container hiw-hero-content">
+                <div class="hiw-hero-text">
+                    <h1 class="hero-title">FROM AN IDEA.<br>INTO A<br>SMARTER BUILD.</h1>
+                    <p class="hero-subtitle">BuildWise turns your budget, site conditions, and housing requirements into a practical construction plan — combining design, quantity calculations, material costing, and visualization in one workflow.</p>
+                    
+                    <div class="hiw-hero-actions">
+                        <a href="../index.html#home" class="btn btn-outline-white">START BUILDING &rarr;</a>
+                        <a href="#define" class="btn-text">EXPLORE THE PROCESS &darr;</a>
+                    </div>
+                </div>
+                
+                <div class="hiw-hero-visual">
+                    <div class="css-house-mockup" style="background-image: url('../assets/images/render-cinematic.jpg');">
+                        <!-- We will copy this to assets folder to ensure proper local paths -->
+                        <div class="metadata-label meta-top-left">30 SQM</div>
+                        <div class="metadata-label meta-top-right">2 BEDROOMS</div>
+                        <div class="metadata-label meta-bottom-left">1 BATHROOM</div>
+                        <div class="metadata-label meta-bottom-right">EST. COST: ₱300K+</div>
+                    </div>
+                </div>
             </div>
-          </div>
-          
-          <!-- Step 2 -->
-          <div class="col-md-6 col-lg-3">
-            <div class="step-card">
-              <div class="step-number">2</div>
-              <h3>Choose a Model</h3>
-              <p>Browse our catalog of predefined architectural styles, ranging from modern lofts to classic two-storey homes, all engineered for optimal structural integrity.</p>
-            </div>
-          </div>
+        </section>
 
-          <!-- Step 3 -->
-          <div class="col-md-6 col-lg-3">
-            <div class="step-card">
-              <div class="step-number">3</div>
-              <h3>Customize Design</h3>
-              <p>Configure the specifics. Adjust areas, select your preferred materials, and define the finishes for the roof, walls, floors, and more through our dynamic builder.</p>
+        <!-- SECTION 02 — INTRODUCTION -->
+        <section class="hiw-section define-section" id="define">
+            <div class="container hiw-grid-2">
+                <div class="hiw-text-col">
+                    <span class="section-num">01 / DEFINE</span>
+                    <h2 class="section-title">EVERY BUILD STARTS WITH A FEW NUMBERS.</h2>
+                    <p class="section-desc">Before a house takes shape, BuildWise starts with the information that defines the project — your budget, site, space requirements, and building preferences.</p>
+                </div>
+                <div class="hiw-visual-col">
+                    <div class="ui-mockup-card setup-mockup">
+                        <div class="mockup-header">PROJECT PARAMETERS</div>
+                        <div class="mockup-body">
+                            <div class="mockup-field">
+                                <label>TARGET BUDGET</label>
+                                <div class="mockup-value highlight">₱500,000</div>
+                            </div>
+                            <div class="mockup-field">
+                                <label>LOT AREA</label>
+                                <div class="mockup-value">100 SQM</div>
+                            </div>
+                            <div class="mockup-field">
+                                <label>LAND TYPE</label>
+                                <div class="mockup-options">
+                                    <span class="mockup-opt active">● FLAT</span>
+                                    <span class="mockup-opt">○ SLOPED</span>
+                                </div>
+                            </div>
+                            <div class="mockup-field">
+                                <label>BUILD PATH</label>
+                                <div class="mockup-options inline">
+                                    <span class="mockup-opt active">[ AI OPTIMIZED ]</span>
+                                    <span class="mockup-opt">[ MANUAL ]</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
+        </section>
 
-          <!-- Step 4 -->
-          <div class="col-md-6 col-lg-3">
-            <div class="step-card">
-              <div class="step-number">4</div>
-              <h3>Get the Estimate</h3>
-              <p>Instantly generate a comprehensive summary. Review your total build area, a projected construction timeline, and a highly detailed bill of materials and costs.</p>
+        <!-- SECTION 03 — TWO WAYS TO BUILD -->
+        <section class="hiw-section paths-section" id="paths">
+            <div class="container">
+                <span class="section-num text-center">02 / CHOOSE YOUR PATH</span>
+                <h2 class="section-title text-center">BUILD YOUR WAY.</h2>
+                <p class="section-desc text-center mx-auto" style="max-width: 600px;">BuildWise gives you two ways to reach your plan. Let the system handle the configuration, or take control yourself.</p>
+                
+                <div class="paths-grid mt-5">
+                    <!-- AI Path -->
+                    <div class="path-card ai-path">
+                        <div class="path-card-header">
+                            <h3>BUILD WITH AI</h3>
+                            <p>Let BuildWise analyze your requirements and determine a suitable configuration for your selected house design.</p>
+                        </div>
+                        <div class="path-flow">
+                            <div class="flow-step">INPUT</div>
+                            <div class="flow-arrow">&darr;</div>
+                            <div class="flow-step ai-glow">AI OPTIMIZATION</div>
+                            <div class="flow-arrow">&darr;</div>
+                            <div class="flow-step highlight">OPTIMIZED PLAN</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Manual Path -->
+                    <div class="path-card manual-path">
+                        <div class="path-card-header">
+                            <h3>CONFIGURE MANUALLY</h3>
+                            <p>Take control of dimensions, rooms, materials, and construction options yourself.</p>
+                        </div>
+                        <div class="path-flow">
+                            <div class="flow-step">INPUT</div>
+                            <div class="flow-arrow">&darr;</div>
+                            <div class="flow-step">YOUR CONFIGURATION</div>
+                            <div class="flow-arrow">&darr;</div>
+                            <div class="flow-step highlight">CUSTOM PLAN</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="paths-convergence">
+                    <div class="convergence-lines">
+                        <div class="line-left"></div>
+                        <div class="line-right"></div>
+                    </div>
+                    <div class="convergence-dot"></div>
+                    <div class="convergence-text">DIFFERENT PATHS. ONE BUILT PLAN.</div>
+                </div>
             </div>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="launch-cta">
-        <a class="btn-buildwise" href="setup.html">Launch Builder</a>
-      </section>
+        <!-- SECTION 04 — CHOOSE YOUR HOUSE -->
+        <section class="hiw-section gallery-section" id="designs">
+            <div class="container">
+                <span class="section-num">03 / SELECT</span>
+                <h2 class="section-title">A DESIGN THAT FITS THE PLAN.</h2>
+                <p class="section-desc">Explore house types that match your requirements and choose the design that best fits your project.</p>
+                
+                <div class="house-gallery mt-5">
+                    <div class="house-card" style="background-image: url('../assets/images/render-amakan.jpg');">
+                        <div class="house-card-overlay">
+                            <h4>HALF AMAKAN</h4>
+                            <p class="house-price">EST. ₱200K - ₱350K</p>
+                            <span class="btn-text">SELECT DESIGN &rarr;</span>
+                        </div>
+                    </div>
+                    <div class="house-card" style="background-image: url('../assets/images/gallery-1.jpeg');">
+                        <div class="house-card-overlay">
+                            <h4>HALF METAL CLADDING</h4>
+                            <p class="house-price">EST. ₱300K - ₱500K</p>
+                            <span class="btn-text">SELECT DESIGN &rarr;</span>
+                        </div>
+                    </div>
+                    <div class="house-card" style="background-image: url('../assets/images/services-bg.jpeg');">
+                        <div class="house-card-overlay">
+                            <h4>LOFT STYLE</h4>
+                            <p class="house-price">EST. ₱350K - ₱550K</p>
+                            <span class="btn-text">SELECT DESIGN &rarr;</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 04 — FINAL RESULT -->
+        <section class="hiw-section climax-section" id="result">
+            <div class="container text-center">
+                <span class="section-num">04 / THE RESULT</span>
+                <h2 class="section-title mx-auto huge-climax">ONE PLAN.<br>A CLEARER PICTURE.</h2>
+                <p class="section-desc mx-auto mt-4" style="max-width: 700px;">BuildWise brings the design, quantities, costs, materials, labor, and construction timeline together into one organized project result.</p>
+                
+                <div class="result-dashboard mt-5">
+                    <div class="result-dash-header">
+                        <div class="dash-title">YOUR BUILDWISE PLAN &mdash; HALF METAL CLADDING</div>
+                        <div class="dash-meta">30 SQM | 2 BEDROOMS | 1 BATHROOM</div>
+                    </div>
+                    <div class="result-dash-body">
+                        <div class="dash-img" style="background-image: url('../assets/images/render-cinematic.jpg');"></div>
+                        <div class="dash-stats">
+                            <div class="d-stat">
+                                <span>TOTAL ESTIMATE</span>
+                                <h4>₱301,398</h4>
+                            </div>
+                            <div class="d-stat">
+                                <span>EST. BUILD TIME</span>
+                                <h4>58 DAYS</h4>
+                            </div>
+                            <div class="d-stat">
+                                <span>LABOR FORCE</span>
+                                <h4>4 WORKERS</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+        <!-- SECTION 12 — FORMULA / TRANSPARENCY -->
+        <section class="hiw-section transparency-section" id="transparency">
+            <div class="container text-center">
+                <h3 class="transparency-title">BUILT ON CALCULATIONS. NOT GUESSWORK.</h3>
+                <p class="transparency-desc mx-auto" style="max-width: 800px;">BuildWise uses defined estimation formulas and material pricing data to generate preliminary construction estimates. Estimates are preliminary and should be reviewed by an appropriately licensed professional before construction.</p>
+                <div class="transparency-links mt-4 justify-content-center" style="gap: 15px;">
+                    <a href="#" class="btn btn-outline-dark">FORMULA METHODOLOGY &rarr;</a>
+                    <a href="#" class="btn btn-outline-dark">ESTIMATION DISCLAIMER &rarr;</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 13 — FINAL CTA -->
+        <section class="hiw-cta-section" id="cta">
+            <div class="hero-bg" style="background-image: url('../assets/images/gallery-1.jpeg');"></div>
+            <div class="hero-overlay" style="background: var(--color-overlay);"></div>
+            <div class="container cta-content text-center">
+                <h2 class="huge-text-cta">READY TO SEE<br>WHAT YOU CAN BUILD?</h2>
+                <p class="hero-subtitle mx-auto">Start with your budget. BuildWise will help you work from there.</p>
+                <div class="mt-5">
+                    <a href="../index.html#home" class="btn btn-outline-white" style="font-size: 1.2rem; padding: 18px 40px;">START BUILDING &rarr;</a>
+                </div>
+            </div>
+        </section>
+
     </main>
 
-    <bw-footer base-path="../"></bw-footer>
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../components/navbar.js"></script>
-    <script src="../components/footer.js"></script>
-  </body>
+    <!-- Scripts -->
+    <script src="../scripts/app.js?v=7"></script>
+    <script src="../scripts/how-it-works.js"></script>
+</body>
 </html>

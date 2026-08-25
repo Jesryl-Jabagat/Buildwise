@@ -75,7 +75,6 @@ export const PRICES = {
   "Excavation / Backfill": { unit: "cu.m.", price: 350 },
   "Soil Poisoning / Termite Treatment": { unit: "sq.m.", price: 150 },
   "Formworks (Plywood & Lumber)": { unit: "sq.m.", price: 450 },
-  "Tie Wire #16": { unit: "kg", price: 75 },
 
   // Doors & Windows
   "Main Door (Solid Wood Slab)": { unit: "set", price: 4500 },
@@ -121,6 +120,32 @@ export const PRICES = {
   "Electrical Tape": { unit: "roll", price: 50 }
 };
 
+let cachedCustomPrices = null;
+
+export function refreshCustomPrices() {
+  try {
+      const customData = localStorage.getItem("buildwise-custom-prices");
+      if (customData) {
+          cachedCustomPrices = JSON.parse(customData);
+      } else {
+          cachedCustomPrices = {};
+      }
+  } catch(e) {
+      console.warn("Could not parse custom prices", e);
+      cachedCustomPrices = {};
+  }
+}
+
+// Initial load
+refreshCustomPrices();
+
+// Listen for storage events in case another tab changes it
+window.addEventListener('storage', (e) => {
+    if (e.key === 'buildwise-custom-prices') {
+        refreshCustomPrices();
+    }
+});
+
 export function getPrice(materialName, grade = "Standard") {
   let baseName = materialName;
   if (materialName.startsWith("Architectural Topcoat Paint")) {
@@ -131,8 +156,14 @@ export function getPrice(materialName, grade = "Standard") {
     console.warn(`Price not found for material: ${baseName}`);
     return 0;
   }
+  
+  let basePrice = item.price;
+  if (cachedCustomPrices && cachedCustomPrices[baseName] !== undefined) {
+      basePrice = cachedCustomPrices[baseName];
+  }
+
   const multiplier = GRADE_MULTIPLIERS[grade] || 1.0;
-  return item.price * multiplier;
+  return basePrice * multiplier;
 }
 
 export function formatMaterialCost(name, qty, grade = "Standard") {
