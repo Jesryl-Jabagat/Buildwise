@@ -57,8 +57,8 @@ export function estimate(data) {
   const totalCRs = (data.crs || data.bathrooms || 0) + (data.crs1F || 0) + (data.crs2F || 0);
   
   sections.push(F.calcDoorsAndWindows(totalBeds, totalCRs, data.materialGrade));
-  if (data.includePlumbing !== "No") { sections.push(F.calcPlumbing(totalCRs, 1)); } // Assuming 1 kitchen
-  if (data.includeElectrical !== "No") { sections.push(F.calcElectrical(D.floorArea + floor2Area, totalBeds, totalCRs, (data.includeACwiring === "Yes"))); }
+  if (data.includePlumbing !== false) { sections.push(F.calcPlumbing(totalCRs, 1)); } // Assuming 1 kitchen
+  if (data.includeElectrical !== false) { sections.push(F.calcElectrical(D.floorArea + floor2Area, totalBeds, totalCRs, data.includeACwiring)); }
 
   return sumObjects(...sections);
 }

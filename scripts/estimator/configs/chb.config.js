@@ -30,8 +30,8 @@ export function estimate(data) {
   const totalBeds = data.bedrooms || 0;
   const totalCRs = data.bathrooms || data.crs || 0;
   sections.push(F.calcDoorsAndWindows(totalBeds, totalCRs, data.materialGrade));
-  if (data.includePlumbing !== "No") { sections.push(F.calcPlumbing(totalCRs, 1)); }
-  if (data.includeElectrical !== "No") { sections.push(F.calcElectrical(D.floorArea, totalBeds, totalCRs, (data.includeACwiring === "Yes"))); }
+  if (data.includePlumbing !== false) { sections.push(F.calcPlumbing(totalCRs, 1)); }
+  if (data.includeElectrical !== false) { sections.push(F.calcElectrical(D.floorArea, totalBeds, totalCRs, data.includeACwiring)); }
 
   return sumObjects(...sections);
 }
