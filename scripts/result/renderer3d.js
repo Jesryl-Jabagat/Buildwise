@@ -2706,17 +2706,17 @@ export function initRenderer(configData) {
     const finalTvW = Math.min(maxTvW, actualAvailSpace - 0.2);
     const finalSofaW = Math.min(maxSofaW, actualAvailSpace - 0.2);
 
-    // Tuck TV against the outer front wall (+X side) to leave the inner hallway (near partition doors) perfectly clear
-    let tvX = frontX - finalTvW / 2 - 0.3;
-    const tvZ = W / 2 - wt / 2 - 0.2;
-    buildFurniture("tv", tvX, tvZ, Math.PI, layer1F, finalTvW);
+    // User requested layout: TV on the front wall (+X), facing inwards (-X)
+    const tvZ = W / 2 - wt / 2 - finalTvW / 2 - 0.2; // Placed near the top corner (+Z corner)
+    let tvX = frontX - 0.2; // Flush against the outer wall
+    buildFurniture("tv", tvX, tvZ, -Math.PI / 2, layer1F, finalTvW); // Rotated to face -X
 
-    // Align Sofa with the TV, also tucked against the outer front wall (+X side)
-    let sofaX = tvX;
-    // Keep a comfortable but compact viewing distance so it doesn't push into the dining space
-    const tvSofaDist = Math.min(1.8, Math.max(1.2, W * 0.35));
-    const sofaZ = tvZ - tvSofaDist;
-    buildFurniture("sofa", sofaX, sofaZ, 0, layer1F, finalSofaW);
+    // Sofa facing the TV (+X)
+    // Keep a comfortable but compact viewing distance
+    const tvSofaDist = Math.min(2.0, Math.max(1.5, actualAvailSpace * 0.5));
+    let sofaX = tvX - tvSofaDist; // Pushed into the room
+    const sofaZ = tvZ; // Aligned with TV
+    buildFurniture("sofa", sofaX, sofaZ, Math.PI / 2, layer1F, finalSofaW); // Rotated to face +X
 
     // Kitchen Counter
     let kitW, kitX, kitZ, kitRot;
