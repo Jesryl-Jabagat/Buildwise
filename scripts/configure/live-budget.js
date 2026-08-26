@@ -158,16 +158,16 @@ function updateMeter(form, typeKey, budget, submitBtn) {
 
     estimate.materialsList.forEach(cat => {
       const name = cat.category;
-      if (['Electrical Works', 'Plumbing Works'].includes(name)) {
+      if (['Electrical', 'Plumbing'].includes(name)) {
         utilsCost += cat.total;
-      } else if (['Plastering Works', 'Ceiling Works', 'Painting Works', 'Tiling Works'].includes(name)) {
+      } else if (['Finishes'].includes(name)) {
         finishesCost += cat.total;
       } else {
         coreCost += cat.total;
       }
     });
 
-    const materialTotal = estimate.summary.totalMaterialsCost || 1;
+    const materialTotal = estimate.summary.totalMaterials || 1;
     const multiplier = estimate.summary.grandTotal / materialTotal;
     
     coreCost = Math.round(coreCost * multiplier);

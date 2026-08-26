@@ -162,9 +162,9 @@ function getCategory(key) {
 
 
 const PRIORITY_GROUPS = {
-  core: ['Earthworks', 'Formworks', 'Concrete Works', 'Masonry Works', 'Doors & Windows', 'Roofing & Tinning'],
-  utilities: ['Electrical Works', 'Plumbing Works'],
-  finishes: ['Plastering Works', 'Ceiling Works', 'Painting Works', 'Tiling Works']
+  core: ["Foundation & Structure", "Walling", "Roofing", "Stairs", "Doors & Windows"],
+  utilities: ["Electrical", "Plumbing"],
+  finishes: ["Finishes"]
 };
 
 function budgetFitEngine(materialsList, budget, totalLabor, contingency, typeKey) {

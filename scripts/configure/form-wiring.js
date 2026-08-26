@@ -8,48 +8,9 @@ import { houseTypes, currency } from '../house-data.js';
 /* --- Advanced Mode Toggle ---------------------------------- */
 
 export function injectAdvancedModeToggle(form) {
-  const sections = form.querySelectorAll('.form-section');
-  if (sections.length === 0) return;
-
-  // Hide finishes sections by default in basic mode
-  sections.forEach((sec) => {
-    if (sec.dataset.priority === 'finishes') {
-      sec.classList.add('advanced-setting');
-      sec.style.display = 'none';
-    }
-  });
-
-  const intro = form.querySelector('.form-intro');
-  if (intro) {
-    const uniqueId = 'advancedToggle_' + Math.random().toString(36).substr(2, 9);
-    const toggleHtml = `
-      <div class="bw-mode-banner">
-        <div class="bw-mode-banner-text">
-          <strong>Basic Mode</strong>
-          <span>Finishes are hidden. The system will optimize them for you.</span>
-        </div>
-        <label class="bw-mode-switch" for="${uniqueId}" style="cursor: pointer; position: relative; z-index: 10;">
-          <input type="checkbox" id="${uniqueId}" class="bw-advanced-toggle-input">
-          <span class="bw-mode-track"></span>
-          <span class="bw-mode-label">Show Finishes</span>
-        </label>
-      </div>
-    `;
-    intro.insertAdjacentHTML('afterend', toggleHtml);
-
-    const toggleInput = form.querySelector(`#${uniqueId}`);
-    const banner = form.querySelector('.bw-mode-banner');
-    const bannerTitle = banner.querySelector('strong');
-    
-    toggleInput.addEventListener('change', (e) => {
-      const isAdvanced = e.target.checked;
-      form.querySelectorAll('.advanced-setting').forEach(sec => {
-        sec.style.display = isAdvanced ? 'block' : 'none';
-      });
-      bannerTitle.textContent = isAdvanced ? 'Advanced Mode' : 'Basic Mode';
-      banner.classList.toggle('bw-mode-banner--advanced', isAdvanced);
-    });
-  }
+  // Toggle basic mode and advance seem not necessary as of now,
+  // so we just leave everything visible and don't inject the banner.
+  return;
 }
 
 /* --- Toggle Switch Wiring ---------------------------------- */
