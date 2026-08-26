@@ -17,6 +17,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="../styles/settings.css">
+    
+    <script>
+        (function() {
+            try {
+                const sessionStr = sessionStorage.getItem('buildwise-session-v2') || localStorage.getItem('buildwise-session-v2');
+                if (!sessionStr) {
+                    window.location.href = '../login.html';
+                } else {
+                    const session = JSON.parse(sessionStr);
+                    if (session.role !== 'Admin') {
+                        window.location.href = '../index.html';
+                    }
+                }
+            } catch (e) {
+                window.location.href = '../login.html';
+            }
+        })();
+    </script>
 </head>
 <body>
 

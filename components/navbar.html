@@ -130,6 +130,89 @@
     font-size: 13px;
     cursor: pointer;
   }
+  .hamburger-menu {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 24px;
+    height: 18px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001;
+  }
+
+  .hamburger-menu span {
+    width: 24px;
+    height: 2px;
+    background: var(--color-text, #333);
+    border-radius: 10px;
+    transition: all 0.3s linear;
+    position: relative;
+    transform-origin: 1px;
+  }
+
+  [data-theme="dark"] .hamburger-menu span {
+    background: #ffffff;
+  }
+
+  .hamburger-menu.active span:nth-child(1) {
+    transform: rotate(45deg);
+  }
+  .hamburger-menu.active span:nth-child(2) {
+    opacity: 0;
+  }
+  .hamburger-menu.active span:nth-child(3) {
+    transform: rotate(-45deg);
+  }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+  @media (max-width: 768px) {
+    .hamburger-menu {
+      display: flex;
+    }
+
+    .nav-menu {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      height: 100vh;
+      width: 250px;
+      flex-direction: column;
+      align-items: flex-start;
+      background: var(--color-nav-bg, #ffffff);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-left: 1px solid var(--color-border, #ddd);
+      padding-top: 80px;
+      padding-left: 32px;
+      transition: right 0.3s ease;
+      z-index: 999;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+      gap: 24px;
+    }
+
+    [data-theme="dark"] .nav-menu {
+      background: var(--color-nav-bg, #1a1a1a);
+      border-left: 1px solid var(--color-border, #333);
+      box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+    }
+
+    .nav-menu.active {
+      right: 0;
+    }
+
+    .nav-links {
+      flex-direction: column;
+      gap: 20px;
+    }
+  }
 </style>
 
 <nav class="navbar">
@@ -138,21 +221,29 @@
     Buildwise
   </a>
   <div class="nav-right">
-    <ul class="nav-links">
-      <li><a href="/pages/how-it-works.html">How it works</a></li>
-      <li><a href="/pages/about.html">About</a></li>
-      <li id="nav-login-link" style="display: none;"><a href="/login.html">Login</a></li>
-    </ul>
-    <div style="position: relative; display: none;" id="avatar-dropdown-container">
-      <div class="avatar" id="simple-avatar-btn">G</div>
-      <div class="simple-dropdown-menu" id="simple-dropdown-menu">
-        <a href="/pages/profile.html" class="simple-dropdown-link" id="nav-profile-link">Profile</a>
-        <a href="/pages/settings.html" class="simple-dropdown-link" id="nav-settings-link">Settings</a>
-        <div class="theme-toggle-row" id="theme-toggle-row">
-          <span>Dark Mode</span>
-          <div class="toggle-switch" id="theme-toggle-switch"></div>
+    <div class="nav-menu" id="nav-menu">
+      <ul class="nav-links">
+        <li><a href="/pages/how-it-works.html">How it works</a></li>
+        <li><a href="/pages/about.html">About</a></li>
+        <li id="nav-login-link" style="display: none;"><a href="/login.html">Login</a></li>
+      </ul>
+      <div style="position: relative; display: none;" id="avatar-dropdown-container">
+        <div class="avatar" id="simple-avatar-btn">G</div>
+        <div class="simple-dropdown-menu" id="simple-dropdown-menu">
+          <a href="/pages/profile.html" class="simple-dropdown-link" id="nav-profile-link">Profile</a>
+          <a href="/pages/settings.html" class="simple-dropdown-link" id="nav-settings-link">Settings</a>
+          <a href="#" class="simple-dropdown-link" id="nav-logout-link" style="color: #e74c3c;">Logout</a>
+          <div class="theme-toggle-row" id="theme-toggle-row">
+            <span>Dark Mode</span>
+            <div class="toggle-switch" id="theme-toggle-switch"></div>
+          </div>
         </div>
       </div>
     </div>
+    <button class="hamburger-menu" id="hamburger-menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
   </div>
 </nav>

@@ -88,7 +88,7 @@ function initNavbarFunctions() {
         });
         
         // Close menu when clicking a link
-        document.querySelectorAll('.nav a').forEach(link => {
+        document.querySelectorAll('#nav-menu a').forEach(link => {
             link.addEventListener('click', () => {
                 hamburger.classList.remove('active');
                 navMenu.classList.remove('active');
@@ -149,6 +149,16 @@ function initNavbarFunctions() {
         });
     }
 
+    // Logout Logic
+    const logoutLink = document.getElementById('nav-logout-link');
+    if (logoutLink) {
+        logoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (typeof Auth !== 'undefined') {
+                Auth.clearSession();
+            }
+        });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -226,11 +236,20 @@ window.updateNavbarUser = function() {
         const avatarContainer = document.getElementById('avatar-dropdown-container');
         const avatar = document.getElementById('simple-avatar-btn');
         const loginLink = document.getElementById('nav-login-link');
+        const settingsLink = document.getElementById('nav-settings-link');
         
         if (session) {
             if (avatarContainer) avatarContainer.style.display = 'block';
             if (loginLink) loginLink.style.display = 'none';
             if (avatar) avatar.textContent = session.initials;
+            
+            if (settingsLink) {
+                if (session.role === 'Admin') {
+                    settingsLink.style.display = 'block';
+                } else {
+                    settingsLink.style.display = 'none';
+                }
+            }
         } else {
             if (avatarContainer) avatarContainer.style.display = 'none';
             if (loginLink) loginLink.style.display = 'block';
