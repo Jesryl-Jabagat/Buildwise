@@ -1411,29 +1411,25 @@ function buildHouseLogic(configData) {
     const maxSofaW = Math.min(2.0, Math.max(0.8, Math.min(availSpaceKit, availSpaceTV) - 0.4));
     const maxTvW = Math.min(1.5, Math.max(0.8, availSpaceTV - 0.4));
 
-    // Calculate shift to ensure we never clip the CR partition wall
-    let tvX = (frontX + livingSideStartX) / 2;
-    const safeShift = Math.max(0, (availSpaceTV / 2) - (maxTvW / 2) - 0.2);
-    const shiftX = Math.min(0.4, safeShift); 
-    tvX -= shiftX; // Shift slightly to the right if space permits
-    
-    const tvZ = W/2 - wt/2 - 0.2;
-    buildFurniture('tv', tvX, tvZ, Math.PI, layer1F, maxTvW);
-    
-    // Sofa facing the TV, dynamic distance based on room width
-    let sofaX = tvX;
-      
-    // Prevent sofa from clipping into the side walls
+    // Align TV and Sofa to the left partition wall so the main right hallway is perfectly open
     const partitionX = Math.max(livingSideStartX, livingOtherSideStartX);
-    const minSofaX = partitionX + maxSofaW/2 + 0.1;
-    const maxSofaX = frontX - maxSofaW/2 - 0.1;
-      
-    if (sofaX < minSofaX) sofaX = minSofaX;
-    if (sofaX > maxSofaX) sofaX = maxSofaX;
-
-    const tvSofaDist = Math.min(2.0, Math.max(1.2, W * 0.35));
+    const actualAvailSpace = frontX - partitionX;
+    
+    // Scale down furniture if the room is extremely narrow
+    const finalTvW = Math.min(maxTvW, actualAvailSpace - 0.2);
+    const finalSofaW = Math.min(maxSofaW, actualAvailSpace - 0.2);
+    
+    // Tuck TV against the left (partition) corner
+    let tvX = partitionX + finalTvW/2 + 0.1;
+    const tvZ = W/2 - wt/2 - 0.2;
+    buildFurniture('tv', tvX, tvZ, Math.PI, layer1F, finalTvW);
+    
+    // Tuck Sofa against the left (partition) wall, facing the TV
+    let sofaX = partitionX + finalSofaW/2 + 0.1;
+    // Pull the sofa slightly closer to the TV to ensure it doesn't block the kitchen/dining in the back
+    const tvSofaDist = Math.min(1.8, Math.max(1.0, W * 0.32)); 
     const sofaZ = tvZ - tvSofaDist;
-    buildFurniture('sofa', sofaX, sofaZ, 0, layer1F, maxSofaW);
+    buildFurniture('sofa', sofaX, sofaZ, 0, layer1F, finalSofaW);
     
     // Kitchen Counter
     let kitW, kitX, kitZ, kitRot;
