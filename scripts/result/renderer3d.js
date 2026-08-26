@@ -1421,7 +1421,16 @@ function buildHouseLogic(configData) {
     buildFurniture('tv', tvX, tvZ, Math.PI, layer1F, maxTvW);
     
     // Sofa facing the TV, dynamic distance based on room width
-    const sofaX = tvX;
+    let sofaX = tvX;
+      
+    // Prevent sofa from clipping into the side walls
+    const partitionX = Math.max(livingSideStartX, livingOtherSideStartX);
+    const minSofaX = partitionX + maxSofaW/2 + 0.1;
+    const maxSofaX = frontX - maxSofaW/2 - 0.1;
+      
+    if (sofaX < minSofaX) sofaX = minSofaX;
+    if (sofaX > maxSofaX) sofaX = maxSofaX;
+
     const tvSofaDist = Math.min(2.0, Math.max(1.2, W * 0.35));
     const sofaZ = tvZ - tvSofaDist;
     buildFurniture('sofa', sofaX, sofaZ, 0, layer1F, maxSofaW);
