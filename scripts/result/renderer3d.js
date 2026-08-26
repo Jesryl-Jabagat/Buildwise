@@ -118,17 +118,17 @@ export function initRenderer(configData) {
     lawn.receiveShadow = true;
     scene.add(lawn);
 
-    // Concrete path/driveway leading to the +X front face
-    const pathGeo = new THREE.PlaneGeometry(15, 4); // Wider to accommodate varying door Z positions
-    const pathMat = new THREE.MeshStandardMaterial({
-      color: 0xa0a0a0,
-      roughness: 0.9,
-    });
-    const path = new THREE.Mesh(pathGeo, pathMat);
-    path.rotation.x = -Math.PI / 2;
-    path.position.set(10, 0.02, 0); // Extending out along +X
-    path.receiveShadow = true;
-    scene.add(path);
+    // Concrete path/driveway leading to the +X front face (Disabled per user request)
+    // const pathGeo = new THREE.PlaneGeometry(15, 4); // Wider to accommodate varying door Z positions
+    // const pathMat = new THREE.MeshStandardMaterial({
+    //   color: 0xa0a0a0,
+    //   roughness: 0.9,
+    // });
+    // const path = new THREE.Mesh(pathGeo, pathMat);
+    // path.rotation.x = -Math.PI / 2;
+    // path.position.set(10, 0.02, 0); // Extending out along +X
+    // path.receiveShadow = true;
+    // scene.add(path);
   }
   makeGround();
 
