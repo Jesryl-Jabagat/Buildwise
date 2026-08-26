@@ -5,8 +5,8 @@
 export function calcGlobalDerived(length, width, wallHeight, soilCondition, isLightweight = false) {
   const totalWallLength = (length + width) * 2;
   
-  // Full structural grid count
-  const spacing = isLightweight ? 4 : 3;
+  // Full structural grid count (4m for lightweight and 1-storey, 3m for 2-storey)
+  const spacing = (isLightweight || wallHeight <= 3.5) ? 4 : 3;
   const colsL = Math.ceil(length / spacing) + 1;
   const colsW = Math.ceil(width / spacing) + 1;
   const numCols = colsL * colsW;
@@ -142,9 +142,9 @@ export function calcEarthworks(floorArea, totalWallLength) {
   };
 }
 
-export function calcFormworks(floorArea) {
+export function calcFormworks(floorArea, isLightweight = false) {
   // Rough estimate for formworks area based on floor area — residential scale
-  const formworksArea = floorArea * 0.7; 
+  const formworksArea = floorArea * (isLightweight ? 0.15 : 0.7); 
   return {
     "Formworks (Plywood & Lumber)": formworksArea
   };

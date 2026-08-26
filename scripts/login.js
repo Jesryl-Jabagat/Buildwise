@@ -51,6 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
+    // Check for auth notice
+    const authNotice = sessionStorage.getItem('authNotice');
+    if (authNotice) {
+        showToast(authNotice, 'error');
+        sessionStorage.removeItem('authNotice');
+    }
+
     // 5. Handle Login Form Submission
     const loginForm = document.getElementById('login-form');
     if (loginForm) {

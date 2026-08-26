@@ -77,14 +77,15 @@ export const PRICES = {
   "Formworks (Plywood & Lumber)": { unit: "sq.m.", price: 450 },
 
   // Doors & Windows
-  "Main Door (Solid Wood Slab)": { unit: "set", price: 4500 },
-  "Bedroom Door (Flush/Panel)": { unit: "set", price: 2500 },
-  "CR Door (PVC/Aluminum)": { unit: "set", price: 1800 },
+  "Main Door (Solid Wood Slab)": { unit: "set", price: 2500 },
+  "Bedroom Door (Flush/Panel)": { unit: "set", price: 1200 },
+  "CR Door (PVC/Aluminum)": { unit: "set", price: 1200 },
   "Door Jamb (Wood/Metal)": { unit: "set", price: 1200 },
   "Lockset / Doorknob": { unit: "set", price: 650 },
   "Door Hinges (pair)": { unit: "pair", price: 150 },
   "Window Frame (Aluminum)": { unit: "lm", price: 350 },
   "Window Glass Panel (sqm)": { unit: "sq.m.", price: 800 },
+  "Window (Jalousie/Louvre)": { unit: "set", price: 1200 },
 
   // Painting Accessories
   "Paint Brush / Roller set": { unit: "set", price: 350 },

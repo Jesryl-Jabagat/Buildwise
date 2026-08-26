@@ -12,8 +12,14 @@ export function getTwoStoreyTemplate() {
         <p>Set both floor footprints, rooms, slabs, ceiling, plaster, and paint separately.</p>
       </div>
 
-      <section class="form-section">
-        <div class="section-label"><span>1</span><div><h3>Shared costing inputs</h3><p>Applies to every house type.</p></div></div>
+      <section class="form-section" data-priority="core">
+        <div class="section-priority-header">
+          <div class="priority-badge priority-badge--core">
+            <span class="priority-icon">🔒</span>
+            <div><strong>Core — Always Included</strong><span>Foundation, structure, roofing, doors & windows</span></div>
+          </div>
+          <div class="priority-cost-preview" id="coreCostPreview1">Est: --</div>
+        </div></div>
         <div class="row g-4">
           <div class="col-md-6"><div class="bw-toggle-field"><span class="form-label">Include Tools &amp; Equipment in Total Cost?</span><label class="bw-toggle"><input type="hidden" name="includeTools" value="No - reference only"><input type="checkbox" class="bw-toggle-input" data-on="Yes" data-off="No - reference only"><span class="bw-toggle-track"></span><span class="bw-toggle-status">No</span></label></div></div>
           <div class="col-md-6"><label class="form-label" for="twoStoreyRoofType">Roof Type</label><select class="form-select" id="twoStoreyRoofType" name="roofType"><option>Corrugated GI Sheet / Yero</option><option selected>Long Span Pre-Painted Roofing</option><option>Color Roof / Pre-painted Corrugated</option><option>Spandrel Ceiling Roof</option><option>Polycarbonate Sheet Roofing</option><option>Concrete Flat Deck Roof</option><option>Metal Stone-Coated / Tile Roof</option></select></div>
@@ -22,8 +28,14 @@ export function getTwoStoreyTemplate() {
         </div>
       </section>
 
-      <section class="form-section">
-        <div class="section-label"><span>2</span><div><h3>Ground and second floor dimensions</h3><p>Separate L and W are required for footing, slab, perimeter, and ceiling formulas.</p></div></div>
+      <section class="form-section" data-priority="core">
+        <div class="section-priority-header">
+          <div class="priority-badge priority-badge--core">
+            <span class="priority-icon">📐</span>
+            <div><strong>Dimensions & Rooms</strong><span>Impacts all core material calculations</span></div>
+          </div>
+          <div class="priority-cost-preview" id="coreCostPreview2">Est: --</div>
+        </div></div>
         <div class="row g-4">
           <div class="col-md-6"><label class="form-label" for="twoStoreyLength">Ground Floor Length - L1</label><div class="input-with-unit"><input class="form-control" id="twoStoreyLength" name="length" type="number" min="1" step="0.1" value="5" required><span>m</span></div></div>
           <div class="col-md-6"><label class="form-label" for="twoStoreyWidth">Ground Floor Width - W1</label><div class="input-with-unit"><input class="form-control" id="twoStoreyWidth" name="width" type="number" min="1" step="0.1" value="5" required><span>m</span></div></div>
@@ -35,8 +47,30 @@ export function getTwoStoreyTemplate() {
         </div>
       </section>
 
-      <section class="form-section">
-        <div class="section-label"><span>3</span><div><h3>Rooms</h3><p>2-storey bedroom and CR quantities differ per floor.</p></div></div>
+      
+      <section class="form-section" data-priority="utilities">
+        <div class="section-priority-header">
+          <div class="priority-badge priority-badge--utilities">
+            <span class="priority-icon">🔌</span>
+            <div><strong>Utilities — Recommended</strong><span>Electrical wiring and plumbing.</span></div>
+          </div>
+          <div class="priority-cost-preview" id="utilsCostPreview">Est: --</div>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-6"><div class="bw-toggle-field"><span class="form-label">Include Electrical Wiring</span><label class="bw-toggle"><input type="hidden" name="includeElectrical" value="Yes"><input type="checkbox" class="bw-toggle-input" data-on="Yes" data-off="No" checked><span class="bw-toggle-track"></span><span class="bw-toggle-status">Yes</span></label></div></div>
+          <div class="col-md-6"><div class="bw-toggle-field"><span class="form-label">Include Plumbing</span><label class="bw-toggle"><input type="hidden" name="includePlumbing" value="Yes"><input type="checkbox" class="bw-toggle-input" data-on="Yes" data-off="No" checked><span class="bw-toggle-track"></span><span class="bw-toggle-status">Yes</span></label></div></div>
+          <div class="col-md-6 conditional-field" data-condition="includeElectrical"><div class="bw-toggle-field"><span class="form-label">Include AC Wiring Circuit</span><label class="bw-toggle"><input type="hidden" name="includeACwiring" value="No"><input type="checkbox" class="bw-toggle-input" data-on="Yes" data-off="No"><span class="bw-toggle-track"></span><span class="bw-toggle-status">No</span></label></div></div>
+        </div>
+      </section>
+
+      <section class="form-section" data-priority="finishes">
+        <div class="section-priority-header">
+          <div class="priority-badge priority-badge--finishes">
+            <span class="priority-icon">🎨</span>
+            <div><strong>Finishes — Cut first if tight</strong><span>Paint, tiles, ceiling upgrades</span></div>
+          </div>
+          <div class="priority-cost-preview" id="finishesCostPreview1">Est: --</div>
+        </div></div>
         <div class="room-picker">
           <label><span>Number of Bedrooms (1F)</span><select class="form-select" name="bedrooms1F"><option selected>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
           <label><span>Number of Bedrooms (2F)</span><select class="form-select" name="bedrooms2F"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></label>
@@ -45,8 +79,14 @@ export function getTwoStoreyTemplate() {
         </div>
       </section>
 
-      <section class="form-section">
-        <div class="section-label"><span>4</span><div><h3>Tiles, ceiling, plaster, and paint</h3><p>Plaster and paint are split per floor.</p></div></div>
+      <section class="form-section" data-priority="core">
+        <div class="section-priority-header">
+          <div class="priority-badge priority-badge--finishes">
+            <span class="priority-icon">✨</span>
+            <div><strong>Tiling & Extras</strong><span>Additional finish options</span></div>
+          </div>
+          <div class="priority-cost-preview" id="finishesCostPreview2">Est: --</div>
+        </div></div>
         <div class="row g-4">
           <div class="col-md-6 conditional-field" data-condition="showTiles"><label class="form-label" for="twoStoreyTileSize">Tile Size</label><select class="form-select" id="twoStoreyTileSize" name="tileSize"><option>7.5x7.5 - 177.8/sqm</option><option>10x10 - 100/sqm</option><option>10.6x10.6 - 88.4/sqm</option><option>10x20 - 50/sqm</option><option>15x15 - 44.44/sqm</option><option>15x20 - 33.33/sqm</option><option>15x30 - 22.22/sqm</option><option>20x20 - 25/sqm</option><option>20x30 - 16.66/sqm</option><option>20x40 - 12.5/sqm</option><option>25x25 - 16/sqm</option><option selected>30x30 - 11/sqm</option><option>30x60 - 5.56/sqm</option><option>40x40 - 6.25/sqm</option><option>50x50 - 4/sqm</option><option>60x60 - 2.78/sqm</option></select></div>
           <div class="col-md-6 conditional-field" data-condition="showTiles"><label class="form-label" for="twoStoreyTileBreakage">Breakage Allowance</label><select class="form-select" id="twoStoreyTileBreakage" name="tileBreakage"><option selected>5%</option><option>7%</option><option>10%</option></select></div>

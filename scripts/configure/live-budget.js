@@ -12,6 +12,8 @@ let toastTimeout = null;
 let toastShown = false;
 
 function showBudgetToast(message, type = "warning") {
+  if (window.location.pathname.includes('analyzing.html')) return;
+
   let toast = document.getElementById("bw-budget-toast");
   if (!toast) {
     toast = document.createElement("div");
@@ -84,6 +86,7 @@ function updateMeter(form, typeKey, budget, submitBtn) {
     "applyTilesGround", "applyTilesSecond",
     "groundFloorCeiling", "mezzanineCeiling",
     "ceilingGroundFloor", "ceilingSecondFloor",
+    "includeElectrical", "includePlumbing", "includeACwiring",
     "hasCeiling",
     "includePlastering", "includePainting",
     "paintGroundFloor", "paintSecondFloor",
@@ -144,7 +147,51 @@ function updateMeter(form, typeKey, budget, submitBtn) {
     const tempBudget = rawData.budget;
     rawData.budget = 0; 
     
+    // Update live budget UI
+    const targetBudget = Number(rawData.budget || tempBudget) || 0;
     estimate = generateEstimate(rawData);
+
+    // Update Priority Section Previews
+    let coreCost = 0;
+    let utilsCost = 0;
+    let finishesCost = 0;
+
+    estimate.materialsList.forEach(cat => {
+      const name = cat.category;
+      if (['Electrical Works', 'Plumbing Works'].includes(name)) {
+        utilsCost += cat.total;
+      } else if (['Plastering Works', 'Ceiling Works', 'Painting Works', 'Tiling Works'].includes(name)) {
+        finishesCost += cat.total;
+      } else {
+        coreCost += cat.total;
+      }
+    });
+
+    const materialTotal = estimate.summary.totalMaterialsCost || 1;
+    const multiplier = estimate.summary.grandTotal / materialTotal;
+    
+    coreCost = Math.round(coreCost * multiplier);
+    utilsCost = Math.round(utilsCost * multiplier);
+    finishesCost = Math.round(finishesCost * multiplier);
+
+    const formatter = new Intl.NumberFormat("en-PH", {
+      style: "currency",
+      currency: "PHP",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    });
+
+    ['coreCostPreview1', 'coreCostPreview2'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = `Est: ${formatter.format(coreCost)}`;
+    });
+    const utilsEl = document.getElementById('utilsCostPreview');
+    if (utilsEl) utilsEl.textContent = `Est: ${formatter.format(utilsCost)}`;
+    
+    ['finishesCostPreview1', 'finishesCostPreview2'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = `Est: ${formatter.format(finishesCost)}`;
+    });
     
     rawData.budget = tempBudget; // Restore for later checks
   } catch (e) {

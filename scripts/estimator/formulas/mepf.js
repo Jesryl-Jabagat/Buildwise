@@ -24,13 +24,13 @@ export function calcPlumbing(numCRs, numKitchens) {
   };
 }
 
-export function calcElectrical(floorArea, numBedrooms, numCRs) {
+export function calcElectrical(floorArea, numBedrooms, numCRs, includeACwiring = false) {
   // Rough estimate based on area and rooms
   const rooms = (numBedrooms || 0) + (numCRs || 0) + 2; // +2 for Living and Kitchen
   
   const lightingWiresBox = Math.ceil(floorArea / 50); // 1 box per 50sqm
   const outletWiresBox = Math.ceil(floorArea / 40); // 1 box per 40sqm
-  const acWiresBox = Math.max(1, Math.ceil((numBedrooms || 1) / 3)); // 1 box per 3 AC units
+  const acWiresBox = includeACwiring ? Math.max(1, Math.ceil((numBedrooms || 1) / 3)) : 0; // AC wires only if requested
 
   const conduits = Math.ceil(floorArea / 8); // ~1 conduit per 8sqm (residential standard)
   const flexibleHose = Math.ceil(floorArea / 50); // 1 roll per 50sqm (residential standard)

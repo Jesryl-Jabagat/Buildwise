@@ -637,42 +637,78 @@ export async function startAiAnalyzing(form, typeKey, setupData) {
         submitBtn.click();
       }
     } else {
-      console.warn("AI failed to generate suggestions. Switching to manual mode.");
-      const header = document.getElementById("aiHeader");
-      if (header) {
-        const spinner = header.querySelector(".spinner-grow");
-        if (spinner) spinner.style.display = "none";
-        const h2 = header.querySelector("h2");
-        if (h2) {
-          h2.innerText = "AI Unavailable";
-          h2.style.color = "var(--danger)";
-        }
-        const status = header.querySelector("#aiStatus") || header.querySelector("p");
-        if (status) status.innerText = "Redirecting to manual mode...";
-        header.style.animation = "none";
-      }
-      setTimeout(() => {
-        window.location.href = `designs.html`;
-      }, 2000);
+      console.warn("AI failed to generate suggestions.");
+      showAiErrorState(form, typeKey, setupData);
     }
   } catch (err) {
     console.error("AI Error", err);
-    const header = document.getElementById("aiHeader");
-    if (header) {
-      const spinner = header.querySelector(".spinner-grow");
-      if (spinner) spinner.style.display = "none";
-      const h2 = header.querySelector("h2");
+    showAiErrorState(form, typeKey, setupData);
+  }
+}
+
+function showAiErrorState(form, typeKey, setupData) {
+  const header = document.getElementById("aiHeader");
+  if (!header) {
+    const typeParam = typeKey ? `?type=${typeKey}` : '';
+    window.location.href = `configure.html${typeParam}`;
+    return;
+  }
+
+  const spinner = header.querySelector(".spinner-grow");
+  if (spinner) spinner.style.display = "none";
+  
+  const h2 = header.querySelector("h2");
+  if (h2) {
+    h2.innerText = "AI Unavailable";
+    h2.style.color = "var(--danger, #ef4444)";
+  }
+  
+  const progress = header.querySelector("#aiProgress");
+  if (progress) progress.innerText = "Analysis Failed";
+  
+  const status = header.querySelector("#aiStatus") || header.querySelector("p");
+  if (status) status.innerText = "Our AI couldn't complete your configuration. This is usually temporary.";
+  
+  header.style.animation = "none";
+  
+  let errorActions = document.getElementById("aiErrorActions");
+  if (!errorActions) {
+    errorActions = document.createElement("div");
+    errorActions.id = "aiErrorActions";
+    errorActions.style.display = "flex";
+    errorActions.style.gap = "16px";
+    errorActions.style.justifyContent = "center";
+    errorActions.style.marginTop = "24px";
+    
+    const tryAgainBtn = document.createElement("button");
+    tryAgainBtn.style.cssText = "padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; display: flex; align-items: center; gap: 8px;";
+    tryAgainBtn.innerHTML = "<span>🔄</span> Try Again";
+    tryAgainBtn.onmouseover = () => tryAgainBtn.style.background = "rgba(255,255,255,0.1)";
+    tryAgainBtn.onmouseout = () => tryAgainBtn.style.background = "transparent";
+    tryAgainBtn.onclick = () => {
       if (h2) {
-        h2.innerText = "AI Unavailable";
-        h2.style.color = "var(--danger)";
+        h2.innerText = "BuildWise AI Architect";
+        h2.style.color = "";
       }
-      const status = header.querySelector("#aiStatus") || header.querySelector("p");
-      if (status) status.innerText = "Redirecting to manual mode...";
-      header.style.animation = "none";
-    }
-    setTimeout(() => {
-      window.location.href = `designs.html`;
-    }, 2000);
+      if (progress) progress.innerText = "Initializing...";
+      if (status) status.innerText = "Drafting your perfect home configuration...";
+      errorActions.remove();
+      startAiAnalyzing(form, typeKey, setupData);
+    };
+    
+    const manualBtn = document.createElement("button");
+    manualBtn.style.cssText = "padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; background: var(--primary, #f59e0b); color: #000; display: flex; align-items: center; gap: 8px;";
+    manualBtn.innerHTML = "<span>⚙️</span> Configure Manually";
+    manualBtn.onmouseover = () => manualBtn.style.opacity = "0.9";
+    manualBtn.onmouseout = () => manualBtn.style.opacity = "1";
+    manualBtn.onclick = () => {
+      const typeParam = typeKey ? `?type=${typeKey}` : '';
+      window.location.href = `configure.html${typeParam}`;
+    };
+    
+    errorActions.appendChild(tryAgainBtn);
+    errorActions.appendChild(manualBtn);
+    header.appendChild(errorActions);
   }
 }
 

@@ -15,7 +15,7 @@ const configs = {
 };
 
 function generateTimelineAndLabor(laborCost, floorArea) {
-  const avgWage = 650;
+  const avgWage = 500;
   
   // Base crew size determined by floor area
   let baseCrew = 3;
@@ -154,10 +154,46 @@ function getCategory(key) {
   if (["chb", "amakanSheets", "metalCladdingSheets", "cocoLumber", "rectTube"].includes(key)) return "Walling";
   if (["cPurlins", "ridgeCaps", "roofSheets", "roofLM", "roofingScrews", "siliconeSealant"].includes(key)) return "Roofing";
   if (["handrail", "newelPost", "phenolicBoard", "stairCocoLumber", "stairTiles", "stairAdhesive", "stairGrout"].includes(key)) return "Stairs";
-  if (["Main Door (Solid Wood Slab)", "Bedroom Door (Flush/Panel)", "CR Door (PVC/Aluminum)", "Door Jamb (Wood/Metal)", "Lockset / Doorknob", "Door Hinges (pair)", "Window Frame (Aluminum)", "Window Glass Panel (sqm)"].includes(key)) return "Doors & Windows";
+  if (["Main Door (Solid Wood Slab)", "Bedroom Door (Flush/Panel)", "CR Door (PVC/Aluminum)", "Door Jamb (Wood/Metal)", "Lockset / Doorknob", "Door Hinges (pair)", "Window Frame (Aluminum)", "Window Glass Panel (sqm)", "Window (Jalousie/Louvre)"].includes(key)) return "Doors & Windows";
   if (["PVC Orange Pipes 4\" (Sanitary)", "PVC Orange Pipes 2\" (Drainage)", "PPR Pipes 1/2\" (Water Supply)", "Sanitary Fittings (Orange)", "Water Supply Fittings (PPR)", "PVC Solvent / Teflon Tape", "Water Closet (Standard flush)", "Lavatory (Wall-hung/Pedestal)", "Kitchen Sink (Stainless)", "Shower Set (Head & Valve)", "Faucets & Angle Valves", "Floor Drain (4x4 Stainless)", "Septic Tank Components (CHB/Cement)"].includes(key)) return "Plumbing";
   if (["PVC Electrical Conduit 1/2\"", "Flexible Hose 1/2\" (50m)", "PVC Fittings & Boxes", "THHN Wire 2.0mm² (Lighting)", "THHN Wire 3.5mm² (Outlets)", "THHN Wire 5.5mm² (AC/Heater)", "Switches (1-3 gang)", "Outlets (2-gang CO)", "Lighting (LED/Pinlights)", "Panel Board & Circuit Breakers", "Electrical Tape"].includes(key)) return "Electrical";
   return "Finishes"; // Default for tiles, paint, ceiling
+}
+
+
+const PRIORITY_GROUPS = {
+  core: ['Earthworks', 'Formworks', 'Concrete Works', 'Masonry Works', 'Doors & Windows', 'Roofing & Tinning'],
+  utilities: ['Electrical Works', 'Plumbing Works'],
+  finishes: ['Plastering Works', 'Ceiling Works', 'Painting Works', 'Tiling Works']
+};
+
+function budgetFitEngine(materialsList, budget, totalLabor, contingency, typeKey) {
+  if (!budget || budget <= 0) return { status: 'NO_BUDGET' };
+  
+  let coreCost = 0, utilCost = 0, finCost = 0;
+  materialsList.forEach(cat => {
+    if (PRIORITY_GROUPS.utilities.includes(cat.category)) utilCost += cat.total;
+    else if (PRIORITY_GROUPS.finishes.includes(cat.category)) finCost += cat.total;
+    else coreCost += cat.total;
+  });
+
+  const materialTotal = coreCost + utilCost + finCost;
+  const multiplier = (materialTotal + totalLabor + contingency) / (materialTotal || 1);
+  const totalCost = materialTotal * multiplier;
+  
+  if (totalCost > budget * 1.15) {
+    return { status: 'UNDERFUNDED', floorCost: totalCost };
+  }
+  
+  return { 
+    status: 'FITTED', 
+    coreGrade: 'Standard', 
+    utilitiesGrade: 'Basic', 
+    finishesGrade: 'Basic', 
+    floorCost: totalCost, 
+    upgradePath: ['Core → Standard'], 
+    utilityFlags: [] 
+  };
 }
 
 export function generateEstimate(data) {
@@ -251,32 +287,29 @@ export function generateEstimate(data) {
 
   let laborMultiplier = 0;
   if (typeKey === "half-amakan" || typeKey === "half-metal") {
-    laborMultiplier = 0.30;
+    laborMultiplier = 0.25;
   } else if (typeKey === "chb") {
-    laborMultiplier = 0.45;
+    laborMultiplier = 0.35;
   } else if (typeKey === "loft" || typeKey === "two-storey") {
-    laborMultiplier = 0.50;
+    laborMultiplier = 0.40;
   } else {
-    laborMultiplier = 0.45;
+    laborMultiplier = 0.35;
   }
 
-  let contingencyMultiplier = 0.10;
-  if (typeKey === "half-amakan" || typeKey === "half-metal") {
-    contingencyMultiplier = 0.05;
-  }
+  let contingencyMultiplier = 0.05;
 
   let laborEstimate = totalMaterialsCost * laborMultiplier;
 
-  // Calculate detailed labor breakdown based on standard DOLE regional wages
+  // Calculate detailed labor breakdown based on province DOLE regional wages
   const laborRoles = [
-    { role: "Foreman / Lead", wage: 850, pct: 0.08 },
-    { role: "Lead Mason", wage: 700, pct: 0.20 },
-    { role: "Lead Carpenter", wage: 700, pct: 0.15 },
-    { role: "Electrician", wage: 750, pct: 0.05 },
-    { role: "Plumber", wage: 750, pct: 0.05 },
-    { role: "Tile Setter", wage: 750, pct: 0.08 },
-    { role: "Painter", wage: 700, pct: 0.05 },
-    { role: "Helper / Ordinary Laborer", wage: 500, pct: 0.34 }
+    { role: "Foreman / Lead", wage: 700, pct: 0.08 },
+    { role: "Lead Mason", wage: 550, pct: 0.20 },
+    { role: "Lead Carpenter", wage: 550, pct: 0.15 },
+    { role: "Electrician", wage: 600, pct: 0.05 },
+    { role: "Plumber", wage: 600, pct: 0.05 },
+    { role: "Tile Setter", wage: 600, pct: 0.08 },
+    { role: "Painter", wage: 550, pct: 0.05 },
+    { role: "Helper / Ordinary Laborer", wage: 400, pct: 0.34 }
   ];
 
   let laborBreakdown = laborRoles.map(r => {
@@ -294,7 +327,7 @@ export function generateEstimate(data) {
   laborEstimate = laborBreakdown.reduce((sum, r) => sum + r.total, 0);
 
   let subTotal = totalMaterialsCost + laborEstimate;
-  let contingency = subTotal * contingencyMultiplier;
+  let contingency = totalMaterialsCost * contingencyMultiplier;
   let grandTotal = subTotal + contingency;
 
   // ── Budget Reconciliation Pass ─────────────────────────────────────────────

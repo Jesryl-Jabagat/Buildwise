@@ -29,9 +29,9 @@ export function estimate(data) {
   sections.push(F.calcFormworks(D.floorArea));
   const totalBeds = data.bedrooms || 0;
   const totalCRs = data.bathrooms || data.crs || 0;
-  sections.push(F.calcDoorsAndWindows(totalBeds, totalCRs));
-  sections.push(F.calcPlumbing(totalCRs, 1));
-  sections.push(F.calcElectrical(D.floorArea, totalBeds, totalCRs));
+  sections.push(F.calcDoorsAndWindows(totalBeds, totalCRs, data.materialGrade));
+  if (data.includePlumbing !== "No") { sections.push(F.calcPlumbing(totalCRs, 1)); }
+  if (data.includeElectrical !== "No") { sections.push(F.calcElectrical(D.floorArea, totalBeds, totalCRs, (data.includeACwiring === "Yes"))); }
 
   return sumObjects(...sections);
 }

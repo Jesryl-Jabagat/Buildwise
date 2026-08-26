@@ -16,6 +16,17 @@
     <link rel="stylesheet" href="../styles/utilities.css?v=2">
     <link rel="stylesheet" href="../styles/builder.css?v=3">
     <link rel="stylesheet" href="../styles/setup.css">
+    
+    <script src="../scripts/auth.js"></script>
+    <script>
+      // Restrict access to logged-in users
+      document.addEventListener('DOMContentLoaded', () => {
+        if (typeof Auth !== 'undefined' && !Auth.getSession()) {
+          sessionStorage.setItem('authNotice', 'Please log in first to access the setup page.');
+          window.location.href = '../login.html';
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="navbar-container"></div>

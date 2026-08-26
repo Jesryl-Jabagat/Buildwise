@@ -11,18 +11,9 @@ export function injectAdvancedModeToggle(form) {
   const sections = form.querySelectorAll('.form-section');
   if (sections.length === 0) return;
 
-  // Determine which sections to hide based on their title content
+  // Hide finishes sections by default in basic mode
   sections.forEach((sec) => {
-    const title = sec.querySelector('h3')?.textContent.toLowerCase() || '';
-    // Hide anything related to finishes, tiles, plaster, paint, ceiling, or walling.
-    if (
-      title.includes('plaster') || 
-      title.includes('paint') || 
-      title.includes('ceiling') || 
-      title.includes('finish') || 
-      title.includes('tile') || 
-      title.includes('walling')
-    ) {
+    if (sec.dataset.priority === 'finishes') {
       sec.classList.add('advanced-setting');
       sec.style.display = 'none';
     }
@@ -35,12 +26,12 @@ export function injectAdvancedModeToggle(form) {
       <div class="bw-mode-banner">
         <div class="bw-mode-banner-text">
           <strong>Basic Mode</strong>
-          <span>Only Dimensions &amp; Rooms shown. The system optimizes the rest.</span>
+          <span>Finishes are hidden. The system will optimize them for you.</span>
         </div>
         <label class="bw-mode-switch" for="${uniqueId}" style="cursor: pointer; position: relative; z-index: 10;">
           <input type="checkbox" id="${uniqueId}" class="bw-advanced-toggle-input">
           <span class="bw-mode-track"></span>
-          <span class="bw-mode-label">Advanced Options</span>
+          <span class="bw-mode-label">Show Finishes</span>
         </label>
       </div>
     `;
@@ -108,11 +99,14 @@ export function wireConditionalFields(form) {
     const paintGroundFloor = formData.get("paintGroundFloor") === "Yes";
     const paintSecondFloor = formData.get("paintSecondFloor") === "Yes";
 
+    const includeElectrical = formData.get("includeElectrical") !== "No";
+
     form.querySelectorAll('.conditional-field').forEach(field => {
       const condition = field.dataset.condition;
       let isVisible = false;
 
       if      (condition === 'showTiles')           isVisible = showTiles;
+      else if (condition === 'includeElectrical')   isVisible = includeElectrical;
       else if (condition === 'showLoftCeiling')     isVisible = showLoftCeiling;
       else if (condition === 'showTwoStoreyCeiling')isVisible = showTwoStoreyCeiling;
       else if (condition === 'hasCeiling')          isVisible = hasCeiling;
