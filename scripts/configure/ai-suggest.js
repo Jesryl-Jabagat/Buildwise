@@ -185,8 +185,8 @@ async function makeApiCall(prompt, connectorKey) {
       "X-Title": "BuildWise AI",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash", // You can change this to any OpenRouter model like openai/gpt-4o-mini
-      max_tokens: 1000, // Reduced from 1500 because the OpenRouter account is running low on credits
+      model: "openrouter/free", // Switched to free model to avoid credit exhaustion
+      max_tokens: 1000,
       messages: [{ role: "user", content: prompt }],
     }),
   });
