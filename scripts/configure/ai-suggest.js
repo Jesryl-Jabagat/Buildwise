@@ -117,6 +117,7 @@ Each object must have:
  * Parses the AI response with a multi-strategy fallback to prevent breakage.
  */
 function parseAiResponse(rawText) {
+  if (!rawText) return null;
   let cleanText = rawText.trim();
   
   // Strategy 1: Direct parse
@@ -185,18 +186,27 @@ async function makeApiCall(prompt, connectorKey) {
       "X-Title": "BuildWise AI",
     },
     body: JSON.stringify({
-      model: "openrouter/free", // Switched to free model to avoid credit exhaustion
-      max_tokens: 1000,
+      model: "google/gemini-2.5-flash", // Reverted to reliable Gemini
+      max_tokens: 500, // Reduced heavily to squeeze into remaining user credits
       messages: [{ role: "user", content: prompt }],
     }),
   });
 
   if (!response.ok) {
-    throw new Error(await response.text());
+    const errText = await response.text();
+    if (response.status === 402) {
+      throw new Error("INSUFFICIENT_CREDITS: " + errText);
+    }
+    throw new Error(errText);
   }
 
   const data = await response.json();
-  const rawText = data.choices[0].message.content;
+  const rawText = data?.choices?.[0]?.message?.content;
+  
+  if (!rawText) {
+    throw new Error("No content returned from AI.");
+  }
+  
   const parsed = parseAiResponse(rawText);
   if (!parsed) {
     throw new Error("Parse failure. Raw output: " + rawText.substring(0, 100));
@@ -214,6 +224,7 @@ async function callWithRetry(prompt) {
     return await makeApiCall(prompt, CONNECTOR);
   } catch (e) {
     console.warn("Attempt 1 failed:", e);
+    if (e.message.includes("INSUFFICIENT_CREDITS")) throw e; // Don't retry if out of credits
   }
 
   // Attempt 2
@@ -222,6 +233,7 @@ async function callWithRetry(prompt) {
     return await makeApiCall(prompt, CONNECTOR);
   } catch (e) {
     console.warn("Attempt 2 failed:", e);
+    if (e.message.includes("INSUFFICIENT_CREDITS")) throw e;
   }
 
   // Attempt 3: Final fallback
@@ -230,6 +242,7 @@ async function callWithRetry(prompt) {
     return await makeApiCall(prompt, CONNECTOR);
   } catch (e) {
     console.error("All AI attempts failed:", e);
+    if (e.message.includes("INSUFFICIENT_CREDITS")) throw e;
     return null; // Return null instead of throwing to degrade gracefully
   }
 }
@@ -638,15 +651,15 @@ export async function startAiAnalyzing(form, typeKey, setupData) {
       }
     } else {
       console.warn("AI failed to generate suggestions.");
-      showAiErrorState(form, typeKey, setupData);
+      showAiErrorState(form, typeKey, setupData, null);
     }
   } catch (err) {
     console.error("AI Error", err);
-    showAiErrorState(form, typeKey, setupData);
+    showAiErrorState(form, typeKey, setupData, err);
   }
 }
 
-function showAiErrorState(form, typeKey, setupData) {
+function showAiErrorState(form, typeKey, setupData, errorObj = null) {
   const header = document.getElementById("aiHeader");
   if (!header) {
     const typeParam = typeKey ? `?type=${typeKey}` : '';
@@ -657,17 +670,23 @@ function showAiErrorState(form, typeKey, setupData) {
   const spinner = header.querySelector(".spinner-grow");
   if (spinner) spinner.style.display = "none";
   
+  const isCreditsError = errorObj && errorObj.message && errorObj.message.includes("INSUFFICIENT_CREDITS");
+
   const h2 = header.querySelector("h2");
   if (h2) {
-    h2.innerText = "AI Unavailable";
+    h2.innerText = isCreditsError ? "OpenRouter Credits Empty" : "AI Unavailable";
     h2.style.color = "var(--danger, #ef4444)";
   }
   
   const progress = header.querySelector("#aiProgress");
-  if (progress) progress.innerText = "Analysis Failed";
+  if (progress) progress.innerText = isCreditsError ? "Billing Error" : "Analysis Failed";
   
   const status = header.querySelector("#aiStatus") || header.querySelector("p");
-  if (status) status.innerText = "Our AI couldn't complete your configuration. This is usually temporary.";
+  if (status) {
+      status.innerText = isCreditsError 
+        ? "Your OpenRouter API key works, but your account balance is exactly 0. Please top up your OpenRouter account to use AI."
+        : "Our AI couldn't complete your configuration. This is usually temporary.";
+  }
   
   header.style.animation = "none";
   
