@@ -95,7 +95,7 @@ function setupConfigPage() {
       const isAnalyzingPage = window.location.pathname.includes('analyzing.html');
       
       // Import the AI module and start it
-      import('./ai-suggest.js').then(module => {
+      import(`./ai-suggest.js?v=${Date.now()}`).then(module => {
         if (isAnalyzingPage) {
           module.startAiAnalyzing(form, typeKey, setupData);
         } else {

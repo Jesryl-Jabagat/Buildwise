@@ -1,4 +1,4 @@
-import { CONNECTOR } from "../env.js";
+import { CONNECTOR } from "../env.js?v=4";
 
 /**
  * Extracts form schema (fields and available options) to send to Gemini.
