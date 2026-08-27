@@ -250,3 +250,33 @@ body {
       #configFormMount {
         display: none !important;
       }
+
+      /* Proceed bar slide-in animation */
+      @keyframes slideUpBar {
+        from {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* Add bottom padding to feed so the sticky bar doesn't cover last bubble */
+      .ai-feed {
+        padding-bottom: 120px !important;
+      }
+
+      /* Mobile: stack the proceed bar vertically */
+      @media (max-width: 600px) {
+        #proceedBar {
+          flex-direction: column !important;
+          align-items: stretch !important;
+          padding: 12px 16px !important;
+        }
+        #proceedBar button {
+          width: 100%;
+          text-align: center;
+        }
+      }

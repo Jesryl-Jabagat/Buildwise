@@ -597,6 +597,75 @@ async function runAnalyzingLoop(form, suggestions) {
 }
 
 /**
+ * Shows a sticky "Proceed to Results" button at the bottom of the screen
+ * after the AI has finished configuring all fields.
+ */
+function showProceedButton(form) {
+  // Scroll to top so user can review from the beginning
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Create sticky footer bar
+  const bar = document.createElement("div");
+  bar.id = "proceedBar";
+  bar.style.cssText = `
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    padding: 16px 24px;
+    background: color-mix(in srgb, var(--surface, #1a1a2e) 90%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid color-mix(in srgb, var(--border, #333) 60%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    animation: slideUpBar 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  `;
+
+  const label = document.createElement("div");
+  label.style.cssText = "display:flex;flex-direction:column;gap:2px;";
+  label.innerHTML = `
+    <span style="font-weight:700;font-size:15px;color:var(--text);">✅ AI Plan Ready</span>
+    <span style="font-size:13px;color:var(--text-muted);">Scroll up to review the AI choices, then proceed when ready.</span>
+  `;
+
+  const btn = document.createElement("button");
+  btn.innerText = "Proceed to Results →";
+  btn.style.cssText = `
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: var(--primary, #f59e0b);
+    color: #000;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    box-shadow: 0 4px 20px color-mix(in srgb, var(--primary, #f59e0b) 40%, transparent);
+  `;
+
+  btn.onmouseover = () => { btn.style.transform = "scale(1.04)"; };
+  btn.onmouseout  = () => { btn.style.transform = "scale(1)"; };
+
+  btn.onclick = () => {
+    btn.innerText = "Loading...";
+    btn.style.opacity = "0.7";
+    btn.disabled = true;
+    const submitBtn = form.querySelector(".create-plan-button");
+    if (submitBtn) submitBtn.click();
+  };
+
+  bar.appendChild(label);
+  bar.appendChild(btn);
+  document.body.appendChild(bar);
+}
+
+/**
  * Entry point for the dedicated Analyzing page.
  */
 export async function startAiAnalyzing(form, typeKey, setupData) {
@@ -636,19 +705,14 @@ export async function startAiAnalyzing(form, typeKey, setupData) {
         if (h2) h2.innerText = "Configuration Complete!";
         
         const progress = header.querySelector("#aiProgress");
-        if (progress) progress.innerText = "Done";
+        if (progress) progress.innerText = "Done — Review your plan below";
         
         const status = header.querySelector("#aiStatus");
-        if (status) status.innerText = "Redirecting to your results...";
+        if (status) status.innerText = "All settings configured by AI. Click Proceed when ready.";
       }
 
-      await new Promise((r) => setTimeout(r, 1500));
-
-      // Submit the form to trigger save and redirect to result.html
-      const submitBtn = form.querySelector(".create-plan-button");
-      if (submitBtn) {
-        submitBtn.click();
-      }
+      // Show the sticky Proceed button instead of auto-redirecting
+      showProceedButton(form);
     } else {
       console.warn("AI failed to generate suggestions.");
       showAiErrorState(form, typeKey, setupData, null);
