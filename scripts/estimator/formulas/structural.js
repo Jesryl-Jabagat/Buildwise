@@ -4,16 +4,23 @@
 
 export function calcGlobalDerived(length, width, wallHeight, soilCondition, isLightweight = false) {
   const totalWallLength = (length + width) * 2;
-  
-  // Full structural grid count (4m for lightweight and 1-storey, 3m for 2-storey)
-  const spacing = (isLightweight || wallHeight <= 3.5) ? 4 : 3;
-  const colsL = Math.ceil(length / spacing) + 1;
-  const colsW = Math.ceil(width / spacing) + 1;
-  const numCols = colsL * colsW;
-  
-  const numBeams = Math.ceil(length / spacing) + Math.ceil(width / spacing);
-  const soilMultiplier = soilCondition === "soft" ? 1.3 : 1.0;
   const floorArea = length * width;
+  
+  // For small houses (under 36sqm), use corners-only (4 columns) — realistic for provincial construction
+  // For larger houses, use a proper structural grid
+  let numCols, numBeams;
+  if (floorArea <= 36) {
+    numCols = 4;   // 4 corner posts only
+    numBeams = 4;  // 4 perimeter tie beams
+  } else {
+    const spacing = (isLightweight || wallHeight <= 3.5) ? 4 : 3;
+    const colsL = Math.ceil(length / spacing) + 1;
+    const colsW = Math.ceil(width / spacing) + 1;
+    numCols = colsL * colsW;
+    numBeams = Math.ceil(length / spacing) + Math.ceil(width / spacing);
+  }
+  
+  const soilMultiplier = soilCondition === "soft" ? 1.3 : 1.0;
   const wallArea = totalWallLength * wallHeight;
   
   return { numCols, numBeams, soilMultiplier, floorArea, wallArea, totalWallLength };
@@ -38,7 +45,8 @@ export function calcFootingsAndColumns1Storey(numCols, soilMultiplier) {
     cement: (footingCement + columnCement) * soilMultiplier,
     screenedSand: (footingSand + columnSand) * soilMultiplier,
     gravel: (footingGravel + columnGravel) * soilMultiplier,
-    rebar10mm: footingRebar10mm + columnRebar10mm
+    rebar10mm: footingRebar10mm + columnRebar10mm,
+    "Tie Wire #16": footingTieWire + columnTieWire
   };
 }
 

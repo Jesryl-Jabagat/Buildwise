@@ -11,10 +11,10 @@ export function calcDoorsAndWindows(numBedrooms, numCRs, materialGrade = "Standa
   // +1 CR door per CR
   // +1 kitchen/back door (defaulting to bedroom door style or flush)
   
-  // Windows: typically 2 windows per bedroom, 1 per CR, 2 in living room
-  const bedroomWindows = beds * 2;
+  // Windows: typically 1 per bedroom, 1 per CR, 2 in living room/kitchen for basic homes
+  const bedroomWindows = beds * 1;
   const crWindows = crs * 1;
-  const livingKitchenWindows = 3;
+  const livingKitchenWindows = 2;
   const totalWindows = bedroomWindows + crWindows + livingKitchenWindows;
   
   // Approx linear meters of aluminum frame per window (assume 1.2 x 1.2 avg = 4.8m)
@@ -22,11 +22,12 @@ export function calcDoorsAndWindows(numBedrooms, numCRs, materialGrade = "Standa
   // Approx sqm of glass per window (assume 1.2 x 1.2 = 1.44 sqm)
   const windowGlassSqm = totalWindows * 1.44;
 
-  const totalDoors = 1 + beds + crs + 1; // main + beds + crs + back
+  // 1 Main, 1 per bed, 1 per CR (Skip separate back door for standard small estimation)
+  const totalDoors = 1 + beds + crs; 
 
   let res = {
     "Main Door (Solid Wood Slab)": 1,
-    "Bedroom Door (Flush/Panel)": beds + 1, // bedrooms + back door
+    "Bedroom Door (Flush/Panel)": beds,
     "CR Door (PVC/Aluminum)": crs,
     "Door Jamb (Wood/Metal)": totalDoors,
     "Lockset / Doorknob": totalDoors,

@@ -28,27 +28,27 @@ export function calcElectrical(floorArea, numBedrooms, numCRs, includeACwiring =
   // Rough estimate based on area and rooms
   const rooms = (numBedrooms || 0) + (numCRs || 0) + 2; // +2 for Living and Kitchen
   
-  const lightingWiresBox = Math.ceil(floorArea / 50); // 1 box per 50sqm
-  const outletWiresBox = Math.ceil(floorArea / 40); // 1 box per 40sqm
-  const acWiresBox = includeACwiring ? Math.max(1, Math.ceil((numBedrooms || 1) / 3)) : 0; // AC wires only if requested
+  const lightingWiresBox = Math.ceil(floorArea / 100) || 1; // 1 box per 100sqm (usually plenty for small houses)
+  const outletWiresBox = Math.ceil(floorArea / 80) || 1; 
+  const acWiresBox = includeACwiring ? Math.max(1, Math.ceil((numBedrooms || 1) / 3)) : 0;
 
-  const conduits = Math.ceil(floorArea / 8); // ~1 conduit per 8sqm (residential standard)
-  const flexibleHose = Math.ceil(floorArea / 50); // 1 roll per 50sqm (residential standard)
+  const conduits = Math.ceil(floorArea / 10); 
+  const flexibleHose = Math.max(1, Math.ceil(floorArea / 100)); // less flexible hose needed usually
   
-  const switches = rooms * 2;
-  const outlets = rooms * 3;
-  const lights = rooms * 2 + 2; // +2 for exterior
+  const switches = rooms * 1.5;
+  const outlets = rooms * 2;
+  const lights = rooms * 1.5 + 1; // +1 for exterior
 
   return {
-    "PVC Electrical Conduit 1/2\"": conduits,
+    "PVC Electrical Conduit 1/2\"": Math.max(2, conduits),
     "Flexible Hose 1/2\" (50m)": flexibleHose,
-    "PVC Fittings & Boxes": Math.ceil(conduits * 1.5),
+    "PVC Fittings & Boxes": Math.max(5, Math.ceil(conduits * 1.5)),
     "THHN Wire 2.0mm² (Lighting)": lightingWiresBox,
     "THHN Wire 3.5mm² (Outlets)": outletWiresBox,
     "THHN Wire 5.5mm² (AC/Heater)": acWiresBox,
-    "Switches (1-3 gang)": switches,
-    "Outlets (2-gang CO)": outlets,
-    "Lighting (LED/Pinlights)": lights,
+    "Switches (1-3 gang)": Math.ceil(switches),
+    "Outlets (2-gang CO)": Math.ceil(outlets),
+    "Lighting (LED/Pinlights)": Math.ceil(lights),
     "Panel Board & Circuit Breakers": 1
   };
 }

@@ -207,12 +207,14 @@
 /* Toasts */
 #toast-container {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 9999;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    align-items: center;
 }
 
 .toast {
@@ -221,8 +223,9 @@
     font-weight: 500;
     color: #fff;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    transform: translateX(120%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(-150%);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .toast.error {
@@ -232,7 +235,8 @@
     background: var(--color-primary);
 }
 .toast.show {
-    transform: translateX(0);
+    transform: translateY(0);
+    opacity: 1;
 }
 
 @media (max-width: 900px) {

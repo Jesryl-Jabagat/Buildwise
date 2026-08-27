@@ -285,22 +285,18 @@ export function generateEstimate(data) {
   // ── First-pass estimate ────────────────────────────────────────────────────
   let { formattedCategories, totalMaterialsCost } = buildCategories(rawQuantities);
 
-  let laborMultiplier = 0;
+  let laborMultiplier = 0.30;
   if (typeKey === "half-amakan" || typeKey === "half-metal") {
-    laborMultiplier = 0.25;
+    laborMultiplier = 0.20;
   } else if (typeKey === "chb") {
-    laborMultiplier = 0.35;
+    laborMultiplier = 0.25;
   } else if (typeKey === "loft" || typeKey === "two-storey") {
-    laborMultiplier = 0.40;
-  } else {
     laborMultiplier = 0.35;
   }
 
   let contingencyMultiplier = 0.05;
-
   let laborEstimate = totalMaterialsCost * laborMultiplier;
 
-  // Calculate detailed labor breakdown based on province DOLE regional wages
   const laborRoles = [
     { role: "Foreman / Lead", wage: 700, pct: 0.08 },
     { role: "Lead Mason", wage: 550, pct: 0.20 },
@@ -323,9 +319,7 @@ export function generateEstimate(data) {
     };
   });
 
-  // Recalculate laborEstimate exactly from the breakdown
   laborEstimate = laborBreakdown.reduce((sum, r) => sum + r.total, 0);
-
   let subTotal = totalMaterialsCost + laborEstimate;
   let contingency = totalMaterialsCost * contingencyMultiplier;
   let grandTotal = subTotal + contingency;

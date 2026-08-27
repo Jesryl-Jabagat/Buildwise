@@ -1884,8 +1884,8 @@
 /* Toast notification */
 .bw-budget-toast {
   position: fixed;
-  bottom: 28px;
-  right: 28px;
+  top: 20px;
+  left: 50%;
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -1897,7 +1897,7 @@
   color: #fff;
   box-shadow: 0 8px 32px rgba(0,0,0,0.22);
   opacity: 0;
-  transform: translateY(16px);
+  transform: translate(-50%, -20px);
   pointer-events: none;
   transition: opacity 0.3s, transform 0.3s;
   max-width: 360px;
@@ -1905,7 +1905,7 @@
 
 .bw-budget-toast--visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translate(-50%, 0);
 }
 
 .bw-budget-toast--warning { background: linear-gradient(135deg, #e65100, #fb8c00); }

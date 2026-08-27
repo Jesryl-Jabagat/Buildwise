@@ -20,20 +20,7 @@
       <section class="container">
         <bw-progress current="3" data-html2canvas-ignore="true"></bw-progress>
 
-        <section class="plan-hero">
-          <div class="plan-hero-copy">
-            <p class="eyebrow-soft">Your BuildWise plan</p>
-            <h1 id="resultTitle">A practical starter home plan is ready.</h1>
-            <p id="resultSubtitle">BuildWise shaped this concept around your budget, rooms, and preferred finish.</p>
-            <div class="plan-actions" data-html2canvas-ignore="true">
-              <a class="btn btn-outline-dark" id="backToConfig" href="configure.html">Edit Choices</a>
-              <a class="btn btn-outline-dark" href="designs.html">Start New Design</a>
-              <button class="btn btn-dark" type="button" id="downloadBtn" onclick="downloadPlan()">Download Plan</button>
-            </div>
-          </div>
-        </section>
-
-        <!-- Section 2: Generated Visuals -->
+        <!-- Section 2: Generated Visuals (MOVED UP FOR IMPACT) -->
         <section class="result-visuals" id="resultVisuals">
           <!-- Exterior 3D (wider hero panel) -->
           <div class="result-visual-box result-visual-box--exterior">
@@ -94,6 +81,20 @@
                   <div class="controls-hint">🖱 Right: Pan &nbsp;|&nbsp; Scroll: Zoom</div>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 1: Hero Copy (Moved below 3D to support the visual) -->
+        <section class="plan-hero pt-0 mt-4 border-top">
+          <div class="plan-hero-copy pt-4">
+            <p class="eyebrow-soft">Your BuildWise plan</p>
+            <h1 id="resultTitle">A practical starter home plan is ready.</h1>
+            <p id="resultSubtitle">BuildWise shaped this concept around your budget, rooms, and preferred finish.</p>
+            <div class="plan-actions" data-html2canvas-ignore="true">
+              <a class="btn btn-outline-dark" id="backToConfig" href="configure.html">Edit Choices</a>
+              <a class="btn btn-outline-dark" href="designs.html">Start New Design</a>
+              <a class="btn btn-dark" id="downloadBtn" href="download-plan.html">Download Plan</a>
             </div>
           </div>
         </section>
@@ -188,14 +189,16 @@
             </div>
           </article>
 
-          <!-- Section 7: Next steps (KEEP) -->
-          <article class="plan-card next-steps-card">
-            <h2>Next steps</h2>
-            <ol>
-              <li>Review the room count and floor area with your family.</li>
-              <li>Ask a builder to validate the budget against local material prices.</li>
-              <li>Prepare a detailed floor plan and permit-ready drawings.</li>
-            </ol>
+          <!-- Section 7: Next steps (CTA) -->
+          <article class="plan-card next-steps-card" style="background: var(--primary); color: white;">
+            <h2 class="text-white" style="margin-bottom: 12px;">Ready to build?</h2>
+            <p class="text-white" style="opacity: 0.9; margin-bottom: 24px;">
+              You have a practical plan and a realistic budget. The next step is to connect with professionals who can turn this concept into permit-ready blueprints and start construction.
+            </p>
+            <div class="d-flex gap-3 flex-wrap">
+              <a href="#" class="btn" style="background-color: white; color: var(--primary); border: 1px solid white;" onclick="alert('This would open a contractor directory!')">Find a Contractor</a>
+              <a href="#" class="btn" style="background-color: transparent; color: white; border: 1px solid white;" onclick="alert('This would copy a share link!')">Share Plan</a>
+            </div>
           </article>
         </div>
       </section>

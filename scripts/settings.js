@@ -66,13 +66,14 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const currentValue = customPrices[item.name] !== undefined ? customPrices[item.name] : item.price;
             const safeId = item.name.replace(/[^a-zA-Z0-9]/g, '_');
+            const safeNameAttr = item.name.replace(/"/g, '&quot;');
             const isModified = currentValue !== item.price;
             
             field.innerHTML = `
                 <label for="price_${safeId}">${item.name}</label>
                 <div class="input-group ${isModified ? 'modified' : ''}">
                     <span class="input-prefix">₱</span>
-                    <input type="number" step="0.01" min="0" id="price_${safeId}" data-material="${item.name}" value="${currentValue}">
+                    <input type="number" step="0.01" min="0" id="price_${safeId}" data-material="${safeNameAttr}" value="${currentValue}">
                     <span class="input-suffix">per ${item.unit}</span>
                 </div>
             `;
@@ -116,7 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Save Logic
-    form.addEventListener('submit', (e) => {
+    const btnSave = document.getElementById('btn-save');
+    btnSave.addEventListener('click', (e) => {
         e.preventDefault();
         
         const newCustomPrices = {};
@@ -147,6 +149,17 @@ document.addEventListener('DOMContentLoaded', () => {
         
         localStorage.setItem('buildwise-custom-prices', JSON.stringify(newCustomPrices));
         refreshCustomPrices();
+        
+        // Immediate visual feedback on the button itself
+        const originalText = btnSave.textContent;
+        btnSave.textContent = "✔ SAVED!";
+        btnSave.style.backgroundColor = "#28a745"; // Success green
+        
+        setTimeout(() => {
+            btnSave.textContent = originalText;
+            btnSave.style.backgroundColor = "";
+        }, 2000);
+
         showToast("Settings Saved Successfully!");
     });
     

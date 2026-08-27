@@ -194,6 +194,53 @@ export function initRenderer(configData) {
   controlsExt.maxPolarAngle = Math.PI / 2 - 0.02;
   controlsExt.target.set(0, 3.0, 0);
 
+  // ── Additional Views for Download Plan ───────────────────────────────────
+  const aerialCont = document.getElementById("aerial-container");
+  const sideCont = document.getElementById("side-container");
+  
+  let cameraAerial = null, rendererAerial = null, controlsAerial = null;
+  let cameraSide = null, rendererSide = null, controlsSide = null;
+
+  if (aerialCont) {
+    cameraAerial = new THREE.PerspectiveCamera(45, aerialCont.clientWidth / aerialCont.clientHeight, 0.1, 500);
+    cameraAerial.layers.enableAll();
+    
+    rendererAerial = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    rendererAerial.setSize(aerialCont.clientWidth, aerialCont.clientHeight);
+    rendererAerial.setPixelRatio(window.devicePixelRatio);
+    rendererAerial.shadowMap.enabled = true;
+    rendererAerial.shadowMap.type = THREE.PCFSoftShadowMap;
+    rendererAerial.toneMapping = THREE.ACESFilmicToneMapping;
+    rendererAerial.toneMappingExposure = 0.85;
+    rendererAerial.outputEncoding = THREE.sRGBEncoding;
+    aerialCont.appendChild(rendererAerial.domElement);
+    
+    controlsAerial = new THREE.OrbitControls(cameraAerial, rendererAerial.domElement);
+    controlsAerial.enableDamping = true;
+    controlsAerial.dampingFactor = 0.05;
+    controlsAerial.maxPolarAngle = Math.PI / 2 - 0.01;
+  }
+
+  if (sideCont) {
+    cameraSide = new THREE.PerspectiveCamera(45, sideCont.clientWidth / sideCont.clientHeight, 0.1, 500);
+    cameraSide.layers.enableAll();
+    
+    rendererSide = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    rendererSide.setSize(sideCont.clientWidth, sideCont.clientHeight);
+    rendererSide.setPixelRatio(window.devicePixelRatio);
+    rendererSide.shadowMap.enabled = true;
+    rendererSide.shadowMap.type = THREE.PCFSoftShadowMap;
+    rendererSide.toneMapping = THREE.ACESFilmicToneMapping;
+    rendererSide.toneMappingExposure = 0.85;
+    rendererSide.outputEncoding = THREE.sRGBEncoding;
+    sideCont.appendChild(rendererSide.domElement);
+    
+    controlsSide = new THREE.OrbitControls(cameraSide, rendererSide.domElement);
+    controlsSide.enableDamping = true;
+    controlsSide.dampingFactor = 0.05;
+    controlsSide.maxPolarAngle = Math.PI / 2 - 0.01;
+  }
+
   // ── Floor Plan: Two independent renderers ────────────────────────────────
   // fp-container-1 = Floor 1 (always shown)
   // fp-container-2 = Floor 2 / Mezzanine (shown only for two-story / loft)
@@ -3425,6 +3472,25 @@ export function initRenderer(configData) {
 
     blueprintGroup.visible = false;
     rendererExt.render(scene, cameraExt);
+    
+    // Additional Renders (only active if containers exist)
+    if (rendererAerial) {
+      if (xrayState.floor2) cameraAerial.layers.enable(2);
+      else cameraAerial.layers.disable(2);
+      controlsAerial.update();
+      // Remove roof for aerial view
+      roofGroup.visible = false;
+      rendererAerial.render(scene, cameraAerial);
+    }
+    
+    if (rendererSide) {
+      if (xrayState.floor2) cameraSide.layers.enable(2);
+      else cameraSide.layers.disable(2);
+      controlsSide.update();
+      // Restore roof for side view based on user toggle
+      roofGroup.visible = xrayState.roof;
+      rendererSide.render(scene, cameraSide);
+    }
 
     // 2. Blueprint Render (2D Floor Plan) — switch scene to blueprint mode
     const bg = scene.background;
@@ -3587,6 +3653,18 @@ export function initRenderer(configData) {
       cameraFP2.updateProjectionMatrix();
       rendererFP2.setSize(fpContainer2.clientWidth, fpContainer2.clientHeight);
     }
+    
+    if (rendererAerial && aerialCont) {
+      cameraAerial.aspect = aerialCont.clientWidth / aerialCont.clientHeight;
+      cameraAerial.updateProjectionMatrix();
+      rendererAerial.setSize(aerialCont.clientWidth, aerialCont.clientHeight);
+    }
+    
+    if (rendererSide && sideCont) {
+      cameraSide.aspect = sideCont.clientWidth / sideCont.clientHeight;
+      cameraSide.updateProjectionMatrix();
+      rendererSide.setSize(sideCont.clientWidth, sideCont.clientHeight);
+    }
   });
 
   // ============================================================
@@ -3622,6 +3700,39 @@ export function initRenderer(configData) {
   cameraExt.far = maxDim * 20;
   cameraExt.updateProjectionMatrix();
   controlsExt.update();
+  
+  if (cameraAerial) {
+    cameraAerial.position.set(
+      center.x + maxDim * 1.5,
+      center.y + maxDim * 1.0,
+      center.z - maxDim * 1.5
+    );
+    controlsAerial.target.set(center.x, center.y, center.z);
+    cameraAerial.near = 0.1;
+    cameraAerial.far = maxDim * 20;
+    cameraAerial.updateProjectionMatrix();
+    controlsAerial.update();
+  }
+  
+  if (cameraSide) {
+    cameraSide.position.set(
+      center.x,
+      1.6, // Eye level
+      center.z + maxDim * 1.4 // Look from +Z side
+    );
+    controlsSide.target.set(center.x, 2.0, center.z);
+    cameraSide.near = 0.1;
+    cameraSide.far = maxDim * 20;
+    cameraSide.updateProjectionMatrix();
+    controlsSide.update();
+  }
+  
+  // Expose to window for download-plan.js multi-camera rendering
+  window.bw3d = {
+      scene: scene,
+      center: center,
+      maxDim: maxDim
+  };
 
   animate();
 
