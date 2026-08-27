@@ -2,6 +2,12 @@
   padding: 80px 0 40px;
   text-align: center;
 }
+.reviews-hero h1 {
+  color: var(--text);
+}
+.reviews-hero p {
+  color: var(--text-muted);
+}
 .reviews-stats {
   display: flex;
   justify-content: center;
@@ -16,7 +22,7 @@
 .stat-value {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text);
   line-height: 1;
 }
 .stat-stars {
@@ -26,7 +32,7 @@
 }
 .stat-label {
   font-size: 0.9rem;
-  color: #5a6360;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -37,13 +43,19 @@
   padding: 40px 0;
 }
 .review-card {
-  background: white;
-  border: 1px solid #d9ddd6;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   display: flex;
   flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.review-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  border-color: var(--primary);
 }
 .review-stars {
   color: #f5b041;
@@ -53,37 +65,38 @@
 }
 .review-text {
   font-size: 1rem;
-  color: #1a1a1a;
+  color: var(--text);
   margin-bottom: 24px;
   flex-grow: 1;
   font-style: italic;
+  line-height: 1.5;
 }
 .review-meta {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  border-top: 1px solid #f5f7f4;
+  border-top: 1px solid var(--border);
   padding-top: 16px;
 }
 .review-author {
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text);
   margin-bottom: 4px;
 }
 .review-date {
   font-size: 0.8rem;
-  color: #5a6360;
+  color: var(--text-muted);
 }
 .review-template {
   font-size: 0.8rem;
-  background: #f5f7f4;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
   padding: 4px 8px;
   border-radius: 4px;
-  color: #1f7a5c;
+  color: var(--primary);
   font-weight: 500;
 }
 .empty-reviews {
   text-align: center;
   padding: 60px 0;
-  color: #5a6360;
+  color: var(--text-muted);
 }
