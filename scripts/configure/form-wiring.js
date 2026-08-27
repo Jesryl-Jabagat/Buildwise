@@ -235,11 +235,23 @@ export function wireFloorAreaDisplay(form) {
 
   const container = document.createElement("div");
   container.className = "col-12 mt-3";
+  let setupAreaHint = '';
+  try {
+    const setupDataStr = localStorage.getItem('buildwiseSetup');
+    if (setupDataStr) {
+      const setupData = JSON.parse(setupDataStr);
+      if (setupData.area) {
+        setupAreaHint = `<p class="small mt-2 mb-0 text-muted" style="line-height: 1.2;">📐 Based on your lot area of <strong>${setupData.area} sqm</strong> from Setup.</p>`;
+      }
+    }
+  } catch (e) {}
+
   container.innerHTML = `
     <div class="alert d-flex align-items-center py-2 mb-0" style="background-color: color-mix(in srgb, var(--primary) 15%, transparent); border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent); color: var(--primary); border-radius: 12px;">
       <strong class="me-2">Estimated Total Floor Area:</strong>
       <span id="liveFloorAreaDisplay" style="font-weight: 800;">0.00 sqm</span>
     </div>
+    ${setupAreaHint}
   `;
 
   const dimSection = l1Input.closest(".row");

@@ -117,6 +117,13 @@ window.generatePDF = async function() {
         pdf.addImage(imgData2, 'JPEG', 0, 0, pdfWidth, imgHeight2);
 
         pdf.save('BuildWise_Plan.pdf');
+
+        // Review Modal Logic
+        setTimeout(() => {
+            const overlay = document.getElementById('review-modal-overlay');
+            overlay.classList.remove('d-none');
+        }, 1500);
+
     } catch (err) {
         console.error("PDF generation error: ", err);
         alert("Error generating PDF.");
@@ -126,5 +133,101 @@ window.generatePDF = async function() {
     }
 }
 
+function setupReviewModal() {
+    let currentRating = 0;
+    const stars = document.querySelectorAll('#star-rating .star');
+    
+    // Star interaction
+    stars.forEach(star => {
+        star.addEventListener('mouseover', function() {
+            const val = this.getAttribute('data-value');
+            stars.forEach(s => {
+                s.style.color = s.getAttribute('data-value') <= val ? '#f5b041' : '#d9ddd6';
+            });
+        });
+        
+        star.addEventListener('mouseout', function() {
+            stars.forEach(s => {
+                s.style.color = s.getAttribute('data-value') <= currentRating ? '#f5b041' : '#d9ddd6';
+            });
+        });
+        
+        star.addEventListener('click', function() {
+            currentRating = this.getAttribute('data-value');
+            stars.forEach(s => {
+                s.style.color = s.getAttribute('data-value') <= currentRating ? '#f5b041' : '#d9ddd6';
+            });
+        });
+    });
+
+    // Skip
+    document.getElementById('btn-skip-review').addEventListener('click', () => {
+        document.getElementById('review-modal-overlay').classList.add('d-none');
+    });
+
+    // Submit
+    document.getElementById('btn-submit-review').addEventListener('click', async () => {
+        if (currentRating === 0) {
+            alert("Please select a star rating.");
+            return;
+        }
+
+        const text = document.getElementById('review-text').value;
+        const btnSubmit = document.getElementById('btn-submit-review');
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = "Submitting...";
+
+        // Get user data from Auth session if available, else anonymous
+        let session = null;
+        try {
+            session = JSON.parse(sessionStorage.getItem('buildwise-session-v2') || localStorage.getItem('buildwise-session-v2') || "null");
+        } catch(e) {}
+        
+        const userName = session ? session.name : "Anonymous User";
+        const userEmail = session ? session.email : null;
+        
+        // Get template name
+        let stored = null;
+        try { stored = JSON.parse(localStorage.getItem("buildwiseResult")); } catch(e){}
+        const templateName = stored ? stored.title : "Unknown Template";
+
+        try {
+            const response = await fetch('/api/reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_name: userName,
+                    user_email: userEmail,
+                    rating: currentRating,
+                    review_text: text,
+                    template_name: templateName
+                })
+            });
+
+            if (response.ok) {
+                document.getElementById('review-success-msg').classList.remove('d-none');
+                btnSubmit.classList.add('d-none');
+                document.getElementById('btn-skip-review').classList.add('d-none');
+                document.getElementById('star-rating').style.pointerEvents = 'none';
+                document.getElementById('review-text').disabled = true;
+                
+                setTimeout(() => {
+                    document.getElementById('review-modal-overlay').classList.add('d-none');
+                }, 2000);
+            } else {
+                alert("Failed to submit review.");
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = "Submit Review";
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network error.");
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = "Submit Review";
+        }
+    });
+}
+
 // Boot
 setupPDFPage();
+setupReviewModal();

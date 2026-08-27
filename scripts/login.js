@@ -3,7 +3,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Redirect if already logged in
     if (typeof Auth !== 'undefined' && Auth.getSession()) {
-        window.location.href = 'pages/profile.html';
+        window.location.href = 'index.html';
         return; // Stop execution if redirecting
     }
 
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await Auth.handleLogin(email, password, remember);
             if (result.success) {
                 showToast('Login successful!', 'success');
-                setTimeout(() => window.location.href = 'pages/profile.html', 1000);
+                setTimeout(() => window.location.href = 'index.html', 1000);
             } else {
                 showToast(result.message);
             }
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await Auth.handleSignup(name, email, pass);
             if (result.success) {
                 showToast('Account created successfully!', 'success');
-                setTimeout(() => window.location.href = 'pages/profile.html', 1000);
+                setTimeout(() => window.location.href = 'index.html', 1000);
             } else {
                 showToast(result.message);
             }

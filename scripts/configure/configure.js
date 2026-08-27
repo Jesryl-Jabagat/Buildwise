@@ -110,6 +110,26 @@ function setupConfigPage() {
         alert("Failed to load AI module. If you are opening this file locally (file:///), your browser might block ES modules. Try using Live Server. Error: " + err.message);
       });
     } else {
+      // Pre-fill smart default dimensions from setup area
+      if (setupData.area && setupData.area > 0) {
+        const side = Math.sqrt(setupData.area);
+        const length = Math.round(side * 10) / 10;
+        const width = Math.round((setupData.area / length) * 10) / 10;
+        
+        const l1Input = form.querySelector('[name="length"], [name="groundLength"]');
+        const w1Input = form.querySelector('[name="width"], [name="groundWidth"]');
+        
+        if (l1Input && w1Input) {
+          l1Input.value = length;
+          w1Input.value = width;
+          // Dispatch events so live-budget and area display pick it up
+          l1Input.dispatchEvent(new Event('input', { bubbles: true }));
+          w1Input.dispatchEvent(new Event('input', { bubbles: true }));
+          l1Input.dispatchEvent(new Event('change', { bubbles: true }));
+          w1Input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+
       // In manual mode, try to pre-fill from a previous result (Edit Choices flow)
       prefillFormFromLocalStorage(form, typeKey);
     }
