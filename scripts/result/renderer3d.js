@@ -1236,8 +1236,8 @@ export function initRenderer(configData) {
     let L2 = L / 2;
     let W2 = W;
     if (type === "Two Storey") {
-      L2 = parseFloat(configData.secondFloorLength) || L2;
-      W2 = parseFloat(configData.secondFloorWidth) || W2;
+      L2 = parseFloat(configData.secondFloorLength) || L;
+      W2 = parseFloat(configData.secondFloorWidth) || W;
     } else if (type === "Loft Style") {
       L2 = parseFloat(configData.mezzanineLength) || L2;
       W2 = parseFloat(configData.mezzanineWidth) || W2;
@@ -1247,7 +1247,7 @@ export function initRenderer(configData) {
       parseFloat(configData.groundWallHeight) ||
       parseFloat(configData.chbBaseWallHeight) ||
       (type === "Two Storey" ? 3.0 : type.includes("Half") ? 1.5 : 3.0);
-    const H2 = 2.8;
+    const H2 = parseFloat(configData.secondFloorWallHeight) || 2.8;
     const isTrue = (val) => val === true || val === "Yes";
     const plastering =
       isTrue(configData.includePlastering) ||
@@ -1501,7 +1501,7 @@ export function initRenderer(configData) {
     const wt = 0.2; // wall thickness
 
     // Ensure mezzanine (L2) is large enough to fit the CR and the stairs without overlapping
-    if ((type === "Two Storey" || type === "Loft Style") && cr1 > 0) {
+    if (type === "Loft Style" && cr1 > 0) {
       let estCrWidth = 0;
       if (bed1 > 0) {
         const bedWidth =
@@ -2109,7 +2109,7 @@ export function initRenderer(configData) {
         wt,
         -ox,
         cy2,
-        -W2 / 2 + wt / 2,
+        -oz - W2 / 2 + wt / 2,
         wallMat2,
         wallGroup,
         true,
@@ -2122,7 +2122,7 @@ export function initRenderer(configData) {
         wt,
         -ox,
         cy2,
-        W2 / 2 - wt / 2,
+        -oz + W2 / 2 - wt / 2,
         wallMat2,
         wallGroup,
         true,
@@ -2182,7 +2182,7 @@ export function initRenderer(configData) {
           wt,
           -ox,
           cy2,
-          -W2 / 2 + wt / 2,
+          -oz - W2 / 2 + wt / 2,
           wallMat2,
           wallGroup,
           true,
@@ -2195,7 +2195,7 @@ export function initRenderer(configData) {
           wt,
           -ox,
           cy2,
-          W2 / 2 - wt / 2,
+          -oz + W2 / 2 - wt / 2,
           wallMat2,
           wallGroup,
           true,
