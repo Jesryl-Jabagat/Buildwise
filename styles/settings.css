@@ -131,3 +131,12 @@
             transform: translateY(0);
             opacity: 1;
         }
+
+        .labor-settings-card {
+            border-color: var(--color-primary, #1f7a5c);
+            background: color-mix(in srgb, var(--color-primary, #1f7a5c) 3%, var(--color-surface));
+        }
+        .labor-settings-card h2 {
+            color: var(--color-primary, #1f7a5c);
+            border-bottom-color: color-mix(in srgb, var(--color-primary, #1f7a5c) 20%, transparent);
+        }

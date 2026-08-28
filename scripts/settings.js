@@ -1,5 +1,5 @@
 import { PRICES, refreshCustomPrices } from './estimator/prices.js';
-
+import { DEFAULT_LABOR_RATES, DEFAULT_LABOR_MULTIPLIERS, refreshCustomLabor } from './estimator/labor.js';
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('settings-container');
     const form = document.getElementById('settings-form');
@@ -47,8 +47,66 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) {
         console.warn("Could not load custom prices", e);
     }
+    
+    // Load custom labor from localStorage
+    let customLabor = { rates: {}, multipliers: {} };
+    try {
+        const laborData = localStorage.getItem('buildwise-custom-labor');
+        if (laborData) {
+            customLabor = JSON.parse(laborData);
+            if (!customLabor.rates) customLabor.rates = {};
+            if (!customLabor.multipliers) customLabor.multipliers = {};
+        }
+    } catch(e) {
+        console.warn("Could not load custom labor", e);
+    }
 
-    // Render the UI
+    // Helper to create a card
+    function createSettingsCard(titleText, items, customDataObj, prefix, suffix, dataAttrPrefix, isMultiplier = false) {
+        const card = document.createElement('div');
+        card.className = 'settings-card';
+        if (titleText.includes('Labor')) {
+            card.classList.add('labor-settings-card');
+        }
+        
+        const title = document.createElement('h2');
+        title.textContent = titleText;
+        card.appendChild(title);
+        
+        const grid = document.createElement('div');
+        grid.className = 'settings-grid';
+        
+        for (const [key, defaultVal] of Object.entries(items)) {
+            const field = document.createElement('div');
+            field.className = 'price-field';
+            
+            const currentValue = customDataObj[key] !== undefined ? customDataObj[key] : defaultVal;
+            const displayValue = isMultiplier ? (currentValue * 100).toFixed(0) : currentValue;
+            
+            const safeId = key.replace(/[^a-zA-Z0-9]/g, '_');
+            const safeNameAttr = key.replace(/"/g, '&quot;');
+            const isModified = currentValue !== defaultVal;
+            
+            field.innerHTML = `
+                <label for="${dataAttrPrefix}_${safeId}">${key}</label>
+                <div class="input-group ${isModified ? 'modified' : ''}">
+                    ${prefix ? `<span class="input-prefix">${prefix}</span>` : ''}
+                    <input type="number" step="${isMultiplier ? '1' : '0.01'}" min="0" id="${dataAttrPrefix}_${safeId}" data-${dataAttrPrefix}="${safeNameAttr}" value="${displayValue}">
+                    <span class="input-suffix">${suffix}</span>
+                </div>
+            `;
+            grid.appendChild(field);
+        }
+        
+        card.appendChild(grid);
+        container.appendChild(card);
+    }
+
+    // Render Labor Cards First
+    createSettingsCard("Daily Labor Wages", DEFAULT_LABOR_RATES, customLabor.rates, "₱", "per day", "labor-rate");
+    createSettingsCard("Labor Cost Multipliers", DEFAULT_LABOR_MULTIPLIERS, customLabor.multipliers, "", "% of materials", "labor-mult", true);
+
+    // Render Material Cards
     for (const [cat, items] of Object.entries(groupedPrices)) {
         const card = document.createElement('div');
         card.className = 'settings-card';
@@ -104,10 +162,23 @@ document.addEventListener('DOMContentLoaded', () => {
     container.addEventListener('input', (e) => {
         if (e.target.tagName === 'INPUT') {
             const material = e.target.getAttribute('data-material');
+            const laborRate = e.target.getAttribute('data-labor-rate');
+            const laborMult = e.target.getAttribute('data-labor-mult');
+            
             const val = parseFloat(e.target.value);
             const inputGroup = e.target.closest('.input-group');
+            
             if (inputGroup) {
-                if (!isNaN(val) && val !== PRICES[material].price) {
+                let defaultVal = null;
+                let parsedVal = val;
+                
+                if (material) defaultVal = PRICES[material].price;
+                else if (laborRate) defaultVal = DEFAULT_LABOR_RATES[laborRate];
+                else if (laborMult) {
+                    defaultVal = DEFAULT_LABOR_MULTIPLIERS[laborMult] * 100;
+                }
+                
+                if (!isNaN(parsedVal) && parsedVal !== defaultVal) {
                     inputGroup.classList.add('modified');
                 } else {
                     inputGroup.classList.remove('modified');
@@ -122,11 +193,15 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         
         const newCustomPrices = {};
+        const newCustomLabor = { rates: {}, multipliers: {} };
         const inputs = container.querySelectorAll('input[type="number"]');
         
         let hasErrors = false;
         inputs.forEach(input => {
             const material = input.getAttribute('data-material');
+            const laborRate = input.getAttribute('data-labor-rate');
+            const laborMult = input.getAttribute('data-labor-mult');
+            
             const val = parseFloat(input.value);
             const inputGroup = input.closest('.input-group');
             
@@ -135,20 +210,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 hasErrors = true;
             } else {
                 inputGroup.style.borderColor = '';
+                
                 // Only save if it differs from default
-                if (val !== PRICES[material].price) {
+                if (material && val !== PRICES[material].price) {
                     newCustomPrices[material] = val;
+                }
+                else if (laborRate && val !== DEFAULT_LABOR_RATES[laborRate]) {
+                    newCustomLabor.rates[laborRate] = val;
+                }
+                else if (laborMult) {
+                    const decimalVal = val / 100;
+                    if (decimalVal !== DEFAULT_LABOR_MULTIPLIERS[laborMult]) {
+                        newCustomLabor.multipliers[laborMult] = decimalVal;
+                    }
                 }
             }
         });
         
         if (hasErrors) {
-            showToast("Please fix invalid prices (must be 0 or greater).");
+            showToast("Please fix invalid values (must be 0 or greater).");
             return;
         }
         
         localStorage.setItem('buildwise-custom-prices', JSON.stringify(newCustomPrices));
+        localStorage.setItem('buildwise-custom-labor', JSON.stringify(newCustomLabor));
+        
         refreshCustomPrices();
+        refreshCustomLabor();
         
         // Immediate visual feedback on the button itself
         const originalText = btnSave.textContent;
@@ -165,15 +253,27 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Reset Logic
     btnReset.addEventListener('click', () => {
-        if (confirm("Are you sure you want to reset all prices to their default values?")) {
+        if (confirm("Are you sure you want to reset all prices and labor settings to their default values?")) {
             localStorage.removeItem('buildwise-custom-prices');
+            localStorage.removeItem('buildwise-custom-labor');
             refreshCustomPrices();
+            refreshCustomLabor();
             
             // Update UI
             const inputs = container.querySelectorAll('input[type="number"]');
             inputs.forEach(input => {
                 const material = input.getAttribute('data-material');
-                input.value = PRICES[material].price;
+                const laborRate = input.getAttribute('data-labor-rate');
+                const laborMult = input.getAttribute('data-labor-mult');
+                
+                if (material) {
+                    input.value = PRICES[material].price;
+                } else if (laborRate) {
+                    input.value = DEFAULT_LABOR_RATES[laborRate];
+                } else if (laborMult) {
+                    input.value = (DEFAULT_LABOR_MULTIPLIERS[laborMult] * 100).toFixed(0);
+                }
+                
                 const inputGroup = input.closest('.input-group');
                 if (inputGroup) {
                     inputGroup.style.borderColor = '';
@@ -181,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             
-            showToast("Prices reset to defaults.");
+            showToast("Settings reset to defaults.");
         }
     });
 });

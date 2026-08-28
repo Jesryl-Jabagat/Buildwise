@@ -3678,6 +3678,10 @@ export function initRenderer(configData) {
   columnGroup.visible = true;
 
   buildHouseLogic(configData);
+  
+  if (configData.layoutVariant === 'mirrored') {
+    houseGroup.scale.z = -1;
+  }
 
   // ── Auto-fit exterior camera to house bounding box ───────────────────
   // Compute a bounding box over the entire house group

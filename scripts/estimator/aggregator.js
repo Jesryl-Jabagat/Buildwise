@@ -1,4 +1,5 @@
 import { formatMaterialCost } from "./prices.js";
+import { getLaborRates, getLaborMultiplier } from "./labor.js";
 
 import * as chbConfig from "./configs/chb.config.js";
 import * as amakanConfig from "./configs/half-amakan.config.js";
@@ -14,8 +15,10 @@ const configs = {
   "two-storey": twoStoreyConfig
 };
 
-function generateTimelineAndLabor(laborCost, floorArea) {
-  const avgWage = 500;
+function generateTimelineAndLabor(laborCost, floorArea, materialsList = []) {
+  const laborRates = getLaborRates();
+  // Compute average wage from custom settings
+  const avgWage = (laborRates["Lead Carpenter / Master Builder"] + laborRates["Helper / Ordinary Laborer"]) / 2;
   
   // Base crew size determined by floor area
   let baseCrew = 3;
@@ -28,23 +31,58 @@ function generateTimelineAndLabor(laborCost, floorArea) {
   const dailyBurnRate = baseCrew * avgWage;
   const totalWorkingDays = Math.min(90, Math.ceil(laborCost / dailyBurnRate));
   
-  // Define realistic crew fluctuations and day allocations per phase
-  const phaseLogic = [
-    { name: "Phase 1: Foundation & Masonry",        pct: 0.20, crew: baseCrew + 1, delay: 7,  delayNote: "curing & inspection" },
-    { name: "Phase 2: Structural Framing & Walling",pct: 0.35, crew: baseCrew + 1, delay: 10, delayNote: "slab curing & inspection" },
-    { name: "Phase 3: Roofing & Ceiling",           pct: 0.15, crew: Math.max(3, baseCrew - 1), delay: 3,  delayNote: "inspection" },
-    { name: "Phase 4: Finishes & Tiling",           pct: 0.20, crew: Math.max(2, baseCrew - 1), delay: 5,  delayNote: "drying & inspection" },
-    { name: "Phase 5: Plumbing, Elec. & Turnover",  pct: 0.10, crew: Math.max(2, baseCrew - 2), delay: 3,  delayNote: "final inspection" }
-  ];
+  // Determine included features from materials list
+  const hasFinishesPhase = materialsList.some(c => c.category === "Finishes");
+  const hasPlumbing = materialsList.some(c => c.category === "Plumbing");
+  const hasElectrical = materialsList.some(c => c.category === "Electrical");
+  const hasUtilitiesPhase = hasPlumbing || hasElectrical;
+
+  let activePhases = [];
+  
+  activePhases.push({ name: "Phase 1: Foundation & Masonry",        rawPct: 0.20, crew: baseCrew + 1, delay: 7,  delayNote: "curing & inspection" });
+  activePhases.push({ name: "Phase 2: Structural Framing & Walling",rawPct: 0.35, crew: baseCrew + 1, delay: 10, delayNote: "slab curing & inspection" });
+  
+  const hasCeiling = materialsList.some(c => c.category === "Finishes" && c.items.some(i => i.name.toLowerCase().includes("ceiling") || i.name.toLowerCase().includes("board")));
+  const p3Name = hasCeiling ? "Phase 3: Roofing & Ceiling" : "Phase 3: Roofing";
+  activePhases.push({ name: p3Name, rawPct: 0.15, crew: Math.max(3, baseCrew - 1), delay: 3,  delayNote: "inspection" });
+
+  if (hasFinishesPhase) {
+     const hasTiles = materialsList.some(c => c.category === "Finishes" && c.items.some(i => i.name.toLowerCase().includes("tile")));
+     let p4Name = "Phase 4: Finishes";
+     if (hasTiles) p4Name += " & Tiling";
+     activePhases.push({ name: p4Name, rawPct: 0.20, crew: Math.max(2, baseCrew - 1), delay: 5, delayNote: "drying & inspection" });
+  }
+  
+  if (hasUtilitiesPhase) {
+     let utils = [];
+     if (hasPlumbing) utils.push("Plumbing");
+     if (hasElectrical) utils.push("Elec.");
+     activePhases.push({ name: `Phase 5: ${utils.join(", ")} & Turnover`, rawPct: 0.10, crew: Math.max(2, baseCrew - 2), delay: 3, delayNote: "final inspection" });
+  } else {
+     activePhases[activePhases.length - 1].name += " & Turnover";
+     activePhases[activePhases.length - 1].delay += 2;
+     activePhases[activePhases.length - 1].delayNote += " & final inspection";
+  }
+
+  // Normalize percentages so they always sum to 100% of the calculated totalWorkingDays
+  const totalRawPct = activePhases.reduce((sum, p) => sum + p.rawPct, 0);
   
   let totalBuildDays = 0;
-  const phases = phaseLogic.map(p => {
-    const activeDays = Math.max(1, Math.ceil(totalWorkingDays * p.pct));
+  const phases = activePhases.map((p, index) => {
+    // Rename Phase numbers sequentially (1, 2, 3, 4...) in case 4 was skipped and 5 remained
+    const nameParts = p.name.split(": ");
+    let finalName = p.name;
+    if (nameParts.length > 1) {
+       finalName = `Phase ${index + 1}: ${nameParts[1]}`;
+    }
+    
+    const normalizedPct = p.rawPct / totalRawPct;
+    const activeDays = Math.max(1, Math.ceil(totalWorkingDays * normalizedPct));
     const totalDays = activeDays + (p.delay || 0);
     
     totalBuildDays += totalDays;
     
-    const displayName = p.delay ? `${p.name} (incl. ${p.delay}d ${p.delayNote})` : p.name;
+    const displayName = p.delay ? `${finalName} (incl. ${p.delay}d ${p.delayNote})` : finalName;
     
     return { name: displayName, days: totalDays, workers: p.crew };
   });
@@ -285,31 +323,34 @@ export function generateEstimate(data) {
   // ── First-pass estimate ────────────────────────────────────────────────────
   let { formattedCategories, totalMaterialsCost } = buildCategories(rawQuantities);
 
-  let laborMultiplier = 0.30;
-  if (typeKey === "half-amakan" || typeKey === "half-metal") {
-    laborMultiplier = 0.20;
-  } else if (typeKey === "chb") {
-    laborMultiplier = 0.25;
-  } else if (typeKey === "loft" || typeKey === "two-storey") {
-    laborMultiplier = 0.35;
-  }
+  let laborMultiplier = getLaborMultiplier(typeKey);
 
   let contingencyMultiplier = 0.05;
   let laborEstimate = totalMaterialsCost * laborMultiplier;
 
-  const laborRoles = [
-    { role: "Foreman / Lead", wage: 700, pct: 0.08 },
-    { role: "Lead Mason", wage: 550, pct: 0.20 },
-    { role: "Lead Carpenter", wage: 550, pct: 0.15 },
-    { role: "Electrician", wage: 600, pct: 0.05 },
-    { role: "Plumber", wage: 600, pct: 0.05 },
-    { role: "Tile Setter", wage: 600, pct: 0.08 },
-    { role: "Painter", wage: 550, pct: 0.05 },
-    { role: "Helper / Ordinary Laborer", wage: 400, pct: 0.34 }
-  ];
+  const hasPlumbingList = formattedCategories.some(c => c.category === "Plumbing");
+  const hasElectricalList = formattedCategories.some(c => c.category === "Electrical");
+  const finishesCat = formattedCategories.find(c => c.category === "Finishes");
+  const hasTilesList = finishesCat && finishesCat.items.some(i => i.name.toLowerCase().includes("tile"));
+  const hasPaintingList = finishesCat && finishesCat.items.some(i => i.name.toLowerCase().includes("paint") || i.name.toLowerCase().includes("primer") || i.name.toLowerCase().includes("putty"));
 
-  let laborBreakdown = laborRoles.map(r => {
-    const allocatedCost = laborEstimate * r.pct;
+  const laborRates = getLaborRates();
+
+  const rawLaborRoles = [
+    { role: "Lead Carpenter / Master Builder", wage: laborRates["Lead Carpenter / Master Builder"], baseWeight: 0.35 },
+    { role: "Helper / Ordinary Laborer", wage: laborRates["Helper / Ordinary Laborer"], baseWeight: 0.45 }
+  ];
+  
+  if (hasElectricalList) rawLaborRoles.push({ role: "Electrician", wage: laborRates["Electrician"], baseWeight: 0.05 });
+  if (hasPlumbingList) rawLaborRoles.push({ role: "Plumber", wage: laborRates["Plumber"], baseWeight: 0.05 });
+  if (hasTilesList) rawLaborRoles.push({ role: "Tile Setter", wage: laborRates["Tile Setter"], baseWeight: 0.08 });
+  if (hasPaintingList) rawLaborRoles.push({ role: "Painter", wage: laborRates["Painter"], baseWeight: 0.05 });
+
+  const totalBaseWeight = rawLaborRoles.reduce((sum, r) => sum + r.baseWeight, 0);
+
+  let laborBreakdown = rawLaborRoles.map(r => {
+    const normalizedPct = r.baseWeight / totalBaseWeight;
+    const allocatedCost = laborEstimate * normalizedPct;
     const days = Math.max(1, Math.ceil(allocatedCost / r.wage));
     return {
       role: r.role,
@@ -346,7 +387,7 @@ export function generateEstimate(data) {
   }
 
   const floorArea = data.floorArea || (data.length * data.width) || 30;
-  const forecasting = generateTimelineAndLabor(laborEstimate, floorArea);
+  const forecasting = generateTimelineAndLabor(laborEstimate, floorArea, formattedCategories);
 
   return {
     materialsList: formattedCategories,

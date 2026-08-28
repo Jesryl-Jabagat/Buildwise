@@ -35,12 +35,25 @@ function setupPDFPage() {
     if (!estimateData.error) {
         document.getElementById("pdf-estimate").innerText = currency.format(estimateData.summary.grandTotal);
         
-        // Materials Summary
+        // Detailed Materials List
         const matTbody = document.getElementById("pdf-materials-tbody");
         estimateData.materialsList.forEach(cat => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${cat.category}</td><td class="text-end">${currency.format(cat.total)}</td>`;
-            matTbody.appendChild(tr);
+            // Category Header
+            const catRow = document.createElement("tr");
+            catRow.innerHTML = `<td colspan="4" style="font-weight: 700; color: #1f7a5c; background: #f5f7f4; padding-top: 6px;">${cat.category}</td>`;
+            matTbody.appendChild(catRow);
+            
+            // Items
+            cat.items.forEach(item => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="text-truncate" style="max-width: 140px;" title="${item.name}">${item.name}</td>
+                    <td>${item.qty}</td>
+                    <td>${item.unit}</td>
+                    <td class="text-end">${currency.format(item.total)}</td>
+                `;
+                matTbody.appendChild(tr);
+            });
         });
         document.getElementById("pdf-materials-total").innerText = currency.format(estimateData.summary.totalMaterials);
         

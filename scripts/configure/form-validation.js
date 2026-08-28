@@ -20,6 +20,7 @@ export function getUserInput(form) {
   const data = {
     typeKey: submittedTypeKey,
     title:   submittedType.title,
+    layoutVariant: ['standard', 'mirrored'][Math.floor(Math.random() * 2)]
   };
 
   let totalRooms = 0;

@@ -1,258 +1,6 @@
-import { CONNECTOR } from "../env.js?v=4";
-
-/**
- * Extracts form schema (fields and available options) to send to Gemini.
- * Uses a compact plain-text format to save input tokens.
- */
-function extractFormSchema(form) {
-  const schemaLines = [];
-
-  // Get all select inputs
-  form.querySelectorAll("select[name]").forEach((select) => {
-    const options = Array.from(select.querySelectorAll("option")).map(
-      (o) => o.value || o.text,
-    );
-    schemaLines.push(`${select.name}: [${options.join(" | ")}]`);
-  });
-
-  // Get all number inputs (dimensions)
-  form.querySelectorAll('input[type="number"][name]').forEach((input) => {
-    schemaLines.push(`${input.name} (number, min:${input.min})`);
-  });
-
-  // Get all toggles (they use hidden inputs in this system to store Yes/No)
-  form.querySelectorAll('input[type="hidden"][name]').forEach((hidden) => {
-    // Check if it belongs to a toggle
-    const toggle = hidden.parentElement.querySelector(".bw-toggle-input");
-    if (toggle) {
-      schemaLines.push(`${hidden.name}: [${toggle.dataset.on} | ${toggle.dataset.off}]`);
-    }
-  });
-
-  return schemaLines.join("\n");
-}
-
-// Architect personas — one is picked randomly each build to vary reasoning style
-const ARCHITECT_PERSONAS = [
-  {
-    name: "pragmatic contractor",
-    style: "You think in terms of labor efficiency and construction speed. Your justifications reference build difficulty, crew size, and realistic on-site constraints.",
-  },
-  {
-    name: "budget optimizer",
-    style: "You are obsessed with maximizing value-per-peso. Your justifications cite cost-per-sqm ratios, material waste reduction, and long-term maintenance savings.",
-  },
-  {
-    name: "structural engineer",
-    style: "You prioritize load paths, soil bearing capacity, and material strength. Your justifications reference structural behavior, seismic resilience, and code compliance.",
-  },
-  {
-    name: "eco-conscious designer",
-    style: "You favor durable, low-maintenance, and weather-appropriate materials. Your justifications reference climate suitability, thermal comfort, and longevity.",
-  },
-  {
-    name: "family-first planner",
-    style: "You design around family lifestyle, circulation space, privacy, and daily comfort. Your justifications reference room flow, natural light, and livability.",
-  },
-];
-
-/**
- * Builds the prompt for Gemini with a rotating persona, anti-repetition rules,
- * field-specific hints, and a random seed to produce varied, realistic reasoning.
- */
-function buildPrompt(typeKey, setupData, schema) {
-  const persona = ARCHITECT_PERSONAS[Math.floor(Math.random() * ARCHITECT_PERSONAS.length)];
-  const seed = Math.floor(Math.random() * 90000) + 10000;
-
-  return `You are BuildWise AI acting as a ${persona.name}.
-${persona.style}
-
-The user wants to build a "${typeKey}" house.
-
-CONTEXT:
-- Budget: PHP ${setupData.budget}
-- Lot Area: ${setupData.area} sqm
-- Location: ${setupData.location}
-- Land Type: ${setupData.landType}
-- Variation Seed: #${seed}
-
-DECISION RULES:
-- If budget is low (under PHP 600,000), choose basic materials and conservative dimensions.
-- If budget is moderate (PHP 600,000–1,200,000), choose standard materials with thoughtful choices.
-- If budget is high (over PHP 1,200,000), choose premium or durable options.
-- If Location is "Typhoon Prone", prioritize stronger roofing and walling materials.
-- If Land Type is "Rocky" or "Hard", choose harder soil condition settings.
-- For soilCondition, reference actual land type from context.
-- For roofStyle, reference location and weather exposure.
-- For dimensions (length, width), ensure the product approximates the lot area and is buildable.
-
-REASONING RULES — CRITICAL:
-- Every "reason" MUST be unique. Do NOT repeat similar phrasing across fields.
-- Each reason must reference at least ONE specific detail from the CONTEXT above (budget amount, lot area, location, land type, or family size).
-- Avoid generic phrases like "good balance", "selected because", "provides a good", "this is suitable".
-- Make each justification feel like it came from a real ${persona.name} who studied the project.
-
-BAD reason examples (DO NOT USE THESE PATTERNS):
-  "Standard grade provides a good balance for your budget."
-  "Selected because your land type is Rocky."
-  "This is suitable for your budget."
-
-GOOD reason examples:
-  "At PHP ${setupData.budget}, locking in Standard grade now preserves roughly 15% of the budget for finishing fixtures the estimator excludes."
-  "The ${setupData.landType} soil profile at this site demands a harder bearing condition to avoid excessive footing depth — choosing Firm Hard Rock prevents cost blowout at excavation."
-  "A ${setupData.area}sqm lot in ${setupData.location} gets significant wind exposure; Long Span Pre-Painted steel resists uplift far better than corrugated GI at this footprint."
-
-SCHEMA (select optimal value for EACH field):
-${schema}
-
-Return ONLY a valid JSON array of objects. Do not include markdown formatting like \`\`\`json.
-Each object must have:
-  "name": the exact field name
-  "value": the exact value you selected from the options (or a sensible number)
-  "reason": A unique, specific, 1–2 sentence justification written as a ${persona.name} would say it.
-`;
-}
-
-/**
- * Parses the AI response with a multi-strategy fallback to prevent breakage.
- */
-function parseAiResponse(rawText) {
-  if (!rawText) return null;
-  let cleanText = rawText.trim();
-  
-  // Strategy 1: Direct parse
-  try {
-    const result = JSON.parse(cleanText.replace(/```json/gi, "").replace(/```/g, "").trim());
-    if (Array.isArray(result) && result.length > 0 && result[0].name) return result;
-  } catch(e) {}
-
-  // Strategy 2: Extract bracket block
-  try {
-    const match = cleanText.match(/\[[\s\S]*\]/);
-    if (match) {
-      const result = JSON.parse(match[0]);
-      if (Array.isArray(result) && result.length > 0 && result[0].name) return result;
-    }
-  } catch(e) {}
-
-  // Strategy 3: Extract object block and arrayify
-  try {
-    const match = cleanText.match(/\{[\s\S]*\}/);
-    if (match) {
-      const obj = JSON.parse(match[0]);
-      let arr = obj.suggestions || obj.fields || obj.configuration || null;
-      if (!arr && obj.name && obj.value) arr = [obj];
-      if (Array.isArray(arr) && arr.length > 0 && arr[0].name) return arr;
-    }
-  } catch(e) {}
-
-  // Strategy 4: Trailing comma repair
-  try {
-    const repaired = cleanText.replace(/,\s*([}\]])/g, "$1");
-    const match = repaired.match(/\[[\s\S]*\]/);
-    if (match) {
-      const result = JSON.parse(match[0]);
-      if (Array.isArray(result) && result.length > 0 && result[0].name) return result;
-    }
-  } catch(e) {}
-
-  // Strategy 5: Partial regex recovery
-  try {
-    const regex = /\{\s*"name"\s*:\s*"([^"]+)"\s*,\s*"value"\s*:\s*(?:"([^"]+)"|([^,]+))\s*,\s*"reason"\s*:\s*"([^"]+)"\s*\}/g;
-    const results = [];
-    let match;
-    while ((match = regex.exec(cleanText)) !== null) {
-      let val = match[2] !== undefined ? match[2] : match[3].trim();
-      if (!isNaN(Number(val))) val = Number(val);
-      results.push({ name: match[1], value: val, reason: match[4] });
-    }
-    if (results.length > 0) return results;
-  } catch(e) {}
-
-  return null;
-}
-
-/**
- * Executes a single API call with the provided key.
- */
-async function makeApiCall(prompt, connectorKey) {
-  const url = `https://openrouter.ai/api/v1/chat/completions`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${connectorKey}`,
-      "HTTP-Referer": window.location.href,
-      "X-Title": "BuildWise AI",
-    },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash", // Reverted to reliable Gemini
-      max_tokens: 500, // Reduced heavily to squeeze into remaining user credits
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    if (response.status === 402) {
-      throw new Error("INSUFFICIENT_CREDITS: " + errText);
-    }
-    throw new Error(errText);
-  }
-
-  const data = await response.json();
-  const rawText = data?.choices?.[0]?.message?.content;
-  
-  if (!rawText) {
-    throw new Error("No content returned from AI.");
-  }
-  
-  const parsed = parseAiResponse(rawText);
-  if (!parsed) {
-    throw new Error("Parse failure. Raw output: " + rawText.substring(0, 100));
-  }
-  return parsed;
-}
-
-/**
- * Wraps the API call with 2 auto-retries.
- */
-async function callWithRetry(prompt) {
-  // Attempt 1
-  try {
-    console.log("AI Attempt 1");
-    return await makeApiCall(prompt, CONNECTOR);
-  } catch (e) {
-    console.warn("Attempt 1 failed:", e);
-    if (e.message.includes("INSUFFICIENT_CREDITS")) throw e; // Don't retry if out of credits
-  }
-
-  // Attempt 2
-  try {
-    console.log("AI Attempt 2");
-    return await makeApiCall(prompt, CONNECTOR);
-  } catch (e) {
-    console.warn("Attempt 2 failed:", e);
-    if (e.message.includes("INSUFFICIENT_CREDITS")) throw e;
-  }
-
-  // Attempt 3: Final fallback
-  try {
-    console.log("AI Attempt 3 (Final)");
-    return await makeApiCall(prompt, CONNECTOR);
-  } catch (e) {
-    console.error("All AI attempts failed:", e);
-    if (e.message.includes("INSUFFICIENT_CREDITS")) throw e;
-    return null; // Return null instead of throwing to degrade gracefully
-  }
-}
-
-/**
- * Fetches the configuration from OpenRouter API with retries and robust parsing.
- */
-async function fetchAiConfiguration(prompt) {
-  return await callWithRetry(prompt);
-}
+import { generateAiConfiguration } from "../ai/service.js";
+import { getUserInput } from "./form-validation.js";
+import { generateEstimate } from "../estimator/aggregator.js";
 
 /**
  * Helper to show the floating tooltip.
@@ -384,10 +132,7 @@ export async function startAiBuilder(form, typeKey, setupData) {
   }
 
   try {
-    const schema = extractFormSchema(form);
-    const prompt = buildPrompt(typeKey, setupData, schema);
-
-    const suggestions = await fetchAiConfiguration(prompt);
+    const suggestions = await generateAiConfiguration(form, typeKey, setupData);
 
     if (suggestions && suggestions.length > 0) {
       // Hide the loading spinner, but keep the dark overlay so they can't click
@@ -401,6 +146,41 @@ export async function startAiBuilder(form, typeKey, setupData) {
       overlay.style.background = "rgba(0,0,0,0.4)";
 
       await runAnimationLoop(form, suggestions);
+
+      // --- Budget Reconciler Loop ---
+      const targetBudget = Number(setupData.budget) || 0;
+      if (targetBudget > 0) {
+          let currentData = getUserInput(form);
+          let currentEstimate = generateEstimate(currentData);
+          
+          if (currentEstimate.summary && currentEstimate.summary.grandTotal > targetBudget) {
+              const togglesToDisable = ["hasACWiring", "hasTiles", "hasPaint", "hasCeiling"];
+              
+              for (let t of togglesToDisable) {
+                  const hidden = form.querySelector(`input[type="hidden"][name="${t}"]`);
+                  if (hidden) {
+                      const toggleBtn = hidden.parentElement.querySelector(".bw-toggle-input");
+                      if (toggleBtn && toggleBtn.checked) {
+                          // Scroll to toggle
+                          toggleBtn.scrollIntoView({ behavior: "smooth", block: "center" });
+                          toggleBtn.parentElement.classList.add("ai-highlight");
+                          await new Promise((r) => setTimeout(r, 600));
+                          
+                          toggleBtn.checked = false;
+                          toggleBtn.dispatchEvent(new Event("change", { bubbles: true }));
+                          showTooltip(toggleBtn.parentElement, "AI Budget Guard: Disabled to meet strict budget constraints.");
+                          
+                          await new Promise((r) => setTimeout(r, 1400));
+                          toggleBtn.parentElement.classList.remove("ai-highlight");
+                          
+                          currentData = getUserInput(form);
+                          currentEstimate = generateEstimate(currentData);
+                          if (currentEstimate.summary && currentEstimate.summary.grandTotal <= targetBudget) break;
+                      }
+                  }
+              }
+          }
+      }
 
       // Submit the form
       const submitBtn = form.querySelector(".create-plan-button");
@@ -677,10 +457,7 @@ export async function startAiAnalyzing(form, typeKey, setupData) {
   }
 
   try {
-    const schema = extractFormSchema(form);
-    const prompt = buildPrompt(typeKey, setupData, schema);
-
-    const suggestions = await fetchAiConfiguration(prompt);
+    const suggestions = await generateAiConfiguration(form, typeKey, setupData);
 
     if (suggestions && suggestions.length > 0) {
       // Hide the loading spinner (legacy)
@@ -738,7 +515,7 @@ function showAiErrorState(form, typeKey, setupData, errorObj = null) {
 
   const h2 = header.querySelector("h2");
   if (h2) {
-    h2.innerText = isCreditsError ? "OpenRouter Credits Empty" : "AI Unavailable";
+    h2.innerText = isCreditsError ? "AI Credits Depleted" : "AI Unavailable";
     h2.style.color = "var(--danger, #ef4444)";
   }
   
@@ -748,8 +525,8 @@ function showAiErrorState(form, typeKey, setupData, errorObj = null) {
   const status = header.querySelector("#aiStatus") || header.querySelector("p");
   if (status) {
       status.innerText = isCreditsError 
-        ? "Your OpenRouter API key works, but your account balance is exactly 0. Please top up your OpenRouter account to use AI."
-        : "Our AI couldn't complete your configuration. This is usually temporary.";
+        ? "Your API keys work, but your account balance is depleted. Please top up to use AI."
+        : "Our AI systems couldn't complete your configuration. This is usually temporary.";
   }
   
   header.style.animation = "none";
