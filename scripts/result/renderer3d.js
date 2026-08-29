@@ -241,6 +241,29 @@ export function initRenderer(configData) {
     controlsSide.maxPolarAngle = Math.PI / 2 - 0.01;
   }
 
+  const rearCont = document.getElementById("rear-container");
+  let cameraRear = null, rendererRear = null, controlsRear = null;
+
+  if (rearCont) {
+    cameraRear = new THREE.PerspectiveCamera(45, rearCont.clientWidth / rearCont.clientHeight, 0.1, 500);
+    cameraRear.layers.enableAll();
+    
+    rendererRear = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    rendererRear.setSize(rearCont.clientWidth, rearCont.clientHeight);
+    rendererRear.setPixelRatio(window.devicePixelRatio);
+    rendererRear.shadowMap.enabled = true;
+    rendererRear.shadowMap.type = THREE.PCFSoftShadowMap;
+    rendererRear.toneMapping = THREE.ACESFilmicToneMapping;
+    rendererRear.toneMappingExposure = 0.85;
+    rendererRear.outputEncoding = THREE.sRGBEncoding;
+    rearCont.appendChild(rendererRear.domElement);
+    
+    controlsRear = new THREE.OrbitControls(cameraRear, rendererRear.domElement);
+    controlsRear.enableDamping = true;
+    controlsRear.dampingFactor = 0.05;
+    controlsRear.maxPolarAngle = Math.PI / 2 - 0.01;
+  }
+
   // ── Floor Plan: Two independent renderers ────────────────────────────────
   // fp-container-1 = Floor 1 (always shown)
   // fp-container-2 = Floor 2 / Mezzanine (shown only for two-story / loft)
@@ -3538,6 +3561,16 @@ export function initRenderer(configData) {
       roofGroup.visible = xrayState.roof;
       rendererSide.render(scene, cameraSide);
     }
+    
+    if (rendererRear && cameraRear) {
+      if (xrayState.roof) cameraRear.layers.enable(4);
+      else cameraRear.layers.disable(4);
+      
+      if (xrayState.floor2) cameraRear.layers.enable(2);
+      else cameraRear.layers.disable(2);
+      
+      rendererRear.render(scene, cameraRear);
+    }
 
     // 2. Blueprint Render (2D Floor Plan) — switch scene to blueprint mode
     const bg = scene.background;
@@ -3596,10 +3629,17 @@ export function initRenderer(configData) {
     });
 
     // Show/hide second floor panel in DOM
+    const wrapperEl = document.getElementById("fp-split-wrapper");
     const panel2El = document.getElementById("fp-panel-2");
     const badge1El = document.getElementById("fp-badge-1");
     const badge2El = document.getElementById("fp-badge-2");
+    
     if (panel2El) panel2El.style.display = isSplit ? "" : "none";
+    if (wrapperEl) {
+       if (isSplit) wrapperEl.classList.add("split-mode");
+       else wrapperEl.classList.remove("split-mode");
+    }
+    
     if (badge1El) badge1El.textContent = isSplit ? "1ST FLOOR" : "TOP VIEW";
     if (badge2El)
       badge2El.textContent =
@@ -3712,6 +3752,11 @@ export function initRenderer(configData) {
       cameraSide.updateProjectionMatrix();
       rendererSide.setSize(sideCont.clientWidth, sideCont.clientHeight);
     }
+    if (rearCont && cameraRear) {
+      cameraRear.aspect = rearCont.clientWidth / rearCont.clientHeight;
+      cameraRear.updateProjectionMatrix();
+      rendererRear.setSize(rearCont.clientWidth, rearCont.clientHeight);
+    }
   });
 
   // ============================================================
@@ -3775,7 +3820,22 @@ export function initRenderer(configData) {
     cameraSide.near = 0.1;
     cameraSide.far = maxDim * 20;
     cameraSide.updateProjectionMatrix();
-    controlsSide.update();
+    if (controlsSide) controlsSide.update();
+  }
+  
+  if (cameraRear) {
+    cameraRear.position.set(
+      center.x - maxDim * 1.2, // Distance from the rear (-X)
+      2.0, // Slight elevation
+      center.z,
+    );
+    cameraRear.lookAt(center.x, 2.0, center.z);
+    if (controlsRear) controlsRear.target.set(center.x, 2.0, center.z);
+    
+    cameraRear.near = 0.1;
+    cameraRear.far = maxDim * 20;
+    cameraRear.updateProjectionMatrix();
+    if (controlsRear) controlsRear.update();
   }
   
   // Expose to window for download-plan.js multi-camera rendering

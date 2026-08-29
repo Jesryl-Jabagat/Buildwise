@@ -129,6 +129,21 @@ window.generatePDF = async function() {
         const imgHeight2 = (canvas2.height * pdfWidth) / canvas2.width;
         pdf.addImage(imgData2, 'JPEG', 0, 0, pdfWidth, imgHeight2);
 
+        pdf.addPage();
+
+        // Capture Page 3
+        const page3 = document.getElementById('pdf-page-3');
+        if (page3) {
+            const canvas3 = await html2canvas(page3, { 
+                scale: 2, 
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            });
+            const imgData3 = canvas3.toDataURL('image/jpeg', 0.95);
+            const imgHeight3 = (canvas3.height * pdfWidth) / canvas3.width;
+            pdf.addImage(imgData3, 'JPEG', 0, 0, pdfWidth, imgHeight3);
+        }
+
         pdf.save('BuildWise_Plan.pdf');
 
         // Review Modal Logic

@@ -65,17 +65,42 @@
                 <div class="view-label">SIDE ELEVATION</div>
                 <div id="side-container" class="render-canvas"></div>
               </div>
-              <!-- View 4: Floor Plan -->
+              <!-- View 4: Rear -->
               <div class="view-panel">
-                <div class="view-label">FLOOR PLAN</div>
-                <!-- We reuse fp-container-1 for the floor plan hook -->
-                <div id="fp-container-1" class="render-canvas" style="background: white;"></div>
+                <div class="view-label">REAR ELEVATION</div>
+                <div id="rear-container" class="render-canvas"></div>
               </div>
             </div>
           </div>
 
-          <!-- PDF Page 2: Data & Estimates -->
+          <!-- PDF Page 2: Architectural Blueprints -->
           <div class="pdf-page mt-4" id="pdf-page-2">
+            <header class="pdf-header pb-3 mb-4 d-flex justify-content-between align-items-end" style="border-bottom: 1px solid #d9ddd6;">
+              <div class="logo d-flex align-items-center">
+                <img src="../assets/logo/logo.png" alt="BuildWise Logo" style="height: 32px; margin-right: 12px;">
+                <span style="font-size: 24px; font-weight: 700; color: #1a1a1a;">BuildWise</span>
+              </div>
+              <div class="project-info text-end">
+                <h2 style="margin: 0; font-size: 20px; font-weight: 600; color: #1a1a1a;">Architectural Floor Plans</h2>
+              </div>
+            </header>
+
+            <div class="blueprints-grid" id="fp-split-wrapper">
+              <!-- Floor 1 -->
+              <div class="blueprint-panel" id="fp-panel-1">
+                <h4 id="fp-badge-1" class="blueprint-label">1ST FLOOR</h4>
+                <div id="fp-container-1" class="render-canvas blueprint-canvas"></div>
+              </div>
+              <!-- Floor 2 -->
+              <div class="blueprint-panel" id="fp-panel-2" style="display:none;">
+                <h4 id="fp-badge-2" class="blueprint-label">2ND FLOOR</h4>
+                <div id="fp-container-2" class="render-canvas blueprint-canvas"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PDF Page 3: Data & Estimates -->
+          <div class="pdf-page mt-4" id="pdf-page-3">
             <header class="pdf-header pb-3 mb-4" style="border-bottom: 1px solid #d9ddd6;">
               <div class="logo">
                 <span style="font-size: 20px; font-weight: 700; color: #1f7a5c;">Project Estimates & Timeline</span>
@@ -136,12 +161,6 @@
 
     <!-- Footer injected here -->
     <div id="footer-container" data-html2canvas-ignore="true"></div>
-
-    <!-- Hidden elements needed by renderer3d.js -->
-    <div id="fp-split-wrapper" style="display:none;"></div>
-    <div id="fp-panel-1" style="display:none;"></div>
-    <div id="fp-panel-2" style="display:none;"></div>
-    <div id="fp-container-2" style="display:none;"></div>
 
     <!-- Review Modal -->
     <div id="review-modal-overlay" class="review-modal-overlay d-none" data-html2canvas-ignore="true">
