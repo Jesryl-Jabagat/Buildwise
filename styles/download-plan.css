@@ -144,7 +144,7 @@ body {
     grid-template-rows: 1fr;
     gap: 20px;
     margin-top: 10px;
-    height: 220mm; /* take up rest of A4 page */
+    height: 200mm; /* perfectly fit the A4 page height minus headers */
 }
 
 /* When 2 floors are shown, we stack them */
@@ -158,6 +158,10 @@ body {
     border-radius: 6px;
     position: relative;
     padding: 10px;
+    box-sizing: border-box;
+    min-height: 0; /* prevents grid blowout */
+    height: 100%;
+    overflow: hidden;
 }
 
 .blueprint-label {
@@ -175,6 +179,8 @@ body {
     width: 100%;
     height: 100%;
     background: #ffffff;
+    position: relative;
+    min-height: 0;
 }
 
 /* ---- Stats Row ---- */
