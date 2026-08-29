@@ -1236,8 +1236,8 @@ export function initRenderer(configData) {
     let L2 = L / 2;
     let W2 = W;
     if (type === "Two Storey") {
-      L2 = parseFloat(configData.secondFloorLength) || L;
-      W2 = parseFloat(configData.secondFloorWidth) || W;
+      L2 = L;
+      W2 = W;
     } else if (type === "Loft Style") {
       L2 = parseFloat(configData.mezzanineLength) || L2;
       W2 = parseFloat(configData.mezzanineWidth) || W2;
@@ -2909,22 +2909,36 @@ export function initRenderer(configData) {
       colSkip.push([cx, cz]);
 
       let actualH = ch;
+      let goesToSecondFloor = false;
+
       if (type === "Two Storey" && ch === totalH) {
         // Clamp column height to 1st floor if it's outside the 2nd floor footprint
         const inL2 = cx >= -L / 2 - 0.1 && cx <= -L / 2 + L2 + 0.1;
         const inW2 = cz >= -W / 2 - 0.1 && cz <= -W / 2 + W2 + 0.1;
         if (!(inL2 && inW2)) {
           actualH = H1;
+        } else {
+          goesToSecondFloor = true;
+        }
+      } else if (type === "Loft Style" && ch === totalH) {
+         // Same for Loft Mezzanine footprint
+        const inL2 = cx >= -L / 2 - 0.1 && cx <= -L / 2 + L2 + 0.1;
+        const inW2 = cz >= -W / 2 - 0.1 && cz <= -W / 2 + W2 + 0.1;
+        if ((inL2 && inW2)) {
+           goesToSecondFloor = true;
         }
       }
 
+      // Draw bottom part of column (Layer 0)
+      const baseH = goesToSecondFloor ? H1 : actualH;
+      
       // Column with slight taper for realism (0.25 width)
       box(
         0.25,
-        actualH,
+        baseH,
         0.25,
         cx,
-        actualH / 2,
+        baseH / 2,
         cz,
         colMat,
         columnGroup,
@@ -2932,20 +2946,53 @@ export function initRenderer(configData) {
         "wall",
         baseLayer,
       );
-      // Capital (top plate)
-      box(
-        0.34,
-        0.08,
-        0.34,
-        cx,
-        actualH - 0.04,
-        cz,
-        colMat,
-        columnGroup,
-        true,
-        "wall",
-        baseLayer,
-      );
+
+      // Capital (top plate) for the base part if it ends here
+      if (!goesToSecondFloor) {
+        box(
+          0.34,
+          0.08,
+          0.34,
+          cx,
+          actualH - 0.04,
+          cz,
+          colMat,
+          columnGroup,
+          true,
+          "wall",
+          baseLayer,
+        );
+      } else {
+        // Draw top part of column (Layer 2)
+        const topH = actualH - H1;
+        box(
+          0.25,
+          topH,
+          0.25,
+          cx,
+          H1 + topH / 2,
+          cz,
+          colMat,
+          columnGroup,
+          true,
+          "wall",
+          2, // Set to Layer 2 so it hides when 2nd floor is toggled
+        );
+        // Capital for the top part
+        box(
+          0.34,
+          0.08,
+          0.34,
+          cx,
+          actualH - 0.04,
+          cz,
+          colMat,
+          columnGroup,
+          true,
+          "wall",
+          2,
+        );
+      }
     }
 
     const cXMin = -L / 2 + 0.125;
