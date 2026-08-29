@@ -436,8 +436,29 @@ function showProceedButton(form) {
     btn.innerText = "Loading...";
     btn.style.opacity = "0.7";
     btn.disabled = true;
-    const submitBtn = form.querySelector(".create-plan-button");
-    if (submitBtn) submitBtn.click();
+
+    try {
+      // Disable native validation since form is display: none
+      form.noValidate = true;
+      
+      const data = getUserInput(form);
+      if (!data) {
+        // If validation fails inside getUserInput (e.g. via alerts), restore button state
+        btn.innerText = "Proceed to Results →";
+        btn.style.opacity = "1";
+        btn.disabled = false;
+        return;
+      }
+      
+      // Directly persist and redirect without relying on DOM form submission events
+      localStorage.setItem("buildwiseResult", JSON.stringify(data));
+      window.location.href = `result.html?type=${encodeURIComponent(data.typeKey)}`;
+    } catch (err) {
+      console.error("Error submitting AI configuration: ", err);
+      // Fallback to legacy submit trigger just in case
+      const submitBtn = form.querySelector(".create-plan-button");
+      if (submitBtn) submitBtn.click();
+    }
   };
 
   bar.appendChild(label);
