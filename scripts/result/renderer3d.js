@@ -37,6 +37,8 @@ export function initRenderer(configData) {
   //  THREE.JS SCENE SETUP
   // ============================================================
   const scene = new THREE.Scene();
+  const center = new THREE.Vector3();
+  const size = new THREE.Vector3();
 
   // 1. Golden Hour Sky Gradient
   const canvas = document.createElement("canvas");
@@ -270,7 +272,8 @@ export function initRenderer(configData) {
   const fpContainer1 = document.getElementById("fp-container-1");
   const fpContainer2 = document.getElementById("fp-container-2");
 
-  const fpD = 8;
+  // Base dimension for orthographic cameras (will be recalculated after house is built)
+  let fpD = 8;
 
   // Camera 1 (Floor 1)
   const fpAspect1 = fpContainer1
@@ -3651,10 +3654,17 @@ export function initRenderer(configData) {
         h1 = fpContainer1.clientHeight;
       if (w1 > 0 && h1 > 0) {
         const a1 = w1 / h1;
-        cameraFP1.left = -fpD * a1;
-        cameraFP1.right = fpD * a1;
-        cameraFP1.top = fpD;
-        cameraFP1.bottom = -fpD;
+        
+        // Dynamic zoom: perfectly frame the floor plan (size.x by size.z) plus some margin
+        const margin = 1.5;
+        const reqV = (size.z / 2) + margin;
+        const reqH = ((size.x / 2) + margin) / a1;
+        const currentFpD = Math.max(reqV, reqH) || 8;
+        
+        cameraFP1.left = -currentFpD * a1;
+        cameraFP1.right = currentFpD * a1;
+        cameraFP1.top = currentFpD;
+        cameraFP1.bottom = -currentFpD;
         cameraFP1.updateProjectionMatrix();
         rendererFP1.setSize(w1, h1);
       }
@@ -3682,10 +3692,16 @@ export function initRenderer(configData) {
         h2 = fpContainer2.clientHeight;
       if (w2 > 0 && h2 > 0) {
         const a2 = w2 / h2;
-        cameraFP2.left = -fpD * a2;
-        cameraFP2.right = fpD * a2;
-        cameraFP2.top = fpD;
-        cameraFP2.bottom = -fpD;
+        
+        const margin = 1.5;
+        const reqV = (size.z / 2) + margin;
+        const reqH = ((size.x / 2) + margin) / a2;
+        const currentFpD2 = Math.max(reqV, reqH) || 8;
+        
+        cameraFP2.left = -currentFpD2 * a2;
+        cameraFP2.right = currentFpD2 * a2;
+        cameraFP2.top = currentFpD2;
+        cameraFP2.bottom = -currentFpD2;
         cameraFP2.updateProjectionMatrix();
         rendererFP2.setSize(w2, h2);
       }
@@ -3721,22 +3737,31 @@ export function initRenderer(configData) {
     rendererExt.setSize(extContainer.clientWidth, extContainer.clientHeight);
 
     if (fpContainer1) {
-      const a1 = fpContainer1.clientWidth / fpContainer1.clientHeight;
-      cameraFP1.left = -fpD * a1;
-      cameraFP1.right = fpD * a1;
-      cameraFP1.top = fpD;
-      cameraFP1.bottom = -fpD;
+      const a1 = fpContainer1.clientWidth / Math.max(1, fpContainer1.clientHeight);
+      const margin = 1.5;
+      const reqV = (size.z / 2) + margin;
+      const reqH = ((size.x / 2) + margin) / a1;
+      const currentFpD = Math.max(reqV, reqH) || 8;
+      
+      cameraFP1.left = -currentFpD * a1;
+      cameraFP1.right = currentFpD * a1;
+      cameraFP1.top = currentFpD;
+      cameraFP1.bottom = -currentFpD;
       cameraFP1.updateProjectionMatrix();
       rendererFP1.setSize(fpContainer1.clientWidth, fpContainer1.clientHeight);
     }
 
     if (fpContainer2) {
-      const a2 =
-        fpContainer2.clientWidth / Math.max(1, fpContainer2.clientHeight);
-      cameraFP2.left = -fpD * a2;
-      cameraFP2.right = fpD * a2;
-      cameraFP2.top = fpD;
-      cameraFP2.bottom = -fpD;
+      const a2 = fpContainer2.clientWidth / Math.max(1, fpContainer2.clientHeight);
+      const margin = 1.5;
+      const reqV = (size.z / 2) + margin;
+      const reqH = ((size.x / 2) + margin) / a2;
+      const currentFpD2 = Math.max(reqV, reqH) || 8;
+      
+      cameraFP2.left = -currentFpD2 * a2;
+      cameraFP2.right = currentFpD2 * a2;
+      cameraFP2.top = currentFpD2;
+      cameraFP2.bottom = -currentFpD2;
       cameraFP2.updateProjectionMatrix();
       rendererFP2.setSize(fpContainer2.clientWidth, fpContainer2.clientHeight);
     }
@@ -3778,8 +3803,6 @@ export function initRenderer(configData) {
   // ── Auto-fit exterior camera to house bounding box ───────────────────
   // Compute a bounding box over the entire house group
   const bbox = new THREE.Box3().setFromObject(houseGroup);
-  const center = new THREE.Vector3();
-  const size = new THREE.Vector3();
   bbox.getCenter(center);
   bbox.getSize(size);
   const maxDim = Math.max(size.x, size.y, size.z) || 10;
