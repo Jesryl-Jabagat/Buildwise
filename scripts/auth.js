@@ -58,21 +58,6 @@ async function handleSignup(name, email, password) {
 }
 
 async function handleLogin(email, password, remember = false) {
-    // Secret Local Bypass
-    if (email === 'admin' && password === 'admin123') {
-        const adminUser = {
-            id: 'admin-secret',
-            name: 'Project Administrator',
-            email: 'admin@buildwise.local',
-            initials: 'PA',
-            role: 'Admin',
-            projects: 142,
-            created_at: new Date().toISOString()
-        };
-        setSession(adminUser, remember);
-        return { success: true };
-    }
-
     try {
         const response = await fetch('/api/login', {
             method: 'POST',
