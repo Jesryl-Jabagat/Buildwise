@@ -1,0 +1,80 @@
+/* ============================================================
+   base.css — Global Resets & Base Styles
+   Loaded by: every page
+   ============================================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.3s ease;
+}
+
+ul {
+    list-style: none;
+}
+
+main {
+    flex: 1;
+}
+
+.container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
+/* Typography */
+h1, h2, h3, h4 {
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.section-title {
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.section-title span {
+    color: var(--color-accent);
+}
+
+.section-label {
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    color: var(--color-muted);
+    text-transform: uppercase;
+}
+
+.section-label.vertical {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    position: absolute;
+    left: -40px;
+    top: 0;
+}
+
+/* Responsive base */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 20px;
+    }
+    .section-title {
+        font-size: 2rem;
+    }
+}

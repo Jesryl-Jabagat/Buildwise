@@ -24,14 +24,12 @@ export function calcBedroomsTableA(count, wallingMaterialType) {
   }
   
   // Default CHB Residential Bedroom (standard 3m×3m partition walls)
+  // Interior partitions don't need structural columns/beams — only light 10mm vertical dowels
   return {
-    chb: 100 * count,
-    cement: 12 * count,
-    screenedSand: 0.3 * count,
-    gravel: 0.5 * count,
-    rebar16mm: 6 * count,
-    rebar12mm: 12 * count,
-    rebar10mm: 6 * count
+    chb: 60 * count,           // ~60 blocks for a 2-wall partition (not 100)
+    cement: 6 * count,          // mortar only, no structural concrete
+    screenedSand: 0.2 * count,
+    rebar10mm: 4 * count        // light vertical dowels only, no heavy 16mm/12mm
   };
 }
 

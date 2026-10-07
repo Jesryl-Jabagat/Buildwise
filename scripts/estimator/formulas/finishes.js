@@ -10,10 +10,10 @@ export function calcPlastering(wallArea) {
 }
 
 export function calcPainting(wallArea) {
-  // 30 sqm/gal coverage. Factor of 2 accounts for both sides and 2 coats.
+  // 30 sqm/gal coverage. Realistic province: 1 coat primer, 1.5 multiplier for topcoat
   return {
-    primer: Math.ceil((wallArea / 30) * 2),
-    topcoat: Math.ceil((wallArea / 30) * 2),
+    primer: Math.ceil(wallArea / 30),
+    topcoat: Math.ceil((wallArea / 30) * 1.5),
     concretePutty: Math.ceil(wallArea / 25),
     paintAccessories: Math.ceil(wallArea / 100) || 1,
     paintThinner: Math.ceil((wallArea / 30) * 0.5),

@@ -1,89 +1,242 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>BuildWise | Intelligent Construction</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buildwise | Architecture & Construction</title>
     <link rel="icon" type="image/png" href="assets/logo/logo.png">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-  </head>
-  <body>
-    <bw-navbar></bw-navbar>
+    <meta name="description" content="Buildwise creates places that connect, sustain, and inspire. Fine architecture to build vision and passion.">
+    <link rel="stylesheet" href="styles/tokens.css">
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/components.css?v=7">
+    <link rel="stylesheet" href="styles/landing.css">
+    <link rel="stylesheet" href="styles/utilities.css">
+    <link rel="stylesheet" href="styles/hero-anim.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
 
-    <main class="landing-page">
-      <section class="landing-hero container">
-        <h1>
-          <span>Intelligent</span>
-          <span>Construction.</span>
-        </h1>
-        <p class="hero-subtitle">
-          The autonomous platform for precision building estimations, material optimization,
-          and architectural compliance.
-        </p>
-        <a class="btn btn-dark btn-buildwise" href="pages/setup.html">Launch Builder</a>
-      </section>
-
-      <section class="team-section container">
-        <div class="section-heading">
-          <h2>Meet the Development Team</h2>
-          <p>The visionaries and engineers behind BuildWise.</p>
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <canvas id="hero-canvas"></canvas>
+        <div class="hero-bg" style="background-image: url('assets/images/hero-bg-alt.jpeg');"></div>
+        <div class="hero-overlay"></div>
+        
+        <!-- Contact Strip -->
+        <div class="contact-strip">
+            <div class="contact-arrow">^</div>
+            <span class="contact-text">CONTACT US</span>
         </div>
-        <div class="team-grid">
-          
-          <div class="team-card">
-            <div class="team-avatar">
-              <img src="assets/Development Team/Fritz Wendell M. Pisons.jpg" alt="Fritz Wendell M. Pisons">
-            </div>
-            <h3>Fritz Wendell M. Pisons</h3>
-            <p class="role">Project Manager</p>
-            <p class="desc">Ensures seamless execution and timeline adherence.</p>
-          </div>
 
-          <div class="team-card">
-            <div class="team-avatar">
-              <img src="assets/Development Team/Osman V. Lofranco.jpg" alt="Osman V. Lofranco">
+        <div class="hero-content">
+            <div class="hero-text-box">
+                <div class="hero-accent-line"></div>
+                <div class="hero-floating-badge">EST. 2024 / SMART BUILDS</div>
+                <h1 class="hero-title">
+                    <strong><span class="word" style="--i:1;">WE</span> <span class="word" style="--i:2;">TURN</span> <span class="word glow-word" style="--i:3;">IDEAS</span></strong><br>
+                    <strong><span class="word" style="--i:4;">INTO</span> <span class="word" style="--i:5;">SMARTER</span></strong><br>
+                    <strong><span class="word glow-word" style="--i:6;">BUILDS.</span></strong>
+                </h1>
+                <p class="hero-subtitle">From budget to materials, BuildWise helps you understand what it takes to build before construction begins.</p>
+                <a href="pages/setup.html" class="btn btn-outline-white btn-hero-cta">START BUILDING</a>
             </div>
-            <h3>Osman V. Lofranco</h3>
-            <p class="role">Frontend Developer</p>
-            <p class="desc">Crafts the dynamic and responsive user interface.</p>
-          </div>
-
-          <div class="team-card">
-            <div class="team-avatar">
-              <img src="assets/Development Team/Johnfred P. Gaper.jpg" alt="Johnfred P. Gaper">
-            </div>
-            <h3>Johnfred P. Gaper</h3>
-            <p class="role">Backend Developer</p>
-            <p class="desc">Architects the robust server infrastructure.</p>
-          </div>
-
-          <div class="team-card">
-            <div class="team-avatar">
-              <img src="assets/Development Team/Marian T. Anud.jpg" alt="Marian T. Anud">
-            </div>
-            <h3>Marian T. Anud</h3>
-            <p class="role">AI & System Integration Developer</p>
-            <p class="desc">Integrates intelligent models for construction insights.</p>
-          </div>
-
-          <div class="team-card">
-            <div class="team-avatar">
-              <img src="assets/Development Team/Via A. Usaraga.jpg" alt="Via A. Usaraga">
-            </div>
-            <h3>Via A. Usaraga</h3>
-            <p class="role">UI/UX Designer & Documentation</p>
-            <p class="desc">Designs intuitive experiences and maintains system docs.</p>
-          </div>
-
+            
         </div>
-      </section>
-    </main>
+        
+        <!-- Services Box (Bottom Right) -->
+        <div class="hero-right-text">
+            <p class="vertical-text">BUILDWISE</p>
+            <div class="services-title">
+                <h3>PLANNING <br>ESTIMATION <br>BUILDING</h3>
+            </div>
+            <div class="services-desc">
+                <p>From budget to materials, BuildWise gives you the clarity to plan smarter and build with confidence.</p>
+                <a href="pages/setup.html" class="read-more">START BUILDING <span class="arrow">→</span></a>
+            </div>
+        </div>
+    </section>
 
-    <bw-footer></bw-footer>
+    <!-- About Section -->
+    <section class="about" id="about">
+        <!-- Top Half Background Grid -->
+        <div class="about-top">
+            <div class="about-top-left"></div>
+            <div class="about-top-right" style="background-image: url('assets/images/about-section.jpeg');"></div>
+            
+            <!-- Huge Text Divider -->
+            <div class="huge-text-wrapper">
+                <h2 class="huge-text">BUILDING</h2>
+            </div>
+        </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="components/navbar.js"></script>
-    <script src="components/footer.js"></script>
-  </body>
+        <!-- Bottom Half Content Grid -->
+        <div class="about-bottom">
+            <div class="about-grid">
+                <div class="about-left">
+                    <div class="section-label vertical-about">OUR APPROACH</div>
+                    <div class="about-content-box">
+                        <h2 class="section-title">FROM <span>BUDGET</span> TO BLUEPRINT<br>TO BUILD</h2>
+                        <div class="about-divider"></div>
+                        <p class="about-desc">Plan your home, understand your costs, estimate your materials, and move toward construction with greater clarity.</p>
+                        
+                        <div class="progress-bars">
+                            <div class="progress-item">
+                                <span class="progress-label">MATERIAL ESTIMATION</span>
+                                <div class="progress-track"><div class="progress-fill" style="width: 25%;"></div></div>
+                                
+                            </div>
+                            <div class="progress-item">
+                                <span class="progress-label">COST ESTIMATION</span>
+                                <div class="progress-track"><div class="progress-fill" style="width: 50%;"></div></div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        <a href="pages/setup.html" class="btn btn-solid btn-outlined">START BUILDING</a>
+                    </div>
+                </div>
+                <div class="about-right">
+                    <div class="video-preview" style="background: none; overflow: hidden;">
+                        <video autoplay loop muted playsinline style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1;">
+                            <source src="assets/videos/videoBuilding.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Cards -->
+    <section class="services-cards-section">
+        <div class="services-bg" style="background-image: url('assets/images/services-bg.jpeg');"></div>
+        <div class="container">
+            <div class="cards-grid">
+                <div class="card dark-card">
+                    <div class="card-icon">🏢</div>
+                    <h3 class="card-title">HOUSE PLANNING</h3>
+                    <p>Plan a home around your space, needs, and available budget.</p>
+                    <a href="pages/setup.html" class="btn btn-outline-dark">EXPLORE</a>
+                </div>
+                <div class="card dark-card">
+                    <div class="card-icon">🏗️</div>
+                    <h3 class="card-title">COST ESTIMATION</h3>
+                    <p>Understand your projected construction costs before you begin building.</p>
+                    <a href="pages/setup.html" class="btn btn-outline-dark">EXPLORE</a>
+                </div>
+                <div class="card dark-card">
+                    <div class="card-icon">📐</div>
+                    <h3 class="card-title">MATERIAL ESTIMATION</h3>
+                    <p>Estimate the materials your project may require with greater clarity.</p>
+                    <a href="pages/setup.html" class="btn btn-outline-dark">EXPLORE</a>
+                </div>
+                <div class="card dark-card">
+                    <div class="card-icon">🏙️</div>
+                    <h3 class="card-title">BUILD CONFIGURATION</h3>
+                    <p>Configure your home based on your requirements, space, and budget.</p>
+                    <a href="pages/setup.html" class="btn btn-outline-dark">EXPLORE</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container stats-grid">
+            <div class="stat-item">
+                <h3 class="stat-number"><span class="count" data-target="5">00</span>+</h3>
+                <p class="stat-label">HOUSE TYPES</p>
+            </div>
+            <div class="stat-item">
+                <h3 class="stat-number"><span class="count" data-target="70">00</span>+</h3>
+                <p class="stat-label">MATERIALS</p>
+            </div>
+            <div class="stat-item">
+                <h3 class="stat-number"><span class="count" data-target="6">00</span>+</h3>
+                <p class="stat-label">ESTIMATION CATEGORIES</p>
+            </div>
+            <div class="stat-item">
+                <h3 class="stat-number"><span class="count" data-target="3">00</span></h3>
+                <p class="stat-label">FINISH GRADES</p>
+            </div>
+        </div>
+    </section>
+
+    
+    
+
+    <!-- Team Section -->
+    <section class="team-section">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="section-title text-center">MEET THE MINDS<br>BEHIND <span>BUILDWISE</span></h2>
+            </div>
+            <div class="team-grid">
+                <div class="team-member">
+                    <div class="member-img" style="background-image: url('assets/team/fritz.jpg');"></div>
+                    <div class="member-info">
+                        <h4>Fritz Wendell M. Pisons</h4>
+                        <p>Project Manager</p>
+                    </div>
+                </div>
+                <div class="team-member">
+                    <div class="member-img" style="background-image: url('assets/team/johnfred.jpg');"></div>
+                    <div class="member-info">
+                        <h4>Johnfred P. Gaper</h4>
+                        <p>Backend Developer</p>
+                    </div>
+                </div>
+                <div class="team-member">
+                    <div class="member-img" style="background-image: url('assets/team/marian.jpg');"></div>
+                    <div class="member-info">
+                        <h4>Marian T. Anud</h4>
+                        <p>AI & System Integration Developer</p>
+                    </div>
+                </div>
+                <div class="team-member">
+                    <div class="member-img" style="background-image: url('assets/team/osman.jpg');"></div>
+                    <div class="member-info">
+                        <h4>Osman V. Lofranco</h4>
+                        <p>Frontend Developer</p>
+                    </div>
+                </div>
+                <div class="team-member">
+                    <div class="member-img" style="background-image: url('assets/team/via.jpg');"></div>
+                    <div class="member-info">
+                        <h4>Via A. Usaraga</h4>
+                        <p>UI/UX Designer & Documentation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section class="projects-section">
+        <div class="container projects-container">
+            <div class="projects-info">
+                <div class="section-label vertical">PROJECTS</div>
+                <h2 class="section-title">BUILDING<br><span>SOLUTIONS</span> THAT<br>MAKE SENSE.</h2>
+                <p>Explore practical home solutions designed around real budgets, spaces, materials, and construction needs.</p>
+                <a href="pages/designs.html" class="btn btn-solid mt-4">EXPLORE DESIGNS</a>
+            </div>
+            <div class="projects-gallery">
+                <div class="project-item" style="background-image: url('assets/images/gallery-1.jpeg');"></div>
+                <div class="project-item" style="background-image: url('assets/images/gallery-2.jpeg');"></div>
+                <div class="project-item" style="background-image: url('assets/images/hero-bg.jpeg');"></div>
+            </div>
+        </div>
+    </section>
+
+    
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
+    
+    <script src="scripts/hero-anim.js" defer></script>
+    <script src="scripts/app.js?v=7"></script>
+</body>
 </html>

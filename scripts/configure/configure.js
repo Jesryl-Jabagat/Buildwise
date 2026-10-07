@@ -95,7 +95,7 @@ function setupConfigPage() {
       const isAnalyzingPage = window.location.pathname.includes('analyzing.html');
       
       // Import the AI module and start it
-      import('./ai-suggest.js').then(module => {
+      import(`./ai-suggest.js?v=${Date.now()}`).then(module => {
         if (isAnalyzingPage) {
           module.startAiAnalyzing(form, typeKey, setupData);
         } else {
@@ -109,7 +109,86 @@ function setupConfigPage() {
         console.error("Failed to load AI Builder module", err);
         alert("Failed to load AI module. If you are opening this file locally (file:///), your browser might block ES modules. Try using Live Server. Error: " + err.message);
       });
+    } else {
+      // Pre-fill smart default dimensions from setup area
+      if (setupData.area && setupData.area > 0) {
+        const side = Math.sqrt(setupData.area);
+        const length = Math.round(side * 10) / 10;
+        const width = Math.round((setupData.area / length) * 10) / 10;
+        
+        const l1Input = form.querySelector('[name="length"], [name="groundLength"]');
+        const w1Input = form.querySelector('[name="width"], [name="groundWidth"]');
+        
+        if (l1Input && w1Input) {
+          l1Input.value = length;
+          w1Input.value = width;
+          // Dispatch events so live-budget and area display pick it up
+          l1Input.dispatchEvent(new Event('input', { bubbles: true }));
+          w1Input.dispatchEvent(new Event('input', { bubbles: true }));
+          l1Input.dispatchEvent(new Event('change', { bubbles: true }));
+          w1Input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+
+      // In manual mode, try to pre-fill from a previous result (Edit Choices flow)
+      prefillFormFromLocalStorage(form, typeKey);
     }
+  } else {
+    // If no setupDataStr at all, still try to prefill just in case
+    prefillFormFromLocalStorage(form, typeKey);
+  }
+}
+
+/**
+ * Reads buildwiseResult from localStorage. If it matches the current house type,
+ * it pre-fills the form fields so the user doesn't have to start from scratch.
+ */
+function prefillFormFromLocalStorage(form, currentTypeKey) {
+  try {
+    const savedResult = localStorage.getItem('buildwiseResult');
+    if (!savedResult) return;
+    
+    const data = JSON.parse(savedResult);
+    if (data.typeKey !== currentTypeKey) return; // Only pre-fill if it's the same house type
+    
+    // Loop through all keys in the saved data and populate matching form fields
+    for (const [key, value] of Object.entries(data)) {
+      const input = form.elements[key];
+      if (!input) continue; // Skip if field doesn't exist in this template
+      
+      // Handle NodeList (e.g. radio buttons with the same name)
+      if (input instanceof RadioNodeList || (input.length && !input.tagName)) {
+        for (const radio of input) {
+          if (radio.value === value) {
+            radio.checked = true;
+          }
+        }
+      } else if (input.type === 'checkbox') {
+        input.checked = (value === 'Yes' || value === true || value === 'true' || value === 'on');
+      } else {
+        // Standard inputs (text, number, select, hidden)
+        input.value = value;
+      }
+      
+      // Dispatch events so live-budget and conditional-fields catch the change
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    // Special handling for the bw-toggle UI (since the actual input is hidden, we need to update the visual checkbox)
+    form.querySelectorAll(".bw-toggle-input").forEach((checkbox) => {
+      const hidden = checkbox.closest(".bw-toggle").querySelector('input[type="hidden"]');
+      if (hidden && data[hidden.name] !== undefined) {
+        checkbox.checked = (data[hidden.name] === checkbox.dataset.on);
+        
+        // Also update the status label visually
+        const status = checkbox.closest(".bw-toggle").querySelector(".bw-toggle-status");
+        if (status) status.textContent = checkbox.checked ? "Yes" : "No";
+      }
+    });
+
+  } catch (e) {
+    console.error("Failed to prefill form:", e);
   }
 }
 

@@ -23,7 +23,7 @@ export const houseTypes = {
     description:
       "Durable metal exterior paired with conventional bungalow framing. Ideal for ₱80k-₱120k budgets.",
     material: ["Metal cladding", "Concrete base", "Coco Lumber framing"],
-    image: "../assets/house-type/metal cladding.png",
+    image: "../assets/house-type/metal_cladding.png",
     minBudget: 80000,
     maxBudget: 150000,
   },
@@ -47,7 +47,7 @@ export const houseTypes = {
     description:
       "High ceilings, open floor plans, and modern architectural aesthetics. Ideal for ₱150k+ budgets.",
     material: ["Steel framing", "Concrete slab", "Glass frontage"],
-    image: "../assets/house-type/loft style.png",
+    image: "../assets/house-type/loft_style.png",
     minBudget: 150000,
     maxBudget: 1000000,
   },
@@ -57,7 +57,7 @@ export const houseTypes = {
     description:
       "Vertical expansion for maximum space efficiency and family zoning. Requires significant budget.",
     material: ["Reinforced concrete", "CHB walls", "Long span roofing"],
-    image: "../assets/house-type/two storey.png",
+    image: "../assets/house-type/two_storey.png",
     minBudget: 250000,
     maxBudget: 5000000,
   },

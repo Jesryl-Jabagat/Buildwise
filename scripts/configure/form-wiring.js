@@ -8,48 +8,9 @@ import { houseTypes, currency } from '../house-data.js';
 /* --- Advanced Mode Toggle ---------------------------------- */
 
 export function injectAdvancedModeToggle(form) {
-  const sections = form.querySelectorAll('.form-section');
-  if (sections.length === 0) return;
-
-  // Hide only the finishes/tiling sections (index 3 and beyond) in basic mode.
-  // Sections 0 (shared costing — soil condition, material grade, roof type),
-  // 1 (dimensions), and 2 (rooms) are always shown.
-  sections.forEach((sec, index) => {
-    if (index >= 3) {
-      sec.classList.add('advanced-setting');
-      sec.style.display = 'none';
-    }
-  });
-
-  const intro = form.querySelector('.form-intro');
-  if (intro) {
-    const toggleHtml = `
-      <div class="bw-mode-banner">
-        <div class="bw-mode-banner-text">
-          <strong>Basic Mode</strong>
-          <span>Only Dimensions &amp; Rooms shown. The system optimizes the rest.</span>
-        </div>
-        <label class="bw-mode-switch">
-          <input type="checkbox" id="advancedModeToggle">
-          <span class="bw-mode-track"></span>
-          <span class="bw-mode-label">Advanced Options</span>
-        </label>
-      </div>
-    `;
-    intro.insertAdjacentHTML('afterend', toggleHtml);
-
-    const toggle = form.querySelector('#advancedModeToggle');
-    const banner = form.querySelector('.bw-mode-banner');
-    const bannerTitle = banner.querySelector('strong');
-    toggle.addEventListener('change', (e) => {
-      const isAdvanced = e.target.checked;
-      form.querySelectorAll('.advanced-setting').forEach(sec => {
-        sec.style.display = isAdvanced ? 'block' : 'none';
-      });
-      bannerTitle.textContent = isAdvanced ? 'Advanced Mode' : 'Basic Mode';
-      banner.classList.toggle('bw-mode-banner--advanced', isAdvanced);
-    });
-  }
+  // Toggle basic mode and advance seem not necessary as of now,
+  // so we just leave everything visible and don't inject the banner.
+  return;
 }
 
 /* --- Toggle Switch Wiring ---------------------------------- */
@@ -99,11 +60,14 @@ export function wireConditionalFields(form) {
     const paintGroundFloor = formData.get("paintGroundFloor") === "Yes";
     const paintSecondFloor = formData.get("paintSecondFloor") === "Yes";
 
+    const includeElectrical = formData.get("includeElectrical") !== "No";
+
     form.querySelectorAll('.conditional-field').forEach(field => {
       const condition = field.dataset.condition;
       let isVisible = false;
 
       if      (condition === 'showTiles')           isVisible = showTiles;
+      else if (condition === 'includeElectrical')   isVisible = includeElectrical;
       else if (condition === 'showLoftCeiling')     isVisible = showLoftCeiling;
       else if (condition === 'showTwoStoreyCeiling')isVisible = showTwoStoreyCeiling;
       else if (condition === 'hasCeiling')          isVisible = hasCeiling;
@@ -271,11 +235,23 @@ export function wireFloorAreaDisplay(form) {
 
   const container = document.createElement("div");
   container.className = "col-12 mt-3";
+  let setupAreaHint = '';
+  try {
+    const setupDataStr = localStorage.getItem('buildwiseSetup');
+    if (setupDataStr) {
+      const setupData = JSON.parse(setupDataStr);
+      if (setupData.area) {
+        setupAreaHint = `<p class="small mt-2 mb-0 text-muted" style="line-height: 1.2;">📐 Based on your lot area of <strong>${setupData.area} sqm</strong> from Setup.</p>`;
+      }
+    }
+  } catch (e) {}
+
   container.innerHTML = `
-    <div class="alert alert-success d-flex align-items-center py-2 mb-0" style="background-color: #e8f5e9; border: 1px solid #c8e6c9; color: #2e7d32;">
+    <div class="alert d-flex align-items-center py-2 mb-0" style="background-color: color-mix(in srgb, var(--primary) 15%, transparent); border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent); color: var(--primary); border-radius: 12px;">
       <strong class="me-2">Estimated Total Floor Area:</strong>
-      <span id="liveFloorAreaDisplay">0.00 sqm</span>
+      <span id="liveFloorAreaDisplay" style="font-weight: 800;">0.00 sqm</span>
     </div>
+    ${setupAreaHint}
   `;
 
   const dimSection = l1Input.closest(".row");
