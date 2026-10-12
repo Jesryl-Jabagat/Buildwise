@@ -16,7 +16,7 @@ export class GroqProvider extends BaseProvider {
       },
       body: JSON.stringify({
         model: this.config.MODEL,
-        max_tokens: 750,
+        max_tokens: 2500,
         temperature: 0.5, // Slightly lower temp for strict JSON adherence
         response_format: { type: "json_object" }, // Enforce JSON format output supported by Groq
         // Note: For json_object to work on Groq, the system prompt must explicitly ask for JSON
@@ -42,7 +42,7 @@ export class GroqProvider extends BaseProvider {
 
   /**
    * Groq's json_object mode requires the model output to be a valid JSON object (not a bare array).
-   * We subtly adjust the system prompt for Groq to ensure it outputs { "suggestions": [...] }
+   * We adjust the system prompt for Groq to ensure it outputs { "suggestions": [...] }
    */
   ensureJsonObjectPrompt(messages) {
     return messages.map(msg => {
@@ -50,6 +50,9 @@ export class GroqProvider extends BaseProvider {
         return {
           ...msg,
           content: msg.content.replace(
+            "OUTPUT STRICT JSON ARRAY OF OBJECTS ONLY: [{ \"name\": \"fieldKey\", \"value\": \"selectedVal\", \"reason\": \"Justification.\" }]", 
+            "OUTPUT STRICT JSON OBJECT ONLY WITH A 'suggestions' ARRAY: { \"suggestions\": [{ \"name\": \"fieldKey\", \"value\": \"selectedVal\", \"reason\": \"Justification.\" }] }"
+          ).replace(
             "OUTPUT STRICT JSON ARRAY OF OBJECTS ONLY: [{", 
             "OUTPUT STRICT JSON OBJECT ONLY WITH A 'suggestions' ARRAY: { \"suggestions\": [{"
           )

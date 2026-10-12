@@ -2,10 +2,10 @@ import { CONNECTOR, GROQ_KEY_1, GROQ_KEY_2 } from "../env.js?v=6";
 
 export const AI_CONFIG = {
   // Provider failover sequence: Primary -> Secondary -> Tertiary
-  PROVIDERS: ["OPENROUTER", "GROQ_PRIMARY", "GROQ_SECONDARY"],
+  PROVIDERS: ["GROQ_PRIMARY", "GROQ_SECONDARY", "OPENROUTER"],
   
   // Timeout per provider attempt (in ms)
-  TIMEOUT_MS: 10000,
+  TIMEOUT_MS: 15000,
   
   // Max retries per specific provider (network errors only)
   MAX_RETRIES: 1,
