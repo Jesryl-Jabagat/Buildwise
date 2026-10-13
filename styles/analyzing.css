@@ -9,6 +9,14 @@ body {
         overflow-x: hidden;
       }
       
+      /* Hide footer during generation; reveal when complete */
+      #footer-container {
+        display: none;
+      }
+      body.generation-complete #footer-container {
+        display: block;
+      }
+      
       .analyzing-bg-animation {
         position: fixed;
         top: 0;
@@ -38,22 +46,28 @@ body {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        padding: 120px 20px 40px;
-        min-height: 100vh;
+        justify-content: flex-start;
+        padding: 90px 20px 20px;
+        height: 100vh;
+        box-sizing: border-box;
         max-width: 800px;
         margin: 0 auto;
         width: 100%;
         --orb-color: var(--primary);
+        overflow: hidden;
       }
 
-      .analyzing-container.has-bubbles {
-        justify-content: flex-start;
+      body.generation-complete .analyzing-container {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+        padding-bottom: 120px;
       }
 
       .ai-header {
         text-align: center;
-        margin-bottom: 40px;
+        margin-bottom: 24px;
+        flex-shrink: 0;
         transition: all 0.5s ease;
       }
 
@@ -133,16 +147,33 @@ body {
         position: absolute;
       }
       
-      #aiHeader.complete h2 {
-        color: var(--primary);
-      }
-
       .ai-feed {
         width: 100%;
+        flex: 1;
+        min-height: 0;
         display: flex;
         flex-direction: column;
-        gap: 20px;
-        padding-bottom: 80px;
+        gap: 16px;
+        padding: 4px 8px 40px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+        overscroll-behavior: contain;
+      }
+
+      /* Custom sleek scrollbar for .ai-feed */
+      .ai-feed::-webkit-scrollbar {
+        width: 6px;
+      }
+      .ai-feed::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .ai-feed::-webkit-scrollbar-thumb {
+        background: color-mix(in srgb, var(--border) 60%, transparent);
+        border-radius: 4px;
+      }
+      .ai-feed::-webkit-scrollbar-thumb:hover {
+        background: var(--primary);
       }
 
       /* Bubbles styles */
@@ -263,9 +294,9 @@ body {
         }
       }
 
-      /* Add bottom padding to feed so the sticky bar doesn't cover last bubble */
-      .ai-feed {
-        padding-bottom: 120px !important;
+      /* Extra bottom padding to ensure proceed bar doesn't overlap last bubble */
+      body.generation-complete .ai-feed {
+        padding-bottom: 90px;
       }
 
       /* Mobile: stack the proceed bar vertically */

@@ -368,8 +368,8 @@ async function runAnalyzingLoop(form, suggestions) {
     
     feed.appendChild(bubble);
     
-    // Scroll smoothly to the bottom of the feed
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    // Auto-scroll smoothly ONLY inside the feed container (no full-page jumping)
+    feed.scrollTo({ top: feed.scrollHeight, behavior: 'smooth' });
 
     // Pause to simulate generation and let the user read
     await new Promise((r) => setTimeout(r, 1200));
@@ -381,8 +381,8 @@ async function runAnalyzingLoop(form, suggestions) {
  * after the AI has finished configuring all fields.
  */
 function showProceedButton(form) {
-  // Scroll to top so user can review from the beginning
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Mark generation as complete so footer and natural layout become accessible
+  document.body.classList.add("generation-complete");
 
   // Create sticky footer bar
   const bar = document.createElement("div");
