@@ -14,6 +14,7 @@ import {
   writeMaterialsTable,
   writeConstructionPhases,
   writeLaborBreakdown,
+  writeBudgetFitBadges,
   setGeneratedImages,
 } from "./result-renderers.js";
 import { initRenderer } from "./renderer3d.js";
@@ -135,13 +136,24 @@ function setupResultPage() {
     if (heroCopy) heroCopy.appendChild(feasibilityNote);
 
     // Materials Table
+    
+    if (estimateData.budgetFit && estimateData.budgetFit.status === "UNDERFUNDED") {
+      const heroCopy = document.querySelector(".plan-hero-copy");
+      const errEl = document.createElement("div");
+      errEl.className = "alert alert-danger mt-3 mb-0";
+      const formatter = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      errEl.innerHTML = `<strong>Underfunded!</strong> Your target budget is below the minimum ${formatter.format(estimateData.budgetFit.floorCost)} required. The breakdown below shows the floor cost.`;
+      if (heroCopy) heroCopy.appendChild(errEl);
+    }
+    writeBudgetFitBadges(estimateData.budgetFit);
     writeMaterialsTable(estimateData.materialsList);
+  
 
     // Budget Bars
     const colorClasses = ["bg-success", "bg-info", "bg-warning", "bg-primary", "bg-secondary", "bg-dark"];
     const budgetRows   = estimateData.materialsList.map((cat, idx) => [cat.category, cat.total, colorClasses[idx % colorClasses.length]]);
     budgetRows.push(["Labor Estimate",    estimateData.summary.laborEstimate, "bg-secondary"]);
-    budgetRows.push(["Contingency (10%)", estimateData.summary.contingency,   "bg-danger"]);
+    budgetRows.push(["Contingency (5%)", estimateData.summary.contingency,   "bg-danger"]);
 
     writeBudgetBars(budgetRows, estimateData.summary.grandTotal);
 

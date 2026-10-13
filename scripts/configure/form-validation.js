@@ -20,6 +20,7 @@ export function getUserInput(form) {
   const data = {
     typeKey: submittedTypeKey,
     title:   submittedType.title,
+    layoutVariant: ['standard', 'mirrored'][Math.floor(Math.random() * 2)]
   };
 
   let totalRooms = 0;
@@ -47,6 +48,14 @@ export function getUserInput(form) {
     if (cleanVal !== "" && !isNaN(cleanVal)) {
       const num = parseFloat(cleanVal);
       data[key] = num;
+      
+      // Safety limits
+      if ((key === "length" || key === "width") && num > 30) {
+        if (!confirm(`Warning: You entered a ${key} of ${num} meters, which is extremely large and may crash the 3D renderer or cause memory issues. Are you sure you want to proceed?`)) {
+          return null;
+        }
+      }
+      
       if (key.toLowerCase().includes("bedrooms")) totalRooms += num;
       if (key.toLowerCase().includes("crs"))      totalBaths += num;
       continue;

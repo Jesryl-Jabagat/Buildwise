@@ -75,17 +75,17 @@ export const PRICES = {
   "Excavation / Backfill": { unit: "cu.m.", price: 350 },
   "Soil Poisoning / Termite Treatment": { unit: "sq.m.", price: 150 },
   "Formworks (Plywood & Lumber)": { unit: "sq.m.", price: 450 },
-  "Tie Wire #16": { unit: "kg", price: 75 },
 
   // Doors & Windows
-  "Main Door (Solid Wood Slab)": { unit: "set", price: 4500 },
-  "Bedroom Door (Flush/Panel)": { unit: "set", price: 2500 },
-  "CR Door (PVC/Aluminum)": { unit: "set", price: 1800 },
+  "Main Door (Solid Wood Slab)": { unit: "set", price: 2500 },
+  "Bedroom Door (Flush/Panel)": { unit: "set", price: 1200 },
+  "CR Door (PVC/Aluminum)": { unit: "set", price: 1200 },
   "Door Jamb (Wood/Metal)": { unit: "set", price: 1200 },
   "Lockset / Doorknob": { unit: "set", price: 650 },
   "Door Hinges (pair)": { unit: "pair", price: 150 },
   "Window Frame (Aluminum)": { unit: "lm", price: 350 },
   "Window Glass Panel (sqm)": { unit: "sq.m.", price: 800 },
+  "Window (Jalousie/Louvre)": { unit: "set", price: 1200 },
 
   // Painting Accessories
   "Paint Brush / Roller set": { unit: "set", price: 350 },
@@ -121,6 +121,32 @@ export const PRICES = {
   "Electrical Tape": { unit: "roll", price: 50 }
 };
 
+let cachedCustomPrices = null;
+
+export function refreshCustomPrices() {
+  try {
+      const customData = localStorage.getItem("buildwise-custom-prices");
+      if (customData) {
+          cachedCustomPrices = JSON.parse(customData);
+      } else {
+          cachedCustomPrices = {};
+      }
+  } catch(e) {
+      console.warn("Could not parse custom prices", e);
+      cachedCustomPrices = {};
+  }
+}
+
+// Initial load
+refreshCustomPrices();
+
+// Listen for storage events in case another tab changes it
+window.addEventListener('storage', (e) => {
+    if (e.key === 'buildwise-custom-prices') {
+        refreshCustomPrices();
+    }
+});
+
 export function getPrice(materialName, grade = "Standard") {
   let baseName = materialName;
   if (materialName.startsWith("Architectural Topcoat Paint")) {
@@ -131,8 +157,14 @@ export function getPrice(materialName, grade = "Standard") {
     console.warn(`Price not found for material: ${baseName}`);
     return 0;
   }
+  
+  let basePrice = item.price;
+  if (cachedCustomPrices && cachedCustomPrices[baseName] !== undefined) {
+      basePrice = cachedCustomPrices[baseName];
+  }
+
   const multiplier = GRADE_MULTIPLIERS[grade] || 1.0;
-  return item.price * multiplier;
+  return basePrice * multiplier;
 }
 
 export function formatMaterialCost(name, qty, grade = "Standard") {
