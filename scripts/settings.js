@@ -1,53 +1,16 @@
-import { PRICES, refreshCustomPrices } from './estimator/prices.js';
+import { DEFAULT_TIER_CATALOG, getEffectiveCatalog, syncMaterialsFromDb, refreshCustomPrices } from './estimator/prices.js';
 import { DEFAULT_LABOR_RATES, DEFAULT_LABOR_MULTIPLIERS, refreshCustomLabor } from './estimator/labor.js';
-document.addEventListener('DOMContentLoaded', () => {
+
+document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById('settings-container');
-    const form = document.getElementById('settings-form');
-    const btnReset = document.getElementById('btn-reset');
     const toastContainer = document.getElementById('toast-container');
-    
-    // A simple categorizer for the settings page (since PRICES is flat)
-    const categories = {
-        "Ceiling": ["Ceiling Board", "Wall Angle", "Carrying Channel", "Furring", "Rivets", "Insulation"],
-        "Electrical Materials": ["Electrical Conduit", "Flexible Hose", "PVC Fittings", "THHN", "Switches", "Outlets", "Lighting", "Panel Board", "Electrical Tape"],
-        "Walling / Light Framing": ["Amakan", "Cladding", "Tube", "Fiber Cement", "Gypsum", "PVC Board", "Plywood"],
-        "Structural / Masonry": ["CHB 4-inch", "Cement", "Screened Sand", "Fine Sand", "Gravel", "Deformed Bar", "Wire", "Phenolic Board", "Lumber", "Excavation", "Poisoning", "Formworks"],
-        "Roofing": ["Corrugated", "Long Span", "Spandrel", "Polycarbonate", "Metal Stone", "C-Purlin", "Ridge", "Gutter", "Tekscrew", "Washer", "Silicone", "Roofing Screw"],
-        "Finishes": ["Floor Tile", "Tile Adhesive", "Primer", "Putty", "Topcoat Paint", "Paint Brush", "Paint Thinner", "Sandpaper"],
-        "Doors, Windows & Stairs": ["Door", "Lockset", "Hinges", "Window", "Handrail", "Newel Post"],
-        "Plumbing Materials": ["PVC Orange", "PPR", "Sanitary Fittings", "Water Supply", "Solvent", "Water Closet", "Lavatory", "Kitchen Sink", "Shower", "Faucet", "Floor Drain", "Septic"]
-    };
+    const btnReset = document.getElementById('btn-reset');
+    const btnSave = document.getElementById('btn-save');
 
-    function getCategory(materialName) {
-        for (const [cat, keywords] of Object.entries(categories)) {
-            if (keywords.some(kw => materialName.includes(kw))) {
-                return cat;
-            }
-        }
-        return "Other Materials";
-    }
+    // Make sure we have the latest materials catalog from Neon
+    await syncMaterialsFromDb();
+    let currentCatalog = getEffectiveCatalog();
 
-    // Group items by category
-    const groupedPrices = {};
-    for (const [name, data] of Object.entries(PRICES)) {
-        const cat = getCategory(name);
-        if (!groupedPrices[cat]) {
-            groupedPrices[cat] = [];
-        }
-        groupedPrices[cat].push({ name, ...data });
-    }
-
-    // Load custom prices from localStorage
-    let customPrices = {};
-    try {
-        const customData = localStorage.getItem('buildwise-custom-prices');
-        if (customData) {
-            customPrices = JSON.parse(customData);
-        }
-    } catch(e) {
-        console.warn("Could not load custom prices", e);
-    }
-    
     // Load custom labor from localStorage
     let customLabor = { rates: {}, multipliers: {} };
     try {
@@ -61,227 +24,338 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn("Could not load custom labor", e);
     }
 
-    // Helper to create a card
-    function createSettingsCard(titleText, items, customDataObj, prefix, suffix, dataAttrPrefix, isMultiplier = false) {
-        const card = document.createElement('div');
-        card.className = 'settings-card';
-        if (titleText.includes('Labor')) {
-            card.classList.add('labor-settings-card');
-        }
-        
-        const title = document.createElement('h2');
-        title.textContent = titleText;
-        card.appendChild(title);
-        
-        const grid = document.createElement('div');
-        grid.className = 'settings-grid';
-        
-        for (const [key, defaultVal] of Object.entries(items)) {
-            const field = document.createElement('div');
-            field.className = 'price-field';
-            
-            const currentValue = customDataObj[key] !== undefined ? customDataObj[key] : defaultVal;
-            const displayValue = isMultiplier ? (currentValue * 100).toFixed(0) : currentValue;
-            
-            const safeId = key.replace(/[^a-zA-Z0-9]/g, '_');
-            const safeNameAttr = key.replace(/"/g, '&quot;');
-            const isModified = currentValue !== defaultVal;
-            
-            field.innerHTML = `
-                <label for="${dataAttrPrefix}_${safeId}">${key}</label>
-                <div class="input-group ${isModified ? 'modified' : ''}">
-                    ${prefix ? `<span class="input-prefix">${prefix}</span>` : ''}
-                    <input type="number" step="${isMultiplier ? '1' : '0.01'}" min="0" id="${dataAttrPrefix}_${safeId}" data-${dataAttrPrefix}="${safeNameAttr}" value="${displayValue}">
-                    <span class="input-suffix">${suffix}</span>
-                </div>
-            `;
-            grid.appendChild(field);
-        }
-        
-        card.appendChild(grid);
-        container.appendChild(card);
-    }
+    // State
+    let activeTab = 'tiers'; // 'tiers' | 'labor'
+    let searchTerm = '';
 
-    // Render Labor Cards First
-    createSettingsCard("Daily Labor Wages", DEFAULT_LABOR_RATES, customLabor.rates, "₱", "per day", "labor-rate");
-    createSettingsCard("Labor Cost Multipliers", DEFAULT_LABOR_MULTIPLIERS, customLabor.multipliers, "", "% of materials", "labor-mult", true);
-
-    // Render Material Cards
-    for (const [cat, items] of Object.entries(groupedPrices)) {
-        const card = document.createElement('div');
-        card.className = 'settings-card';
-        
-        const title = document.createElement('h2');
-        title.textContent = cat;
-        card.appendChild(title);
-        
-        const grid = document.createElement('div');
-        grid.className = 'settings-grid';
-        
-        items.forEach(item => {
-            const field = document.createElement('div');
-            field.className = 'price-field';
-            
-            const currentValue = customPrices[item.name] !== undefined ? customPrices[item.name] : item.price;
-            const safeId = item.name.replace(/[^a-zA-Z0-9]/g, '_');
-            const safeNameAttr = item.name.replace(/"/g, '&quot;');
-            const isModified = currentValue !== item.price;
-            
-            field.innerHTML = `
-                <label for="price_${safeId}">${item.name}</label>
-                <div class="input-group ${isModified ? 'modified' : ''}">
-                    <span class="input-prefix">₱</span>
-                    <input type="number" step="0.01" min="0" id="price_${safeId}" data-material="${safeNameAttr}" value="${currentValue}">
-                    <span class="input-suffix">per ${item.unit}</span>
-                </div>
-            `;
-            grid.appendChild(field);
-        });
-        
-        card.appendChild(grid);
-        container.appendChild(card);
-    }
-
-    function showToast(message) {
+    function showToast(msg) {
+        if (!toastContainer) return;
         const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = message;
+        toast.className = 'toast show';
+        toast.textContent = msg;
         toastContainer.appendChild(toast);
-        
-        // Trigger reflow
-        void toast.offsetWidth;
-        toast.classList.add('show');
-        
         setTimeout(() => {
             toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
+            setTimeout(() => toast.remove(), 400);
         }, 3000);
     }
 
-    // Add input event listener to toggle .modified class dynamically
-    container.addEventListener('input', (e) => {
-        if (e.target.tagName === 'INPUT') {
-            const material = e.target.getAttribute('data-material');
-            const laborRate = e.target.getAttribute('data-labor-rate');
-            const laborMult = e.target.getAttribute('data-labor-mult');
-            
-            const val = parseFloat(e.target.value);
-            const inputGroup = e.target.closest('.input-group');
-            
-            if (inputGroup) {
-                let defaultVal = null;
-                let parsedVal = val;
-                
-                if (material) defaultVal = PRICES[material].price;
-                else if (laborRate) defaultVal = DEFAULT_LABOR_RATES[laborRate];
-                else if (laborMult) {
-                    defaultVal = DEFAULT_LABOR_MULTIPLIERS[laborMult] * 100;
-                }
-                
-                if (!isNaN(parsedVal) && parsedVal !== defaultVal) {
-                    inputGroup.classList.add('modified');
-                } else {
-                    inputGroup.classList.remove('modified');
-                }
-            }
-        }
-    });
+    function renderView() {
+        container.innerHTML = '';
 
-    // Save Logic
-    const btnSave = document.getElementById('btn-save');
-    btnSave.addEventListener('click', (e) => {
-        e.preventDefault();
-        
-        const newCustomPrices = {};
-        const newCustomLabor = { rates: {}, multipliers: {} };
-        const inputs = container.querySelectorAll('input[type="number"]');
-        
-        let hasErrors = false;
-        inputs.forEach(input => {
-            const material = input.getAttribute('data-material');
-            const laborRate = input.getAttribute('data-labor-rate');
-            const laborMult = input.getAttribute('data-labor-mult');
-            
-            const val = parseFloat(input.value);
-            const inputGroup = input.closest('.input-group');
-            
-            if (isNaN(val) || val < 0) {
-                inputGroup.style.borderColor = 'red';
-                hasErrors = true;
-            } else {
-                inputGroup.style.borderColor = '';
-                
-                // Only save if it differs from default
-                if (material && val !== PRICES[material].price) {
-                    newCustomPrices[material] = val;
-                }
-                else if (laborRate && val !== DEFAULT_LABOR_RATES[laborRate]) {
-                    newCustomLabor.rates[laborRate] = val;
-                }
-                else if (laborMult) {
-                    const decimalVal = val / 100;
-                    if (decimalVal !== DEFAULT_LABOR_MULTIPLIERS[laborMult]) {
-                        newCustomLabor.multipliers[laborMult] = decimalVal;
-                    }
-                }
+        // Render Tabs
+        const tabsWrap = document.createElement('div');
+        tabsWrap.className = 'tier-tabs';
+        tabsWrap.innerHTML = `
+            <button type="button" class="tier-tab-btn ${activeTab === 'tiers' ? 'active' : ''}" data-tab="tiers">
+                🧱 Material Tiers & Brands (${Object.keys(currentCatalog).length})
+            </button>
+            <button type="button" class="tier-tab-btn ${activeTab === 'labor' ? 'active' : ''}" data-tab="labor">
+                👷 Labor Wages & Rates
+            </button>
+        `;
+        tabsWrap.addEventListener('click', (e) => {
+            const btn = e.target.closest('.tier-tab-btn');
+            if (btn) {
+                activeTab = btn.getAttribute('data-tab');
+                renderView();
             }
         });
-        
-        if (hasErrors) {
-            showToast("Please fix invalid values (must be 0 or greater).");
-            return;
-        }
-        
-        localStorage.setItem('buildwise-custom-prices', JSON.stringify(newCustomPrices));
-        localStorage.setItem('buildwise-custom-labor', JSON.stringify(newCustomLabor));
-        
-        refreshCustomPrices();
-        refreshCustomLabor();
-        
-        // Immediate visual feedback on the button itself
-        const originalText = btnSave.textContent;
-        btnSave.textContent = "✔ SAVED!";
-        btnSave.style.backgroundColor = "#28a745"; // Success green
-        
-        setTimeout(() => {
-            btnSave.textContent = originalText;
-            btnSave.style.backgroundColor = "";
-        }, 2000);
+        container.appendChild(tabsWrap);
 
-        showToast("Settings Saved Successfully!");
+        if (activeTab === 'tiers') {
+            renderTiersView();
+        } else {
+            renderLaborView();
+        }
+    }
+
+    function renderTiersView() {
+        // Search and Actions
+        const topBar = document.createElement('div');
+        topBar.className = 'top-action-bar';
+        topBar.innerHTML = `
+            <div class="search-bar-wrap" style="flex:1; margin-bottom:0;">
+                <input type="text" id="material-search" placeholder="🔍 Search material name, brand, or category..." value="${searchTerm}">
+            </div>
+        `;
+        container.appendChild(topBar);
+
+        const searchInput = topBar.querySelector('#material-search');
+        searchInput.addEventListener('input', (e) => {
+            searchTerm = e.target.value.toLowerCase();
+            filterTiersRows();
+        });
+
+        // Group materials by category
+        const grouped = {};
+        for (const [key, item] of Object.entries(currentCatalog)) {
+            const cat = item.category || "General Materials";
+            if (!grouped[cat]) grouped[cat] = [];
+            grouped[cat].push({ key, ...item });
+        }
+
+        const catalogCard = document.createElement('div');
+        catalogCard.className = 'settings-card';
+        catalogCard.id = 'tier-catalog-content';
+
+        const cardHeader = document.createElement('div');
+        cardHeader.innerHTML = `
+            <h2>Materials & Brands Catalog</h2>
+            <p style="color:var(--color-muted); font-size:0.9rem; margin-bottom: 20px;">
+                Configure exact brands and unit prices for each tier (Basic, Standard, Premium). These are saved directly to your Neon Database and cached locally.
+            </p>
+        `;
+        catalogCard.appendChild(cardHeader);
+
+        for (const [catName, items] of Object.entries(grouped)) {
+            const catHeader = document.createElement('h3');
+            catHeader.style.cssText = 'color:var(--color-accent); font-size:1.15rem; margin: 25px 0 12px; border-bottom: 1px dashed var(--color-border); padding-bottom: 6px;';
+            catHeader.textContent = `📁 ${catName}`;
+            catHeader.className = 'cat-section-title';
+            catalogCard.appendChild(catHeader);
+
+            const catList = document.createElement('div');
+            catList.className = 'cat-items-list';
+
+            items.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'tier-item-row';
+                row.setAttribute('data-material-key', item.key);
+                row.setAttribute('data-search-text', `${item.key} ${catName} ${item.Basic?.brand || ''} ${item.Standard?.brand || ''} ${item.Premium?.brand || ''}`.toLowerCase());
+
+                row.innerHTML = `
+                    <div class="tier-item-header">
+                        <span class="tier-item-title">${item.key}</span>
+                        <span class="tier-item-meta">${catName} • [${item.unit || 'unit'}]</span>
+                    </div>
+                    <div class="tier-columns-grid">
+                        <!-- BASIC TIER -->
+                        <div class="tier-column-box tier-basic">
+                            <div class="tier-badge">
+                                <span>Basic Tier</span>
+                                <span>Economy</span>
+                            </div>
+                            <input type="text" class="tier-input-brand" placeholder="Brand / Grade Name" 
+                                data-key="${item.key}" data-tier="Basic" data-field="brand" value="${item.Basic?.brand || ''}">
+                            <div class="tier-input-price-wrap">
+                                <span>₱</span>
+                                <input type="number" step="0.01" min="0" placeholder="0.00" 
+                                    data-key="${item.key}" data-tier="Basic" data-field="price" value="${item.Basic?.price || 0}">
+                            </div>
+                        </div>
+
+                        <!-- STANDARD TIER -->
+                        <div class="tier-column-box tier-standard">
+                            <div class="tier-badge">
+                                <span>Standard Tier</span>
+                                <span>Default</span>
+                            </div>
+                            <input type="text" class="tier-input-brand" placeholder="Brand / Grade Name" 
+                                data-key="${item.key}" data-tier="Standard" data-field="brand" value="${item.Standard?.brand || ''}">
+                            <div class="tier-input-price-wrap">
+                                <span>₱</span>
+                                <input type="number" step="0.01" min="0" placeholder="0.00" 
+                                    data-key="${item.key}" data-tier="Standard" data-field="price" value="${item.Standard?.price || 0}">
+                            </div>
+                        </div>
+
+                        <!-- PREMIUM TIER -->
+                        <div class="tier-column-box tier-premium">
+                            <div class="tier-badge">
+                                <span>Premium Tier</span>
+                                <span>Heavy-Duty</span>
+                            </div>
+                            <input type="text" class="tier-input-brand" placeholder="Brand / Grade Name" 
+                                data-key="${item.key}" data-tier="Premium" data-field="brand" value="${item.Premium?.brand || ''}">
+                            <div class="tier-input-price-wrap">
+                                <span>₱</span>
+                                <input type="number" step="0.01" min="0" placeholder="0.00" 
+                                    data-key="${item.key}" data-tier="Premium" data-field="price" value="${item.Premium?.price || 0}">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                catList.appendChild(row);
+            });
+
+            catalogCard.appendChild(catList);
+        }
+
+        container.appendChild(catalogCard);
+        filterTiersRows();
+    }
+
+    function filterTiersRows() {
+        const rows = container.querySelectorAll('.tier-item-row');
+        rows.forEach(row => {
+            const text = row.getAttribute('data-search-text') || '';
+            if (!searchTerm || text.includes(searchTerm)) {
+                row.style.display = 'block';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function renderLaborView() {
+        // Daily wages card
+        const wageCard = document.createElement('div');
+        wageCard.className = 'settings-card labor-settings-card';
+        wageCard.innerHTML = `<h2>Daily Labor Wages</h2><div class="settings-grid" id="labor-wage-grid"></div>`;
+        const wageGrid = wageCard.querySelector('#labor-wage-grid');
+
+        for (const [key, defaultVal] of Object.entries(DEFAULT_LABOR_RATES)) {
+            const curVal = customLabor.rates[key] !== undefined ? customLabor.rates[key] : defaultVal;
+            const field = document.createElement('div');
+            field.className = 'price-field';
+            field.innerHTML = `
+                <label>${key}</label>
+                <div class="input-group ${curVal !== defaultVal ? 'modified' : ''}">
+                    <span class="input-prefix">₱</span>
+                    <input type="number" step="1" min="0" data-labor-rate="${key}" value="${curVal}">
+                    <span class="input-suffix">per day</span>
+                </div>
+            `;
+            wageGrid.appendChild(field);
+        }
+        container.appendChild(wageCard);
+
+        // Multipliers card
+        const multCard = document.createElement('div');
+        multCard.className = 'settings-card labor-settings-card';
+        multCard.innerHTML = `<h2>Labor Cost Multipliers</h2><div class="settings-grid" id="labor-mult-grid"></div>`;
+        const multGrid = multCard.querySelector('#labor-mult-grid');
+
+        for (const [key, defaultVal] of Object.entries(DEFAULT_LABOR_MULTIPLIERS)) {
+            const curVal = customLabor.multipliers[key] !== undefined ? customLabor.multipliers[key] : defaultVal;
+            const field = document.createElement('div');
+            field.className = 'price-field';
+            field.innerHTML = `
+                <label>${key}</label>
+                <div class="input-group ${curVal !== defaultVal ? 'modified' : ''}">
+                    <input type="number" step="1" min="0" data-labor-mult="${key}" value="${(curVal * 100).toFixed(0)}">
+                    <span class="input-suffix">% of materials</span>
+                </div>
+            `;
+            multGrid.appendChild(field);
+        }
+        container.appendChild(multCard);
+    }
+
+    // Save All Changes (Updates Database + LocalStorage)
+    btnSave.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const origText = btnSave.textContent;
+        btnSave.disabled = true;
+        btnSave.textContent = "Saving to Database...";
+
+        try {
+            // 1. Gather Tiers updates
+            const tierInputs = container.querySelectorAll('[data-tier]');
+            const updatedItemsMap = {};
+
+            tierInputs.forEach(input => {
+                const key = input.getAttribute('data-key');
+                const tier = input.getAttribute('data-tier');
+                const field = input.getAttribute('data-field');
+
+                if (!updatedItemsMap[key]) {
+                    updatedItemsMap[key] = {
+                        material_key: key,
+                        Basic: { ...currentCatalog[key]?.Basic },
+                        Standard: { ...currentCatalog[key]?.Standard },
+                        Premium: { ...currentCatalog[key]?.Premium }
+                    };
+                }
+
+                if (field === 'price') {
+                    updatedItemsMap[key][tier].price = parseFloat(input.value) || 0;
+                } else if (field === 'brand') {
+                    updatedItemsMap[key][tier].brand = input.value.trim();
+                }
+            });
+
+            // Update currentCatalog in memory & localStorage
+            for (const [key, data] of Object.entries(updatedItemsMap)) {
+                if (currentCatalog[key]) {
+                    currentCatalog[key].Basic = data.Basic;
+                    currentCatalog[key].Standard = data.Standard;
+                    currentCatalog[key].Premium = data.Premium;
+
+                    // Sync to Neon Database via PUT /api/materials
+                    fetch('/api/materials', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            material_key: key,
+                            basic_brand: data.Basic.brand,
+                            basic_price: data.Basic.price,
+                            standard_brand: data.Standard.brand,
+                            standard_price: data.Standard.price,
+                            premium_brand: data.Premium.brand,
+                            premium_price: data.Premium.price
+                        })
+                    }).catch(err => console.warn(`Error syncing ${key} to DB:`, err));
+                }
+            }
+
+            localStorage.setItem('buildwise-materials-catalog', JSON.stringify(currentCatalog));
+            refreshCustomPrices();
+
+            // 2. Gather Labor updates
+            const newCustomLabor = { rates: {}, multipliers: {} };
+            const laborRateInputs = container.querySelectorAll('[data-labor-rate]');
+            laborRateInputs.forEach(input => {
+                const role = input.getAttribute('data-labor-rate');
+                const val = parseFloat(input.value) || 0;
+                if (val !== DEFAULT_LABOR_RATES[role]) {
+                    newCustomLabor.rates[role] = val;
+                }
+            });
+
+            const laborMultInputs = container.querySelectorAll('[data-labor-mult]');
+            laborMultInputs.forEach(input => {
+                const type = input.getAttribute('data-labor-mult');
+                const val = (parseFloat(input.value) || 0) / 100;
+                if (val !== DEFAULT_LABOR_MULTIPLIERS[type]) {
+                    newCustomLabor.multipliers[type] = val;
+                }
+            });
+
+            localStorage.setItem('buildwise-custom-labor', JSON.stringify(newCustomLabor));
+            refreshCustomLabor();
+
+            btnSave.textContent = "✔ SAVED!";
+            btnSave.style.backgroundColor = "#28a745";
+            showToast("All material tier prices and brands saved successfully!");
+
+            setTimeout(() => {
+                btnSave.textContent = origText;
+                btnSave.style.backgroundColor = "";
+                btnSave.disabled = false;
+            }, 2000);
+        } catch (err) {
+            console.error("Save error:", err);
+            showToast("Failed to save changes: " + err.message);
+            btnSave.textContent = origText;
+            btnSave.disabled = false;
+        }
     });
-    
-    // Reset Logic
+
+    // Reset Defaults
     btnReset.addEventListener('click', () => {
-        if (confirm("Are you sure you want to reset all prices and labor settings to their default values?")) {
-            localStorage.removeItem('buildwise-custom-prices');
+        if (confirm("Are you sure you want to reset all material tiers and labor settings back to default baseline values?")) {
+            localStorage.removeItem('buildwise-materials-catalog');
             localStorage.removeItem('buildwise-custom-labor');
             refreshCustomPrices();
             refreshCustomLabor();
-            
-            // Update UI
-            const inputs = container.querySelectorAll('input[type="number"]');
-            inputs.forEach(input => {
-                const material = input.getAttribute('data-material');
-                const laborRate = input.getAttribute('data-labor-rate');
-                const laborMult = input.getAttribute('data-labor-mult');
-                
-                if (material) {
-                    input.value = PRICES[material].price;
-                } else if (laborRate) {
-                    input.value = DEFAULT_LABOR_RATES[laborRate];
-                } else if (laborMult) {
-                    input.value = (DEFAULT_LABOR_MULTIPLIERS[laborMult] * 100).toFixed(0);
-                }
-                
-                const inputGroup = input.closest('.input-group');
-                if (inputGroup) {
-                    inputGroup.style.borderColor = '';
-                    inputGroup.classList.remove('modified');
-                }
-            });
-            
+            currentCatalog = { ...DEFAULT_TIER_CATALOG };
+            renderView();
             showToast("Settings reset to defaults.");
         }
     });
+
+    // Initial render
+    renderView();
 });

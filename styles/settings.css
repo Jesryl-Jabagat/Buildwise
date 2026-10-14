@@ -140,3 +140,140 @@
             color: var(--color-primary, #1f7a5c);
             border-bottom-color: color-mix(in srgb, var(--color-primary, #1f7a5c) 20%, transparent);
         }
+
+        /* Material Tier Catalog Styles */
+        .tier-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 12px;
+        }
+        .tier-tab-btn {
+            background: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-muted);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tier-tab-btn.active, .tier-tab-btn:hover {
+            background: var(--color-surface);
+            color: var(--color-accent);
+            border-color: var(--color-accent);
+        }
+        .tier-item-row {
+            background: color-mix(in srgb, var(--color-bg) 40%, transparent);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .tier-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .tier-item-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--color-text);
+        }
+        .tier-item-meta {
+            font-size: 0.85rem;
+            color: var(--color-muted);
+            background: var(--color-bg);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--color-border);
+        }
+        .tier-columns-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        @media (max-width: 850px) {
+            .tier-columns-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .tier-column-box {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .tier-column-box.tier-basic { border-top: 3px solid #6b7280; }
+        .tier-column-box.tier-standard { border-top: 3px solid var(--color-primary, #1f7a5c); }
+        .tier-column-box.tier-premium { border-top: 3px solid var(--color-accent, #d89a2b); }
+
+        .tier-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .tier-basic .tier-badge { color: #9ca3af; }
+        .tier-standard .tier-badge { color: #10b981; }
+        .tier-premium .tier-badge { color: #f59e0b; }
+
+        .tier-input-brand {
+            width: 100%;
+            padding: 8px 10px;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            color: var(--color-text);
+            font-size: 0.88rem;
+            font-family: inherit;
+        }
+        .tier-input-price-wrap {
+            display: flex;
+            align-items: center;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .tier-input-price-wrap span {
+            padding: 6px 10px;
+            color: var(--color-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-right: 1px solid var(--color-border);
+        }
+        .tier-input-price-wrap input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: var(--color-text);
+            padding: 6px 10px;
+            font-family: inherit;
+        }
+        .search-bar-wrap {
+            margin-bottom: 20px;
+        }
+        .search-bar-wrap input {
+            width: 100%;
+            padding: 12px 18px;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: 0.95rem;
+        }
+        .top-action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }

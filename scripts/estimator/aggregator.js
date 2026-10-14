@@ -295,10 +295,12 @@ export function generateEstimate(data) {
         priced.total = priced.qty * priced.unitCost;
       }
       
-      // Append specific brands if available
+      // Append specific brand: prioritize dynamic brand from tier catalog, fallback to BRAND_MAP
       let baseForBrand = priceName;
       if (priceName.startsWith("Architectural Topcoat Paint")) baseForBrand = "Architectural Topcoat Paint";
-      if (BRAND_MAP[baseForBrand]) {
+      if (priced.brand) {
+        priced.name += ` (${priced.brand})`;
+      } else if (BRAND_MAP[baseForBrand]) {
         priced.name += BRAND_MAP[baseForBrand];
       }
 

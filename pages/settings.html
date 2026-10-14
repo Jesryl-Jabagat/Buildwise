@@ -43,13 +43,13 @@
 
     <main class="settings-content">
         <div class="settings-header">
-            <h1>Pricing & Labor Settings</h1>
-            <p>Customize the base material prices and labor rates used across all estimates. These values are saved locally to your browser and will override the default system values.</p>
+            <h1>Pricing, Tiers & Labor Settings</h1>
+            <p>Customize exact brands and tier pricing (Basic, Standard, Premium) alongside labor rates across all home estimates. Changes are synchronized with your Neon database and cached locally.</p>
         </div>
         
         <form id="settings-form">
             <div id="settings-container">
-                <!-- Javascript will inject cards here based on prices.js -->
+                <!-- Javascript will inject tabs and cards here -->
             </div>
             
             <div class="settings-card">
@@ -67,7 +67,7 @@
     <div id="toast-container"></div>
 
     <!-- The type="module" is necessary to import from prices.js and labor.js -->
-    <script type="module" src="../scripts/settings.js?v=4"></script>
+    <script type="module" src="../scripts/settings.js?v=5"></script>
     <script src="../scripts/app.js?v=7"></script>
 </body>
 </html>

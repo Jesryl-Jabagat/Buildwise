@@ -25,12 +25,15 @@ let cachedCustomLabor = {
 
 export function refreshCustomLabor() {
     try {
-        const customData = localStorage.getItem("buildwise-custom-labor");
-        if (customData) {
-            cachedCustomLabor = JSON.parse(customData);
-            // Ensure properties exist
-            if (!cachedCustomLabor.rates) cachedCustomLabor.rates = {};
-            if (!cachedCustomLabor.multipliers) cachedCustomLabor.multipliers = {};
+        if (typeof window !== "undefined" && window.localStorage) {
+            const customData = localStorage.getItem("buildwise-custom-labor");
+            if (customData) {
+                cachedCustomLabor = JSON.parse(customData);
+                if (!cachedCustomLabor.rates) cachedCustomLabor.rates = {};
+                if (!cachedCustomLabor.multipliers) cachedCustomLabor.multipliers = {};
+            } else {
+                cachedCustomLabor = { rates: {}, multipliers: {} };
+            }
         } else {
             cachedCustomLabor = { rates: {}, multipliers: {} };
         }
@@ -44,11 +47,13 @@ export function refreshCustomLabor() {
 refreshCustomLabor();
 
 // Listen for storage events in case another tab changes it
-window.addEventListener('storage', (e) => {
-    if (e.key === 'buildwise-custom-labor') {
-        refreshCustomLabor();
-    }
-});
+if (typeof window !== "undefined") {
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'buildwise-custom-labor') {
+            refreshCustomLabor();
+        }
+    });
+}
 
 export function getLaborRates() {
     const rates = { ...DEFAULT_LABOR_RATES };
