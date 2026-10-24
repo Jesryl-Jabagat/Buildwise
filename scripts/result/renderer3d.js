@@ -82,8 +82,53 @@ export function initRenderer(configData) {
   scene.add(fillLight);
 
   // ============================================================
-  //  ENVIRONMENT
+  //  ENVIRONMENT & TERRAIN GENERATORS
   // ============================================================
+  const environmentGroup = new THREE.Group();
+  scene.add(environmentGroup);
+
+  const rawLandType = String(
+    configData.landType ||
+    (() => {
+      try {
+        return JSON.parse(localStorage.getItem("buildwiseSetup") || "{}").landType;
+      } catch (_) {
+        return "Flat";
+      }
+    })() ||
+    "Flat"
+  ).trim().toLowerCase();
+
+  const isSloped = rawLandType.includes("slop");
+  const isRocky = rawLandType.includes("rock");
+
+  // Approximate house footprint for terrain leveling
+  const houseFootprintL = Math.max(4, Number(configData.length || configData.groundLength) || 8);
+  const houseFootprintW = Math.max(4, Number(configData.width || configData.groundWidth) || 6);
+
+  function makeTree(x, z, h, y = 0, foliageColor = 0x2d5a27, barkColor = 0x4a3520) {
+    const trunkGeo = new THREE.CylinderGeometry(0.18, 0.22, h * 0.4, 8);
+    const trunkMat = new THREE.MeshStandardMaterial({
+      color: barkColor,
+      roughness: 1,
+    });
+    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.set(x, y + h * 0.2, z);
+    trunk.castShadow = true;
+    trunk.receiveShadow = true;
+    environmentGroup.add(trunk);
+
+    const topGeo = new THREE.SphereGeometry(h * 0.35, 12, 10);
+    const topMat = new THREE.MeshStandardMaterial({
+      color: foliageColor,
+      roughness: 0.9,
+    });
+    const top = new THREE.Mesh(topGeo, topMat);
+    top.position.set(x, y + h * 0.5, z);
+    top.castShadow = true;
+    top.receiveShadow = true;
+    environmentGroup.add(top);
+  }
 
   function makeGrassTex() {
     const c = document.createElement("canvas");
@@ -91,74 +136,333 @@ export function initRenderer(configData) {
     c.height = 512;
     const ctx = c.getContext("2d");
     ctx.fillStyle = "#2d5a27";
-    ctx.fillRect(0, 0, 512, 512); // Base dark forest green
-    // Add noise/variation
+    ctx.fillRect(0, 0, 512, 512);
     for (let i = 0; i < 15000; i++) {
       const x = Math.random() * 512;
       const y = Math.random() * 512;
-      const r = Math.random() > 0.5 ? "#3a7233" : "#1f421b"; // Lighter and darker green speckles
+      const r = Math.random() > 0.5 ? "#3a7233" : "#1f421b";
       ctx.fillStyle = r;
       ctx.fillRect(x, y, 2, 2);
     }
     const t = new THREE.CanvasTexture(c);
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.repeat.set(10, 10);
+    t.repeat.set(100, 100);
     return t;
   }
 
-  function makeGround() {
-    const lawnGeo = new THREE.PlaneGeometry(1000, 1000); // Massive ground plane to hit the far fog
-    const grassTex = makeGrassTex();
-    grassTex.repeat.set(100, 100); // Scale the texture repeat up to match the larger size
+  function buildFlatScene() {
+    const lawnGeo = new THREE.PlaneGeometry(1000, 1000);
     const lawnMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
-      map: grassTex,
+      map: makeGrassTex(),
       roughness: 1.0,
     });
     const lawn = new THREE.Mesh(lawnGeo, lawnMat);
     lawn.rotation.x = -Math.PI / 2;
     lawn.receiveShadow = true;
-    scene.add(lawn);
+    environmentGroup.add(lawn);
 
-    // Concrete path/driveway leading to the +X front face (Disabled per user request)
-    // const pathGeo = new THREE.PlaneGeometry(15, 4); // Wider to accommodate varying door Z positions
-    // const pathMat = new THREE.MeshStandardMaterial({
-    //   color: 0xa0a0a0,
-    //   roughness: 0.9,
-    // });
-    // const path = new THREE.Mesh(pathGeo, pathMat);
-    // path.rotation.x = -Math.PI / 2;
-    // path.position.set(10, 0.02, 0); // Extending out along +X
-    // path.receiveShadow = true;
-    // scene.add(path);
+    // Standard trees around property
+    makeTree(-9, -7, 5.5);
+    makeTree(11, -4, 4.5);
+    makeTree(-10, 8, 3.5);
   }
-  makeGround();
 
-  function makeTree(x, z, h) {
-    const trunkGeo = new THREE.CylinderGeometry(0.18, 0.22, h * 0.4, 8);
-    const trunkMat = new THREE.MeshStandardMaterial({
-      color: 0x4a3520,
-      roughness: 1,
-    }); // Deep brown
-    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-    trunk.position.set(x, h * 0.2, z);
-    trunk.castShadow = true;
-    scene.add(trunk);
+  function buildSlopedScene() {
+    const c = document.createElement("canvas");
+    c.width = 512;
+    c.height = 512;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#32572b";
+    ctx.fillRect(0, 0, 512, 512);
+    for (let i = 0; i < 18000; i++) {
+      const x = Math.random() * 512;
+      const y = Math.random() * 512;
+      ctx.fillStyle = Math.random() > 0.6 ? "#416f36" : (Math.random() > 0.4 ? "#264221" : "#594d39");
+      ctx.fillRect(x, y, 2, 2);
+    }
+    const slopedTex = new THREE.CanvasTexture(c);
+    slopedTex.wrapS = slopedTex.wrapT = THREE.RepeatWrapping;
+    slopedTex.repeat.set(80, 80);
 
-    const topGeo = new THREE.SphereGeometry(h * 0.35, 12, 10);
-    const topMat = new THREE.MeshStandardMaterial({
-      color: 0x2d5a27,
+    const padXMin = -(houseFootprintL / 2 + 2.5);
+    const padXMax = +(houseFootprintL / 2 + 2.5);
+    const padZMin = -(houseFootprintW / 2 + 2.5);
+    const padZMax = +(houseFootprintW / 2 + 2.5);
+
+    function getSlopeElevation(wx, wz) {
+      if (wx >= padXMin && wx <= padXMax && wz >= padZMin && wz <= padZMax) {
+        return 0; // Leveled pad for house
+      }
+
+      let elev = 0;
+      // Rising hillside behind the house (-X)
+      if (wx < padXMin) {
+        const distBack = padXMin - wx;
+        elev = Math.min(22, distBack * 0.22 + Math.sin(wz * 0.08) * 0.45);
+      } 
+      // Falling slope in front of the house (+X)
+      else if (wx > padXMax) {
+        const distFront = wx - padXMax;
+        elev = Math.max(-10, -distFront * 0.16 + Math.cos(wz * 0.08) * 0.35);
+      }
+
+      const sideDist = Math.max(0, padZMin - wz, wz - padZMax);
+      if (sideDist > 0) {
+        const factor = Math.min(1, sideDist / 12);
+        const baseline = (wx < 0 ? (padXMin - wx) * 0.18 : -(wx - padXMax) * 0.14);
+        elev = elev * (1 - factor * 0.3) + baseline * (factor * 0.3);
+      }
+
+      return elev;
+    }
+
+    const slopeGeo = new THREE.PlaneGeometry(1000, 1000, 100, 100);
+    const pos = slopeGeo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const wx = pos.getX(i);
+      const wz = -pos.getY(i);
+      pos.setZ(i, getSlopeElevation(wx, wz));
+    }
+    pos.needsUpdate = true;
+    slopeGeo.computeVertexNormals();
+
+    const slopeMat = new THREE.MeshStandardMaterial({
+      map: slopedTex,
+      roughness: 1.0,
+    });
+    const slopeMesh = new THREE.Mesh(slopeGeo, slopeMat);
+    slopeMesh.rotation.x = -Math.PI / 2;
+    slopeMesh.receiveShadow = true;
+    environmentGroup.add(slopeMesh);
+
+    // 1. Leveled terrace ground apron (paved perimeter around the house)
+    const padL = padXMax - padXMin;
+    const padW = padZMax - padZMin;
+    const apronGeo = new THREE.BoxGeometry(padL, 0.05, padW);
+    const apronMat = new THREE.MeshStandardMaterial({
+      color: 0x9e988f,
       roughness: 0.9,
-    }); // Dark rich green
-    const top = new THREE.Mesh(topGeo, topMat);
-    top.position.set(x, h * 0.5, z);
-    top.castShadow = true;
-    scene.add(top);
+    });
+    const apron = new THREE.Mesh(apronGeo, apronMat);
+    apron.position.set((padXMax + padXMin) / 2, -0.025, (padZMax + padZMin) / 2);
+    apron.receiveShadow = true;
+    environmentGroup.add(apron);
+
+    // 2. Concrete/masonry retaining wall directly behind the terrace
+    const wallZSpan = padW + 4;
+    const wallH = 2.4;
+    const backWallGeo = new THREE.BoxGeometry(0.4, wallH, wallZSpan);
+    const wallMat = new THREE.MeshStandardMaterial({
+      color: 0x827d75,
+      roughness: 0.85,
+    });
+    const backWall = new THREE.Mesh(backWallGeo, wallMat);
+    backWall.position.set(padXMin - 0.2, wallH / 2, 0);
+    backWall.castShadow = true;
+    backWall.receiveShadow = true;
+    environmentGroup.add(backWall);
+
+    const capGeo = new THREE.BoxGeometry(0.55, 0.12, wallZSpan + 0.1);
+    const capMat = new THREE.MeshStandardMaterial({
+      color: 0xa8a49c,
+      roughness: 0.8,
+    });
+    const cap = new THREE.Mesh(capGeo, capMat);
+    cap.position.set(padXMin - 0.2, wallH + 0.06, 0);
+    cap.castShadow = true;
+    environmentGroup.add(cap);
+
+    // 3. Lower terrace stem curb & steps in front of the house
+    const frontCurbGeo = new THREE.BoxGeometry(0.35, 1.2, wallZSpan);
+    const frontCurb = new THREE.Mesh(frontCurbGeo, wallMat);
+    frontCurb.position.set(padXMax + 0.175, -0.6, 0);
+    frontCurb.receiveShadow = true;
+    frontCurb.castShadow = true;
+    environmentGroup.add(frontCurb);
+
+    for (let s = 1; s <= 3; s++) {
+      const stepGeo = new THREE.BoxGeometry(0.6, 0.35, 2.6);
+      const step = new THREE.Mesh(stepGeo, capMat);
+      step.position.set(padXMax + 0.3 + (s * 0.35), -0.35 * s + 0.175, 0);
+      step.receiveShadow = true;
+      step.castShadow = true;
+      environmentGroup.add(step);
+    }
+
+    // 4. Hillside trees on the slopes
+    makeTree(padXMin - 6, -8, 6.0, getSlopeElevation(padXMin - 6, -8));
+    makeTree(padXMin - 9, 6, 6.5, getSlopeElevation(padXMin - 9, 6));
+    makeTree(padXMin - 12, -2, 7.0, getSlopeElevation(padXMin - 12, -2));
+    makeTree(padXMax + 9, -7, 4.5, getSlopeElevation(padXMax + 9, -7));
+    makeTree(padXMax + 12, 8, 4.8, getSlopeElevation(padXMax + 12, 8));
+    makeTree(0, padZMax + 5, 5.0, getSlopeElevation(0, padZMax + 5));
+    makeTree(-2, padZMin - 5, 5.2, getSlopeElevation(-2, padZMin - 5));
   }
-  // Add trees around the property, spaced nicely
-  makeTree(-9, -7, 5.5);
-  makeTree(11, -4, 4.5);
-  makeTree(-10, 8, 3.5);
+
+  function buildRockyScene() {
+    const c = document.createElement("canvas");
+    c.width = 512;
+    c.height = 512;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#5d574f";
+    ctx.fillRect(0, 0, 512, 512);
+
+    for (let i = 0; i < 35000; i++) {
+      const x = Math.random() * 512;
+      const y = Math.random() * 512;
+      const col = Math.random();
+      if (col > 0.75) ctx.fillStyle = "#3d3832";
+      else if (col > 0.5) ctx.fillStyle = "#7a7266";
+      else if (col > 0.25) ctx.fillStyle = "#8a7f70";
+      else ctx.fillStyle = "#555b46";
+      ctx.fillRect(x, y, Math.random() * 3 + 1, Math.random() * 3 + 1);
+    }
+
+    ctx.strokeStyle = "#272420";
+    ctx.lineWidth = 1.6;
+    for (let i = 0; i < 50; i++) {
+      let cx = Math.random() * 512;
+      let cy = Math.random() * 512;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      const segments = Math.floor(Math.random() * 4) + 2;
+      for (let s = 0; s < segments; s++) {
+        cx += (Math.random() - 0.5) * 45;
+        cy += (Math.random() - 0.5) * 45;
+        ctx.lineTo(cx, cy);
+      }
+      ctx.stroke();
+    }
+
+    const rockyTex = new THREE.CanvasTexture(c);
+    rockyTex.wrapS = rockyTex.wrapT = THREE.RepeatWrapping;
+    rockyTex.repeat.set(60, 60);
+
+    const padXMin = -(houseFootprintL / 2 + 1.8);
+    const padXMax = +(houseFootprintL / 2 + 1.8);
+    const padZMin = -(houseFootprintW / 2 + 1.8);
+    const padZMax = +(houseFootprintW / 2 + 1.8);
+
+    function getRockyElevation(wx, wz) {
+      if (wx >= padXMin && wx <= padXMax && wz >= padZMin && wz <= padZMax) {
+        return 0;
+      }
+      const dist = Math.max(
+        0,
+        padXMin - wx,
+        wx - padXMax,
+        padZMin - wz,
+        wz - padZMax
+      );
+      const ramp = Math.min(1.0, dist / 3.0);
+      const wave1 = Math.sin(wx * 0.18) * Math.cos(wz * 0.18) * 0.65;
+      const wave2 = Math.sin(wx * 0.42 + wz * 0.35) * 0.30;
+      const wave3 = Math.cos(wx * 0.75 - wz * 0.60) * 0.15;
+      return (wave1 + wave2 + wave3) * ramp;
+    }
+
+    const rockGeo = new THREE.PlaneGeometry(1000, 1000, 100, 100);
+    const pos = rockGeo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const wx = pos.getX(i);
+      const wz = -pos.getY(i);
+      pos.setZ(i, getRockyElevation(wx, wz));
+    }
+    pos.needsUpdate = true;
+    rockGeo.computeVertexNormals();
+
+    const rockMat = new THREE.MeshStandardMaterial({
+      map: rockyTex,
+      roughness: 1.0,
+      metalness: 0.05,
+    });
+    const rockGround = new THREE.Mesh(rockGeo, rockMat);
+    rockGround.rotation.x = -Math.PI / 2;
+    rockGround.receiveShadow = true;
+    environmentGroup.add(rockGround);
+
+    const boulderMatDark = new THREE.MeshStandardMaterial({
+      color: 0x544e47,
+      roughness: 0.95,
+      metalness: 0.05,
+    });
+    const boulderMatMid = new THREE.MeshStandardMaterial({
+      color: 0x6e685f,
+      roughness: 0.95,
+      metalness: 0.05,
+    });
+    const boulderMatLight = new THREE.MeshStandardMaterial({
+      color: 0x827a70,
+      roughness: 0.95,
+      metalness: 0.05,
+    });
+
+    function makeBoulder(x, z, scale, rotY, mat = boulderMatMid) {
+      const geo = new THREE.DodecahedronGeometry(scale, 1);
+      const p = geo.attributes.position;
+      for (let i = 0; i < p.count; i++) {
+        const vx = p.getX(i);
+        const vy = p.getY(i);
+        const vz = p.getZ(i);
+        const deform = 0.8 + 0.35 * Math.sin(vx * 3.7 + vy * 5.1 + vz * 2.3);
+        p.setXYZ(i, vx * deform, vy * (deform * 0.75), vz * deform);
+      }
+      p.needsUpdate = true;
+      geo.computeVertexNormals();
+
+      const mesh = new THREE.Mesh(geo, mat);
+      const groundY = getRockyElevation(x, z);
+      mesh.position.set(x, groundY + scale * 0.45, z);
+      mesh.rotation.set(Math.sin(x) * 0.2, rotY, Math.cos(z) * 0.2);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      environmentGroup.add(mesh);
+    }
+
+    const boulderList = [
+      [-7.5, -7.5, 1.4, 0.4, boulderMatMid],
+      [-9.0, -6.8, 1.0, 1.2, boulderMatDark],
+      [-6.5, -8.8, 0.7, 2.1, boulderMatLight],
+      [-8.2, -9.0, 1.2, 0.8, boulderMatMid],
+      [8.5, -6.5, 1.5, 1.9, boulderMatMid],
+      [7.2, -7.8, 0.8, 0.5, boulderMatLight],
+      [10.2, -5.5, 1.2, 2.7, boulderMatDark],
+      [9.4, -8.0, 0.6, 1.1, boulderMatMid],
+      [-9.2, 7.0, 1.8, 2.3, boulderMatDark],
+      [-11.0, 5.8, 1.1, 0.9, boulderMatMid],
+      [-8.0, 8.8, 0.8, 1.7, boulderMatLight],
+      [-11.5, 8.2, 1.3, 3.0, boulderMatMid],
+      [9.0, 7.8, 1.6, 0.7, boulderMatMid],
+      [10.8, 8.8, 1.1, 2.2, boulderMatDark],
+      [7.8, 9.2, 0.8, 1.4, boulderMatLight],
+      [12.0, 7.0, 0.9, 0.3, boulderMatMid],
+      [-14.0, 0.5, 2.8, 1.5, boulderMatDark],
+      [14.5, 1.8, 2.4, 2.8, boulderMatMid],
+      [-3.0, 12.0, 2.1, 0.6, boulderMatDark],
+      [4.0, -11.5, 1.9, 2.0, boulderMatMid],
+      [padXMin - 0.7, padZMin - 0.5, 0.45, 0.9, boulderMatMid],
+      [padXMax + 0.8, padZMin - 0.6, 0.40, 1.8, boulderMatLight],
+      [padXMin - 0.6, padZMax + 0.7, 0.50, 2.4, boulderMatDark],
+      [padXMax + 0.7, padZMax + 0.6, 0.42, 0.5, boulderMatMid],
+    ];
+
+    boulderList.forEach(([x, z, s, r, m]) => makeBoulder(x, z, s, r, m));
+
+    makeTree(-10, -8, 5.2, getRockyElevation(-10, -8), 0x223c28, 0x362b21);
+    makeTree(11, -5, 4.4, getRockyElevation(11, -5), 0x24422b, 0x382c22);
+    makeTree(-11, 9, 4.8, getRockyElevation(-11, 9), 0x1f3624, 0x342920);
+    makeTree(12, 9, 3.8, getRockyElevation(12, 9), 0x233e29, 0x362b21);
+  }
+
+  // Dispatch appropriate terrain scene
+  if (isSloped) {
+    buildSlopedScene();
+  } else if (isRocky) {
+    buildRockyScene();
+  } else {
+    buildFlatScene();
+  }
 
   // ============================================================
   //  RENDERERS
@@ -3586,6 +3890,7 @@ export function initRenderer(configData) {
     wallGroup.visible = true;
     slabGroup.visible = true;
     columnGroup.visible = true;
+    environmentGroup.visible = false;
 
     blueprintGroup.visible = true;
 
@@ -3714,6 +4019,7 @@ export function initRenderer(configData) {
     scene.background = bg;
     scene.fog = oldFog;
     blueprintGroup.visible = false;
+    environmentGroup.visible = true;
 
     wallGroup.children.forEach((c) => {
       c.material = oldMats.get(c);

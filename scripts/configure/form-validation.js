@@ -130,6 +130,22 @@ export function getUserInput(form) {
   data.mainMaterial = data.chbType || data.wallingMaterialType || submittedType.material[0];
   data.layoutPriority = "Engineer formula inputs";
 
+  // Forward landType and location from setup
+  try {
+    const setupRaw = localStorage.getItem("buildwiseSetup");
+    if (setupRaw) {
+      const setup = JSON.parse(setupRaw);
+      data.landType = setup.landType || "Flat";
+      data.location = setup.location || "";
+    } else {
+      data.landType = "Flat";
+      data.location = "";
+    }
+  } catch (e) {
+    data.landType = "Flat";
+    data.location = "";
+  }
+
   return data;
 }
 

@@ -74,7 +74,9 @@ function setupResultPage() {
   const roomCount = Number(data.bedrooms) + Number(data.bathrooms);
 
   setText("resultTitle",    `${data.title} plan for ${(data.familySize || "your family").toLowerCase()}`);
-  setText("resultSubtitle", `A ${data.floorArea} sqm home concept with ${data.bedrooms} bedroom(s), ${data.bathrooms} bathroom(s), and ${(data.finishLevel || "standard finish").toLowerCase()}.`);
+  const siteDesc = data.landType ? `${data.landType.toLowerCase()} terrain` : "flat terrain";
+  const locDesc = data.location ? ` in ${data.location}` : "";
+  setText("resultSubtitle", `A ${data.floorArea} sqm home concept on ${siteDesc}${locDesc} with ${data.bedrooms} bedroom(s), ${data.bathrooms} bathroom(s), and ${(data.finishLevel || "standard finish").toLowerCase()}.`);
   setText("targetBudget",   currency.format(budget));
   setText("resultArea",     `${data.floorArea} sqm`);
   setText("resultRooms",    `${roomCount} rooms`);
@@ -87,6 +89,11 @@ function setupResultPage() {
   }
 
   writeLayoutList(data);
+
+  const renderLabel = document.querySelector("#exterior-container .render-label");
+  if (renderLabel && data.landType) {
+    renderLabel.textContent = `3D VIEW • ${data.landType.toUpperCase()} TERRAIN`;
+  }
 
   // Run Estimator
   const estimateData = generateEstimate(data);
