@@ -169,55 +169,99 @@ export function initRenderer(configData) {
   }
 
   function buildSlopedScene() {
+    // 1. Rich hillside mountain grass texture with earth/soil undertones
     const c = document.createElement("canvas");
     c.width = 512;
     c.height = 512;
     const ctx = c.getContext("2d");
-    ctx.fillStyle = "#32572b";
+    ctx.fillStyle = "#284a20";
     ctx.fillRect(0, 0, 512, 512);
-    for (let i = 0; i < 18000; i++) {
+    for (let i = 0; i < 22000; i++) {
       const x = Math.random() * 512;
       const y = Math.random() * 512;
-      ctx.fillStyle = Math.random() > 0.6 ? "#416f36" : (Math.random() > 0.4 ? "#264221" : "#594d39");
+      const r = Math.random();
+      ctx.fillStyle = r > 0.65 ? "#355e2b" : (r > 0.35 ? "#1d3816" : "#4a4030");
       ctx.fillRect(x, y, 2, 2);
     }
     const slopedTex = new THREE.CanvasTexture(c);
     slopedTex.wrapS = slopedTex.wrapT = THREE.RepeatWrapping;
-    slopedTex.repeat.set(80, 80);
+    slopedTex.repeat.set(60, 60);
 
-    const padXMin = -(houseFootprintL / 2 + 2.5);
-    const padXMax = +(houseFootprintL / 2 + 2.5);
-    const padZMin = -(houseFootprintW / 2 + 2.5);
-    const padZMax = +(houseFootprintW / 2 + 2.5);
+    // 2. Concrete Hollow Block (CHB) texture for the retaining wall
+    const wallCanvas = document.createElement("canvas");
+    wallCanvas.width = 256;
+    wallCanvas.height = 256;
+    const wctx = wallCanvas.getContext("2d");
+    wctx.fillStyle = "#4a4640"; // Deep masonry concrete
+    wctx.fillRect(0, 0, 256, 256);
+    // Block joints
+    wctx.strokeStyle = "#302d28";
+    wctx.lineWidth = 4;
+    const rowH = 42;
+    const blkW = 85;
+    for (let y = 0; y <= 256; y += rowH) {
+      wctx.beginPath();
+      wctx.moveTo(0, y);
+      wctx.lineTo(256, y);
+      wctx.stroke();
+    }
+    for (let row = 0; row < 256 / rowH; row++) {
+      const off = row % 2 === 0 ? 0 : blkW / 2;
+      for (let x = -blkW; x <= 256; x += blkW) {
+        wctx.beginPath();
+        wctx.moveTo(x + off, row * rowH);
+        wctx.lineTo(x + off, (row + 1) * rowH);
+        wctx.stroke();
+      }
+    }
+    const chbWallTex = new THREE.CanvasTexture(wallCanvas);
+    chbWallTex.wrapS = chbWallTex.wrapT = THREE.RepeatWrapping;
+    chbWallTex.repeat.set(3, 1);
 
+    // Terrace boundary definition around the house footprint
+    const padXMin = -(houseFootprintL / 2 + 1.8);
+    const padXMax = +(houseFootprintL / 2 + 1.8);
+    const padZMin = -(houseFootprintW / 2 + 2.2);
+    const padZMax = +(houseFootprintW / 2 + 2.2);
+
+    // Elevation function: distinct 15-20 degree hillside slope
     function getSlopeElevation(wx, wz) {
+      // Leveled building pad inside the terrace
       if (wx >= padXMin && wx <= padXMax && wz >= padZMin && wz <= padZMax) {
-        return 0; // Leveled pad for house
+        return 0;
       }
 
-      let elev = 0;
-      // Rising hillside behind the house (-X)
+      // Uphill behind the house (-X)
       if (wx < padXMin) {
         const distBack = padXMin - wx;
-        elev = Math.min(22, distBack * 0.22 + Math.sin(wz * 0.08) * 0.45);
-      } 
-      // Falling slope in front of the house (+X)
-      else if (wx > padXMax) {
+        // Starts at retaining wall height and climbs up the mountain ridge
+        const hillRise = 2.0 + distBack * 0.38 + Math.sin(wz * 0.08) * 0.5;
+        if (wz < padZMin || wz > padZMax) {
+          const sideDist = Math.max(padZMin - wz, wz - padZMax);
+          const sideRamp = Math.min(1.0, sideDist / 6.0);
+          return Math.min(26, hillRise * (1 - sideRamp * 0.15));
+        }
+        return Math.min(26, hillRise);
+      }
+
+      // Downhill in front of the house (+X)
+      if (wx > padXMax) {
         const distFront = wx - padXMax;
-        elev = Math.max(-10, -distFront * 0.16 + Math.cos(wz * 0.08) * 0.35);
+        // Drops from terrace curb down into the lower yard
+        const valleyDrop = -1.2 - distFront * 0.26 + Math.cos(wz * 0.08) * 0.35;
+        return Math.max(-14, valleyDrop);
       }
 
-      const sideDist = Math.max(0, padZMin - wz, wz - padZMax);
-      if (sideDist > 0) {
-        const factor = Math.min(1, sideDist / 12);
-        const baseline = (wx < 0 ? (padXMin - wx) * 0.18 : -(wx - padXMax) * 0.14);
-        elev = elev * (1 - factor * 0.3) + baseline * (factor * 0.3);
-      }
-
-      return elev;
+      // Flanks beside the house (between padXMin and padXMax, but outside padZ)
+      const sideDist = Math.max(padZMin - wz, wz - padZMax);
+      const sideRamp = Math.min(1.0, sideDist / 3.5);
+      const t = (wx - padXMin) / (padXMax - padXMin); // 0 at back, 1 at front
+      const flankHeight = (2.0 * (1 - t) - 1.2 * t);
+      return flankHeight * sideRamp;
     }
 
-    const slopeGeo = new THREE.PlaneGeometry(1000, 1000, 100, 100);
+    // High resolution lot mesh (160x160 segments across 400m for smooth slopes)
+    const slopeGeo = new THREE.PlaneGeometry(400, 400, 160, 160);
     const pos = slopeGeo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
       const wx = pos.getX(i);
@@ -228,98 +272,118 @@ export function initRenderer(configData) {
     slopeGeo.computeVertexNormals();
 
     const slopeMat = new THREE.MeshStandardMaterial({
+      color: 0x909c85, // Muted mountain grass tint
       map: slopedTex,
-      roughness: 1.0,
+      roughness: 0.95,
     });
     const slopeMesh = new THREE.Mesh(slopeGeo, slopeMat);
     slopeMesh.rotation.x = -Math.PI / 2;
     slopeMesh.receiveShadow = true;
     environmentGroup.add(slopeMesh);
 
-    // 1. Leveled terrace ground apron (paved perimeter around the house)
+    // ── Architectural Cut-and-Fill Elements ──
+    // 1. Paved concrete terrace apron around the house
     const padL = padXMax - padXMin;
     const padW = padZMax - padZMin;
-    const apronGeo = new THREE.BoxGeometry(padL, 0.05, padW);
+    const apronGeo = new THREE.BoxGeometry(padL, 0.08, padW);
     const apronMat = new THREE.MeshStandardMaterial({
-      color: 0x9e988f,
+      color: 0x6e6860, // Realistic warm weathered concrete
       roughness: 0.9,
     });
     const apron = new THREE.Mesh(apronGeo, apronMat);
-    apron.position.set((padXMax + padXMin) / 2, -0.025, (padZMax + padZMin) / 2);
+    apron.position.set((padXMax + padXMin) / 2, -0.04, (padZMax + padZMin) / 2);
     apron.receiveShadow = true;
     environmentGroup.add(apron);
 
-    // 2. Concrete/masonry retaining wall directly behind the terrace
-    const wallZSpan = padW + 4;
+    // 2. Concrete Masonry Retaining Wall directly behind the terrace
+    const wallZSpan = padW + 3.0;
     const wallH = 2.4;
-    const backWallGeo = new THREE.BoxGeometry(0.4, wallH, wallZSpan);
+    const backWallGeo = new THREE.BoxGeometry(0.45, wallH, wallZSpan);
     const wallMat = new THREE.MeshStandardMaterial({
-      color: 0x827d75,
+      color: 0x5a5650,
+      map: chbWallTex,
       roughness: 0.85,
     });
     const backWall = new THREE.Mesh(backWallGeo, wallMat);
-    backWall.position.set(padXMin - 0.2, wallH / 2, 0);
+    backWall.position.set(padXMin - 0.22, wallH / 2, 0);
     backWall.castShadow = true;
     backWall.receiveShadow = true;
     environmentGroup.add(backWall);
 
-    const capGeo = new THREE.BoxGeometry(0.55, 0.12, wallZSpan + 0.1);
+    // Wall cap
+    const capGeo = new THREE.BoxGeometry(0.60, 0.15, wallZSpan + 0.15);
     const capMat = new THREE.MeshStandardMaterial({
-      color: 0xa8a49c,
+      color: 0x48443e,
       roughness: 0.8,
     });
     const cap = new THREE.Mesh(capGeo, capMat);
-    cap.position.set(padXMin - 0.2, wallH + 0.06, 0);
+    cap.position.set(padXMin - 0.22, wallH + 0.075, 0);
     cap.castShadow = true;
     environmentGroup.add(cap);
 
-    // 3. Lower terrace stem curb & steps in front of the house
-    const frontCurbGeo = new THREE.BoxGeometry(0.35, 1.2, wallZSpan);
+    // 3. Lower terrace stem curb in front of the house
+    const frontCurbGeo = new THREE.BoxGeometry(0.4, 1.25, wallZSpan);
     const frontCurb = new THREE.Mesh(frontCurbGeo, wallMat);
-    frontCurb.position.set(padXMax + 0.175, -0.6, 0);
+    frontCurb.position.set(padXMax + 0.2, -0.625, 0);
     frontCurb.receiveShadow = true;
     frontCurb.castShadow = true;
     environmentGroup.add(frontCurb);
 
-    for (let s = 1; s <= 3; s++) {
-      const stepGeo = new THREE.BoxGeometry(0.6, 0.35, 2.6);
-      const step = new THREE.Mesh(stepGeo, capMat);
-      step.position.set(padXMax + 0.3 + (s * 0.35), -0.35 * s + 0.175, 0);
+    // Concrete steps connecting terrace to the lower slope
+    const stepMat = new THREE.MeshStandardMaterial({
+      color: 0x58534c,
+      roughness: 0.85,
+    });
+    const stepCount = 4;
+    const stepW = 2.4;
+    const stepD = 0.45;
+    const stepH = 1.25 / stepCount;
+    for (let s = 1; s <= stepCount; s++) {
+      const stepGeo = new THREE.BoxGeometry(stepD, stepH, stepW);
+      const step = new THREE.Mesh(stepGeo, stepMat);
+      step.position.set(
+        padXMax + 0.2 + (s * (stepD * 0.85)),
+        -(s - 0.5) * stepH,
+        0
+      );
       step.receiveShadow = true;
       step.castShadow = true;
       environmentGroup.add(step);
     }
 
-    // 4. Hillside trees on the slopes
-    makeTree(padXMin - 6, -8, 6.0, getSlopeElevation(padXMin - 6, -8));
-    makeTree(padXMin - 9, 6, 6.5, getSlopeElevation(padXMin - 9, 6));
-    makeTree(padXMin - 12, -2, 7.0, getSlopeElevation(padXMin - 12, -2));
-    makeTree(padXMax + 9, -7, 4.5, getSlopeElevation(padXMax + 9, -7));
-    makeTree(padXMax + 12, 8, 4.8, getSlopeElevation(padXMax + 12, 8));
-    makeTree(0, padZMax + 5, 5.0, getSlopeElevation(0, padZMax + 5));
-    makeTree(-2, padZMin - 5, 5.2, getSlopeElevation(-2, padZMin - 5));
+    // 4. Hillside trees placed on upper ridge and lower valley
+    makeTree(padXMin - 8, -9, 6.5, getSlopeElevation(padXMin - 8, -9), 0x1f3c1a, 0x36281b);
+    makeTree(padXMin - 12, 7, 7.0, getSlopeElevation(padXMin - 12, 7), 0x22421d, 0x382a1d);
+    makeTree(padXMin - 16, -2, 7.5, getSlopeElevation(padXMin - 16, -2), 0x1d3817, 0x322518);
+    makeTree(padXMax + 8, -9, 4.5, getSlopeElevation(padXMax + 8, -9), 0x264820, 0x3a2c1e);
+    makeTree(padXMax + 12, 8, 4.8, getSlopeElevation(padXMax + 12, 8), 0x24441e, 0x36281b);
+    makeTree(-1, padZMax + 5, 5.2, getSlopeElevation(-1, padZMax + 5), 0x203e1b, 0x34261a);
+    makeTree(-2, padZMin - 5, 5.2, getSlopeElevation(-2, padZMin - 5), 0x21401c, 0x36281b);
   }
 
   function buildRockyScene() {
+    // 1. Procedural Dark Rocky Soil & Bedrock Texture
     const c = document.createElement("canvas");
     c.width = 512;
     c.height = 512;
     const ctx = c.getContext("2d");
-    ctx.fillStyle = "#5d574f";
+    ctx.fillStyle = "#3a342d"; // Rich dark charcoal earth base
     ctx.fillRect(0, 0, 512, 512);
 
+    // Multi-shade gravel, graphite, and moss speckles
     for (let i = 0; i < 35000; i++) {
       const x = Math.random() * 512;
       const y = Math.random() * 512;
       const col = Math.random();
-      if (col > 0.75) ctx.fillStyle = "#3d3832";
-      else if (col > 0.5) ctx.fillStyle = "#7a7266";
-      else if (col > 0.25) ctx.fillStyle = "#8a7f70";
-      else ctx.fillStyle = "#555b46";
+      if (col > 0.75) ctx.fillStyle = "#221f1b";      // Deep basalt
+      else if (col > 0.5) ctx.fillStyle = "#544d43";  // Granite speck
+      else if (col > 0.25) ctx.fillStyle = "#63594b"; // Earth pebble
+      else ctx.fillStyle = "#3e4732";                 // Hardy alpine moss
       ctx.fillRect(x, y, Math.random() * 3 + 1, Math.random() * 3 + 1);
     }
 
-    ctx.strokeStyle = "#272420";
+    // Mineral fissures & cracks
+    ctx.strokeStyle = "#1a1815";
     ctx.lineWidth = 1.6;
     for (let i = 0; i < 50; i++) {
       let cx = Math.random() * 512;
@@ -328,8 +392,8 @@ export function initRenderer(configData) {
       ctx.moveTo(cx, cy);
       const segments = Math.floor(Math.random() * 4) + 2;
       for (let s = 0; s < segments; s++) {
-        cx += (Math.random() - 0.5) * 45;
-        cy += (Math.random() - 0.5) * 45;
+        cx += (Math.random() - 0.5) * 40;
+        cy += (Math.random() - 0.5) * 40;
         ctx.lineTo(cx, cy);
       }
       ctx.stroke();
@@ -337,16 +401,16 @@ export function initRenderer(configData) {
 
     const rockyTex = new THREE.CanvasTexture(c);
     rockyTex.wrapS = rockyTex.wrapT = THREE.RepeatWrapping;
-    rockyTex.repeat.set(60, 60);
+    rockyTex.repeat.set(40, 40);
 
-    const padXMin = -(houseFootprintL / 2 + 1.8);
-    const padXMax = +(houseFootprintL / 2 + 1.8);
-    const padZMin = -(houseFootprintW / 2 + 1.8);
-    const padZMax = +(houseFootprintW / 2 + 1.8);
+    const padXMin = -(houseFootprintL / 2 + 1.5);
+    const padXMax = +(houseFootprintL / 2 + 1.5);
+    const padZMin = -(houseFootprintW / 2 + 1.5);
+    const padZMax = +(houseFootprintW / 2 + 1.5);
 
     function getRockyElevation(wx, wz) {
       if (wx >= padXMin && wx <= padXMax && wz >= padZMin && wz <= padZMax) {
-        return 0;
+        return 0; // Flat pad for house stability
       }
       const dist = Math.max(
         0,
@@ -355,14 +419,13 @@ export function initRenderer(configData) {
         padZMin - wz,
         wz - padZMax
       );
-      const ramp = Math.min(1.0, dist / 3.0);
-      const wave1 = Math.sin(wx * 0.18) * Math.cos(wz * 0.18) * 0.65;
-      const wave2 = Math.sin(wx * 0.42 + wz * 0.35) * 0.30;
-      const wave3 = Math.cos(wx * 0.75 - wz * 0.60) * 0.15;
-      return (wave1 + wave2 + wave3) * ramp;
+      const ramp = Math.min(1.0, dist / 4.0);
+      const wave1 = Math.sin(wx * 0.16) * Math.cos(wz * 0.16) * 0.50;
+      const wave2 = Math.sin(wx * 0.38 + wz * 0.32) * 0.22;
+      return (wave1 + wave2) * ramp;
     }
 
-    const rockGeo = new THREE.PlaneGeometry(1000, 1000, 100, 100);
+    const rockGeo = new THREE.PlaneGeometry(400, 400, 140, 140);
     const pos = rockGeo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
       const wx = pos.getX(i);
@@ -373,8 +436,9 @@ export function initRenderer(configData) {
     rockGeo.computeVertexNormals();
 
     const rockMat = new THREE.MeshStandardMaterial({
+      color: 0x6e6456, // Dark warm stone tint (prevents sunlight washout)
       map: rockyTex,
-      roughness: 1.0,
+      roughness: 0.95,
       metalness: 0.05,
     });
     const rockGround = new THREE.Mesh(rockGeo, rockMat);
@@ -382,79 +446,117 @@ export function initRenderer(configData) {
     rockGround.receiveShadow = true;
     environmentGroup.add(rockGround);
 
+    // 2. Realistic, Naturally-Faceted 3D Boulders (Clean low-poly, no crumpled mesh)
     const boulderMatDark = new THREE.MeshStandardMaterial({
-      color: 0x544e47,
+      color: 0x34302a, // Deep slate basalt
       roughness: 0.95,
       metalness: 0.05,
     });
     const boulderMatMid = new THREE.MeshStandardMaterial({
-      color: 0x6e685f,
+      color: 0x484239, // Weathered granite
       roughness: 0.95,
       metalness: 0.05,
     });
     const boulderMatLight = new THREE.MeshStandardMaterial({
-      color: 0x827a70,
+      color: 0x5a5247, // Sandstone outcrop
       roughness: 0.95,
       metalness: 0.05,
     });
 
-    function makeBoulder(x, z, scale, rotY, mat = boulderMatMid) {
-      const geo = new THREE.DodecahedronGeometry(scale, 1);
+    function makeNaturalBoulder(x, z, scaleX, scaleY, scaleZ, rotY, mat = boulderMatMid) {
+      // Dodecahedron with detail 0 has 12 natural facets
+      const geo = new THREE.DodecahedronGeometry(1.0, 0);
       const p = geo.attributes.position;
       for (let i = 0; i < p.count; i++) {
         const vx = p.getX(i);
         const vy = p.getY(i);
         const vz = p.getZ(i);
-        const deform = 0.8 + 0.35 * Math.sin(vx * 3.7 + vy * 5.1 + vz * 2.3);
-        p.setXYZ(i, vx * deform, vy * (deform * 0.75), vz * deform);
+        // Subtle organic variation (5-8% max deformation to keep natural stone shape)
+        const perturb = 0.94 + 0.10 * Math.sin(vx * 2.8 + vy * 3.7 + vz * 2.1);
+        p.setXYZ(i, vx * perturb * scaleX, vy * perturb * scaleY, vz * perturb * scaleZ);
       }
       p.needsUpdate = true;
       geo.computeVertexNormals();
 
       const mesh = new THREE.Mesh(geo, mat);
       const groundY = getRockyElevation(x, z);
-      mesh.position.set(x, groundY + scale * 0.45, z);
-      mesh.rotation.set(Math.sin(x) * 0.2, rotY, Math.cos(z) * 0.2);
+      // Embed bottom naturally into soil (rocks look grounded, not floating)
+      mesh.position.set(x, groundY + scaleY * 0.35, z);
+      mesh.rotation.set(0.1 * Math.sin(x), rotY, 0.1 * Math.cos(z));
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       environmentGroup.add(mesh);
     }
 
-    const boulderList = [
-      [-7.5, -7.5, 1.4, 0.4, boulderMatMid],
-      [-9.0, -6.8, 1.0, 1.2, boulderMatDark],
-      [-6.5, -8.8, 0.7, 2.1, boulderMatLight],
-      [-8.2, -9.0, 1.2, 0.8, boulderMatMid],
-      [8.5, -6.5, 1.5, 1.9, boulderMatMid],
-      [7.2, -7.8, 0.8, 0.5, boulderMatLight],
-      [10.2, -5.5, 1.2, 2.7, boulderMatDark],
-      [9.4, -8.0, 0.6, 1.1, boulderMatMid],
-      [-9.2, 7.0, 1.8, 2.3, boulderMatDark],
-      [-11.0, 5.8, 1.1, 0.9, boulderMatMid],
-      [-8.0, 8.8, 0.8, 1.7, boulderMatLight],
-      [-11.5, 8.2, 1.3, 3.0, boulderMatMid],
-      [9.0, 7.8, 1.6, 0.7, boulderMatMid],
-      [10.8, 8.8, 1.1, 2.2, boulderMatDark],
-      [7.8, 9.2, 0.8, 1.4, boulderMatLight],
-      [12.0, 7.0, 0.9, 0.3, boulderMatMid],
-      [-14.0, 0.5, 2.8, 1.5, boulderMatDark],
-      [14.5, 1.8, 2.4, 2.8, boulderMatMid],
-      [-3.0, 12.0, 2.1, 0.6, boulderMatDark],
-      [4.0, -11.5, 1.9, 2.0, boulderMatMid],
-      [padXMin - 0.7, padZMin - 0.5, 0.45, 0.9, boulderMatMid],
-      [padXMax + 0.8, padZMin - 0.6, 0.40, 1.8, boulderMatLight],
-      [padXMin - 0.6, padZMax + 0.7, 0.50, 2.4, boulderMatDark],
-      [padXMax + 0.7, padZMax + 0.6, 0.42, 0.5, boulderMatMid],
+    // Organic clusters of parent boulders and smaller satellite rocks
+    const rocks = [
+      // Cluster 1 (Left front)
+      [-6.5, -6.5, 0.85, 0.60, 0.80, 0.4, boulderMatMid],
+      [-7.8, -5.8, 0.50, 0.35, 0.45, 1.2, boulderMatDark],
+      [-5.6, -7.4, 0.40, 0.28, 0.38, 2.1, boulderMatLight],
+
+      // Cluster 2 (Right front)
+      [7.5, -5.8, 0.90, 0.65, 0.85, 1.8, boulderMatMid],
+      [6.4, -6.8, 0.45, 0.30, 0.42, 0.6, boulderMatLight],
+      [8.7, -5.0, 0.55, 0.38, 0.50, 2.5, boulderMatDark],
+
+      // Cluster 3 (Left rear)
+      [-8.0, 6.2, 1.00, 0.70, 0.90, 2.2, boulderMatDark],
+      [-9.4, 5.2, 0.55, 0.38, 0.50, 0.8, boulderMatMid],
+      [-7.2, 7.5, 0.42, 0.28, 0.40, 1.6, boulderMatLight],
+
+      // Cluster 4 (Right rear)
+      [7.8, 6.8, 0.95, 0.68, 0.85, 0.9, boulderMatMid],
+      [9.2, 7.8, 0.55, 0.36, 0.48, 2.3, boulderMatDark],
+      [6.8, 8.0, 0.40, 0.26, 0.38, 1.3, boulderMatLight],
+
+      // Solitary accent boulders near property perimeter
+      [-11.5, -0.5, 1.15, 0.80, 1.05, 1.4, boulderMatDark],
+      [11.5, 1.2, 1.10, 0.75, 1.00, 2.7, boulderMatMid],
+      [-2.5, 9.5, 0.75, 0.52, 0.70, 0.7, boulderMatDark],
+      [3.2, -9.0, 0.80, 0.55, 0.75, 1.9, boulderMatMid],
     ];
 
-    boulderList.forEach(([x, z, s, r, m]) => makeBoulder(x, z, s, r, m));
+    rocks.forEach(([x, z, sx, sy, sz, r, m]) => makeNaturalBoulder(x, z, sx, sy, sz, r, m));
 
-    makeTree(-10, -8, 5.2, getRockyElevation(-10, -8), 0x223c28, 0x362b21);
-    makeTree(11, -5, 4.4, getRockyElevation(11, -5), 0x24422b, 0x382c22);
-    makeTree(-11, 9, 4.8, getRockyElevation(-11, 9), 0x1f3624, 0x342920);
-    makeTree(12, 9, 3.8, getRockyElevation(12, 9), 0x233e29, 0x362b21);
+    // 3. Hardy Mountain Pine Trees (Multi-tiered evergreen conifers)
+    function makePineTree(x, z, h, y = 0) {
+      const trunkGeo = new THREE.CylinderGeometry(0.14, 0.20, h * 0.35, 7);
+      const trunkMat = new THREE.MeshStandardMaterial({
+        color: 0x2e2319, // Dark weathered bark
+        roughness: 1.0,
+      });
+      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.set(x, y + h * 0.175, z);
+      trunk.castShadow = true;
+      trunk.receiveShadow = true;
+      environmentGroup.add(trunk);
+
+      const foliageMat = new THREE.MeshStandardMaterial({
+        color: 0x1d3822, // Alpine evergreen needle green
+        roughness: 0.9,
+      });
+
+      // 3 overlapping conical needle tiers
+      const tiers = [
+        { r: h * 0.32, th: h * 0.35, py: h * 0.35 },
+        { r: h * 0.25, th: h * 0.32, py: h * 0.55 },
+        { r: h * 0.17, th: h * 0.28, py: h * 0.75 },
+      ];
+      tiers.forEach((t) => {
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(t.r, t.th, 7), foliageMat);
+        cone.position.set(x, y + t.py, z);
+        cone.castShadow = true;
+        cone.receiveShadow = true;
+        environmentGroup.add(cone);
+      });
+    }
+
+    makePineTree(-9.5, -7.5, 5.0, getRockyElevation(-9.5, -7.5));
+    makePineTree(10.2, -4.8, 4.4, getRockyElevation(10.2, -4.8));
+    makePineTree(-10.2, 8.2, 4.8, getRockyElevation(-10.2, 8.2));
+    makePineTree(10.8, 8.0, 4.0, getRockyElevation(10.8, 8.0));
   }
-
   // Dispatch appropriate terrain scene
   if (isSloped) {
     buildSlopedScene();
