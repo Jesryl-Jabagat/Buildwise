@@ -12,23 +12,29 @@ export function estimate(data) {
   const D = F.calcGlobalDerived(L, W, wallHeight, data.soilCondition);
   const sections = [];
 
+  const totalBeds = data.bedrooms || data.bedrooms1F || 0;
+  const totalCRs = data.bathrooms || data.crs || data.crs1F || 0;
+
+  // Exterior door (~1.89 sqm) and window openings (~1.2 sqm each) deducted from exterior wall area
+  const numExteriorWindows = Math.max(2, totalBeds + 1);
+  const exteriorOpeningsArea = 1.89 + (numExteriorWindows * 1.2);
+
   sections.push(F.calcFootingsAndColumns1Storey(D.numCols, D.soilMultiplier));
   sections.push(F.calcGroundSlab(D.floorArea));
-  sections.push(F.calcFullCHBWalls(D.wallArea));
+  sections.push(F.calcFullCHBWalls(D.wallArea, exteriorOpeningsArea));
   sections.push(F.calcRoofing(L, W, data.roofType));
   
-  sections.push(F.calcBedroomsTableB(data.bedrooms || data.bedrooms1F || 0));
-  sections.push(F.calcCRsTableB(data.crs || data.bathrooms || data.crs1F || 0));
+  sections.push(F.calcBedroomsTableB(totalBeds));
+  sections.push(F.calcCRsTableB(totalCRs));
 
-  if (data.includePlastering) sections.push(F.calcPlastering(D.wallArea));
-  if (data.includePainting) sections.push(F.calcPainting(D.wallArea));
+  const netWallArea = Math.max(0, D.wallArea - exteriorOpeningsArea);
+  if (data.includePlastering) sections.push(F.calcPlastering(netWallArea));
+  if (data.includePainting) sections.push(F.calcPainting(netWallArea));
   if (data.applyTilesGround) sections.push(F.calcTiling(D.floorArea, data.tileSize || "60x60", data.tileBreakage || 5));
   if (data.hasCeiling) sections.push(F.calcCeiling(D.floorArea, L, W, data.ceilingWastage || 5));
 
   sections.push(F.calcEarthworks(D.floorArea, D.totalWallLength));
   sections.push(F.calcFormworks(D.floorArea));
-  const totalBeds = data.bedrooms || 0;
-  const totalCRs = data.bathrooms || data.crs || 0;
   sections.push(F.calcDoorsAndWindows(totalBeds, totalCRs, data.materialGrade));
   if (data.includePlumbing !== false) { sections.push(F.calcPlumbing(totalCRs, 1)); }
   if (data.includeElectrical !== false) { sections.push(F.calcElectrical(D.floorArea, totalBeds, totalCRs, data.includeACwiring)); }

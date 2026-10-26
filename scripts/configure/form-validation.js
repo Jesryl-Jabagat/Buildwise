@@ -67,9 +67,10 @@ export function getUserInput(form) {
       continue;
     }
 
-    // Convert percentage strings (e.g. "10%" → 0.1)
+    // Convert percentage strings (e.g. "10%" -> 10 as whole number).
+    // Formula functions (calcCeiling, calcTiling) divide by 100 themselves.
     if (cleanVal.endsWith("%")) {
-      data[key] = parseFloat(cleanVal.replace("%", "")) / 100;
+      data[key] = parseFloat(cleanVal.replace("%", ""));
       continue;
     }
 
@@ -109,6 +110,11 @@ export function getUserInput(form) {
 
   if (data.groundWallHeight  && data.groundWallHeight  < 2) { alert("Wall height must be at least 2 meters."); return null; }
   if (data.secondFloorWallHeight && data.secondFloorWallHeight < 2) { alert("Wall height must be at least 2 meters."); return null; }
+
+  if (data.chbBaseWallHeight !== undefined && data.chbBaseWallHeight > 1.5) {
+    alert("CHB base wall height cannot exceed 1.5 meters for half-wall construction.");
+    return null;
+  }
 
   const gfArea   = l1 * w1;
   const mezzArea = l2 * w2;

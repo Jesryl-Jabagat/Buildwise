@@ -2,26 +2,28 @@
    walling.js — CHB walls and light wall cladding
    ============================================================ */
 
-export function calcFullCHBWalls(wallArea) {
-  const totalCHB = Math.ceil(wallArea * 12.5 * 1.05);
+export function calcFullCHBWalls(wallArea, openingDeduction = 0) {
+  const netArea = Math.max(0, wallArea - openingDeduction);
+  const totalCHB = Math.ceil(netArea * 12.5 * 1.05);
   return {
     chb: totalCHB,
-    cement: wallArea * 0.525,
-    screenedSand: wallArea * 0.0438,
-    rebar10mm: Math.ceil((wallArea * 1.5 / 6) + (wallArea * 1.2 / 6))
+    cement: netArea * 0.525,
+    screenedSand: netArea * 0.0438,
+    rebar10mm: Math.ceil((netArea * 1.5 / 6) + (netArea * 1.2 / 6))
   };
 }
 
-export function calcHalfCHBWalls(length, width, chbBaseWallHeight) {
+export function calcHalfCHBWalls(length, width, chbBaseWallHeight, openingDeduction = 0) {
   const totalWallLength = (length + width) * 2;
   const lowerWallAreaSqm = totalWallLength * chbBaseWallHeight;
-  const totalCHB = Math.ceil((lowerWallAreaSqm * 12.5) * 1.05);
+  const netArea = Math.max(0, lowerWallAreaSqm - openingDeduction);
+  const totalCHB = Math.ceil((netArea * 12.5) * 1.05);
   return {
-    chbWallArea: lowerWallAreaSqm, 
+    chbWallArea: netArea, 
     chb: totalCHB,
-    cement: lowerWallAreaSqm * 0.525,
-    screenedSand: lowerWallAreaSqm * 0.0438,
-    rebar10mm: Math.ceil((lowerWallAreaSqm * 1.5 / 6) + (lowerWallAreaSqm * 1.2 / 6))
+    cement: netArea * 0.525,
+    screenedSand: netArea * 0.0438,
+    rebar10mm: Math.ceil((netArea * 1.5 / 6) + (netArea * 1.2 / 6))
   };
 }
 
