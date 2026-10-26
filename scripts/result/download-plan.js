@@ -35,15 +35,25 @@ function setupPDFPage() {
     if (!estimateData.error) {
         document.getElementById("pdf-estimate").innerText = currency.format(estimateData.summary.grandTotal);
         
-        // Summarized Materials List
+        // Full Materials List (all items)
         const matTbody = document.getElementById("pdf-materials-tbody");
         estimateData.materialsList.forEach(cat => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td style="font-weight: 500;">${cat.category}</td>
-                <td class="text-end">${currency.format(cat.total)}</td>
+            // Category header row
+            const catRow = document.createElement("tr");
+            catRow.innerHTML = `
+                <td colspan="3" style="font-weight: 700; background: #f5f7f4; padding: 4px 6px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #1f7a5c;">${cat.category}</td>
             `;
-            matTbody.appendChild(tr);
+            matTbody.appendChild(catRow);
+            // Individual item rows
+            cat.items.forEach(item => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td style="padding-left: 12px;">${item.name}</td>
+                    <td class="text-center" style="white-space:nowrap;">${item.qty} ${item.unit || ''}</td>
+                    <td class="text-end">${currency.format(item.total)}</td>
+                `;
+                matTbody.appendChild(tr);
+            });
         });
         document.getElementById("pdf-materials-total").innerText = currency.format(estimateData.summary.totalMaterials);
         
