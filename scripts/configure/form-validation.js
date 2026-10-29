@@ -118,7 +118,7 @@ export function getUserInput(form) {
 
   const gfArea   = l1 * w1;
   const mezzArea = l2 * w2;
-  if (submittedTypeKey === "loft" && mezzArea > (0.5 * gfArea)) {
+  if (submittedTypeKey === "loft" && mezzArea > (0.5 * gfArea) + 0.001) {
     alert("Mezzanine floor cannot exceed 50% of the ground floor area per building code.");
     return null;
   }

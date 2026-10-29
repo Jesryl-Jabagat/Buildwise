@@ -64,7 +64,7 @@ export function validateInputs(data, houseType) {
   if (houseType === "loft") {
     const mezzLength = data.mezzanineLength || 0;
     const mezzWidth = data.mezzanineWidth || 0;
-    if (mezzLength * mezzWidth > floorArea * 0.50) {
+    if (mezzLength * mezzWidth > (floorArea * 0.50) + 0.001) {
       return "Mezzanine area cannot exceed 50% of the ground floor area.";
     }
   }

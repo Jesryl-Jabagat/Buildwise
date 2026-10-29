@@ -13,7 +13,7 @@ export function estimate(data) {
   const mezzanineWidth = data.mezzanineWidth || 0;
   const floor2Area = mezzanineLength * mezzanineWidth;
   
-  if (floor2Area > (L * W * 0.50)) {
+  if (floor2Area > (L * W * 0.50) + 0.001) {
     return "Error: Mezzanine area cannot exceed 50% of the ground floor area.";
   }
   

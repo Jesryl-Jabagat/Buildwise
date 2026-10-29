@@ -266,6 +266,23 @@ export function wireFloorAreaDisplay(form) {
     }
     const display = container.querySelector("#liveFloorAreaDisplay");
     if (display) display.textContent = total.toFixed(2) + " sqm";
+
+    const guidance = form.querySelector("#loftMezzanineGuidance");
+    if (guidance && form.dataset.type === "loft") {
+      const gfA = (parseFloat(l1Input.value) || 0) * (parseFloat(w1Input.value) || 0);
+      const mLen = parseFloat(l2Input ? l2Input.value : 0) || 0;
+      const mW = parseFloat(w2Input ? w2Input.value : 0) || 0;
+      const mArea = mLen * mW;
+      const maxArea = gfA * 0.50;
+
+      if (mArea > maxArea + 0.001) {
+        guidance.textContent = "Exceeds 50% building code limit! Max allowable: " + maxArea.toFixed(1) + " sqm (Current: " + mArea.toFixed(1) + " sqm).";
+        guidance.className = "small mt-1 text-danger fw-bold";
+      } else {
+        guidance.textContent = "Mezzanine: " + mArea.toFixed(1) + " sqm / " + maxArea.toFixed(1) + " sqm max (50% limit).";
+        guidance.className = "small mt-1 text-muted";
+      }
+    }
   }
 
   l1Input.addEventListener("input", updateArea);
