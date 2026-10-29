@@ -286,11 +286,19 @@ export function wireFloorAreaDisplay(form) {
   }
 
   l1Input.addEventListener("input", updateArea);
-  w1Input.addEventListener("input", updateArea);
+  w1Input.addEventListener("input", () => {
+    if (form.dataset.type === "loft" && w2Input) {
+      w2Input.value = w1Input.value;
+    }
+    updateArea();
+  });
   if (l2Input && w2Input) {
     l2Input.addEventListener("input", updateArea);
     w2Input.addEventListener("input", updateArea);
   }
 
+  if (form.dataset.type === "loft" && w2Input && w1Input) {
+    w2Input.value = w1Input.value;
+  }
   updateArea();
 }

@@ -1,5 +1,5 @@
 import { DEFAULT_TIER_CATALOG, getEffectiveCatalog, syncMaterialsFromDb, refreshCustomPrices } from './estimator/prices.js';
-import { DEFAULT_LABOR_RATES, DEFAULT_LABOR_MULTIPLIERS, refreshCustomLabor } from './estimator/labor.js';
+import { DEFAULT_LABOR_RATES, DEFAULT_LABOR_MULTIPLIERS, refreshCustomLabor, syncLaborFromDb } from './estimator/labor.js';
 import { DEFAULT_TOOLS_LIST, getEffectiveTools, syncToolsFromDb, refreshCustomTools } from './estimator/tools.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         topBar.className = 'top-action-bar';
         topBar.innerHTML = `
             <div class="search-bar-wrap" style="flex:1; margin-bottom:0;">
-                <input type="text" id="material-search" placeholder="🔍 Search material name, brand, or category..." value="${searchTerm}">
+                <input type="text" id="material-search" placeholder="ðŸ” Search material name, brand, or category..." value="${searchTerm}">
             </div>
         `;
         container.appendChild(topBar);
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (const [catName, items] of Object.entries(grouped)) {
             const catHeader = document.createElement('h3');
             catHeader.style.cssText = 'color:var(--color-accent); font-size:1.15rem; margin: 25px 0 12px; border-bottom: 1px dashed var(--color-border); padding-bottom: 6px;';
-            catHeader.textContent = `📁 ${catName}`;
+            catHeader.textContent = `ðŸ“ ${catName}`;
             catHeader.className = 'cat-section-title';
             catalogCard.appendChild(catHeader);
 
@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 row.innerHTML = `
                     <div class="tier-item-header">
                         <span class="tier-item-title">${item.key}</span>
-                        <span class="tier-item-meta">${catName} • [${item.unit || 'unit'}]</span>
+                        <span class="tier-item-meta">${catName} â€¢ [${item.unit || 'unit'}]</span>
                     </div>
                     <div class="tier-columns-grid">
                         <!-- BASIC TIER -->
@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         topBar.className = 'top-action-bar';
         topBar.innerHTML = `
             <div class="search-bar-wrap" style="flex:1; margin-bottom:0;">
-                <input type="text" id="tool-search" placeholder="🔍 Search tool name or category..." value="${toolSearchTerm}">
+                <input type="text" id="tool-search" placeholder="ðŸ” Search tool name or category..." value="${toolSearchTerm}">
             </div>
         `;
         container.appendChild(topBar);
@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (const [catName, items] of Object.entries(grouped)) {
             const catHeader = document.createElement('h3');
             catHeader.style.cssText = 'color:var(--color-accent); font-size:1.15rem; margin: 25px 0 12px; border-bottom: 1px dashed var(--color-border); padding-bottom: 6px;';
-            catHeader.textContent = `🛠️ ${catName}`;
+            catHeader.textContent = `ðŸ› ï¸ ${catName}`;
             catHeader.className = 'cat-section-title';
             toolsCard.appendChild(catHeader);
 
@@ -423,6 +423,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             localStorage.setItem('buildwise-custom-labor', JSON.stringify(newCustomLabor));
             refreshCustomLabor();
+
+            // Background sync labor rates to database
+            laborRateInputs.forEach(input => {
+                const role = input.getAttribute('data-labor-rate');
+                const val = parseFloat(input.value) || 0;
+                fetch('/api/labor', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role_key: role, daily_wage: val })
+                }).catch(err => console.warn(Error syncing labor rate ${role} to DB:, err));
+            });
+
+            // Background sync labor multipliers to database
+            laborMultInputs.forEach(input => {
+                const type = input.getAttribute('data-labor-mult');
+                const val = (parseFloat(input.value) || 0) / 100;
+                fetch('/api/labor?type=multiplier', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type_key: type, multiplier: val })
+                }).catch(err => console.warn(Error syncing labor multiplier ${type} to DB:, err));
+            });
 
             // 3. Gather Tools updates
             const toolPriceInputs = container.querySelectorAll('input[data-tool-key]');

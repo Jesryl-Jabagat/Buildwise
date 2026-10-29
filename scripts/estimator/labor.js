@@ -1,4 +1,37 @@
-// scripts/estimator/labor.js
+﻿// scripts/estimator/labor.js
+
+// ─── DB Sync ────────────────────────────────────────────────────────────────
+// Fetches live labor rates and multipliers from the database and updates
+// the local cache + localStorage so getLaborRates() / getLaborMultiplier()
+// always reflect the latest admin-set values without needing a page reload.
+export async function syncLaborFromDb() {
+    if (typeof fetch !== "function") return;
+    try {
+        const res = await fetch("/api/labor");
+        if (!res.ok) return;
+        const json = await res.json();
+        if (json && json.success) {
+            const newRates = {};
+            const newMultipliers = {};
+            if (Array.isArray(json.rates)) {
+                json.rates.forEach(r => {
+                    newRates[r.role_key] = parseFloat(r.daily_wage);
+                });
+            }
+            if (Array.isArray(json.multipliers)) {
+                json.multipliers.forEach(m => {
+                    newMultipliers[m.type_key] = parseFloat(m.multiplier);
+                });
+            }
+            cachedCustomLabor = { rates: newRates, multipliers: newMultipliers };
+            if (typeof window !== "undefined" && window.localStorage) {
+                localStorage.setItem("buildwise-custom-labor", JSON.stringify(cachedCustomLabor));
+            }
+        }
+    } catch (err) {
+        console.warn("Could not sync labor from database, using cached/defaults", err);
+    }
+}
 
 export const DEFAULT_LABOR_RATES = {
     "Lead Carpenter / Master Builder": 550,
@@ -79,4 +112,9 @@ export function getLaborMultiplier(typeKey) {
     }
     
     return DEFAULT_LABOR_MULTIPLIERS[key];
+}
+
+// Background sync from database on page load
+if (typeof window !== "undefined" && typeof fetch === "function") {
+    syncLaborFromDb().catch(() => {});
 }

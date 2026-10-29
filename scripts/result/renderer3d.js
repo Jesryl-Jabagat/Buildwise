@@ -1672,7 +1672,10 @@ export function initRenderer(configData) {
       W2 = W;
     } else if (type === "Loft Style") {
       L2 = parseFloat(configData.mezzanineLength) || L2;
-      W2 = parseFloat(configData.mezzanineWidth) || W2;
+      W2 = parseFloat(configData.mezzanineWidth) || W;
+      // Mezzanine cannot exceed building footprint
+      W2 = Math.min(W, Math.max(1, W2));
+      L2 = Math.min(L * 0.85, Math.max(1, L2));
     }
     const H1 =
       parseFloat(configData.wallHeight) ||
@@ -1946,7 +1949,7 @@ export function initRenderer(configData) {
         estCrWidth = Math.min(1.8, (L - wt) / cr1) * cr1;
       }
       const minL2 = estCrWidth + 1.6 + wt; // 1.6 is stairs width, +wt to clear walls safely
-      if (L2 < minL2) L2 = minL2;
+      if (L2 < minL2) L2 = Math.min(L - 1.2, minL2);
     }
 
     // ---- 1. OUTER WALLS ----
@@ -2604,65 +2607,77 @@ export function initRenderer(configData) {
       buildRooms(bed1, cr1, 0, 0, L, W, H1, 0, wallMat, true, 1);
 
       if (type === "Loft Style") {
-        const ox = (L - L2) / 2,
-          oz = (W - W2) / 2;
-        const cy2 = H1 + 0.5; // Railing height = 1m
-        // 4 edges of the mezzanine acting as railing
+        const mezCX = -(L - L2) / 2;
+        const mezCZ = -(W - W2) / 2;
+        const cyRailing = H1 + 0.09 + 0.45; // Sits flush on top of the 0.18m mezzanine slab
+        const railH = 0.9;
+        const railThick = 0.08;
+
+        // 1. Sleek interior railing overlooking the double-height living area
+        const frontRailX = mezCX + L2 / 2 - railThick / 2;
+        const railZSpan = W2 - wt * 2;
         box(
-          L2,
-          1.0,
-          wt,
-          -ox,
-          cy2,
-          -oz - W2 / 2 + wt / 2,
+          railThick,
+          railH - 0.05,
+          railZSpan,
+          frontRailX,
+          cyRailing - 0.025,
+          mezCZ,
           wallMat2,
           wallGroup,
           true,
           "wall",
           2,
         );
+        // Handrail top cap
         box(
-          L2,
-          1.0,
-          wt,
-          -ox,
-          cy2,
-          -oz + W2 / 2 - wt / 2,
-          wallMat2,
+          railThick + 0.04,
+          0.05,
+          railZSpan,
+          frontRailX,
+          H1 + 0.09 + railH - 0.025,
+          mezCZ,
+          frameMat,
           wallGroup,
-          true,
-          "wall",
-          2,
-        );
-        box(
-          wt,
-          1.0,
-          W2 - wt * 2,
-          -ox - L2 / 2 + wt / 2,
-          cy2,
-          -oz,
-          wallMat2,
-          wallGroup,
-          true,
-          "wall",
-          2,
-        );
-        box(
-          wt,
-          1.0,
-          W2 - wt * 2,
-          -ox + L2 / 2 - wt / 2,
-          cy2,
-          -oz,
-          wallMat2,
-          wallGroup,
-          true,
+          false,
           "wall",
           2,
         );
 
-        buildRooms(bed2, cr2, -ox, -oz, L2, W2, 1.5, H1, wallMat2, true, 2);
-        addDimensionLabels(L2, W2, -ox, -oz, 2);
+        // 2. If mezzanine does not span full width, add railing along exposed side
+        if (W2 < W - 0.3) {
+          const sideRailZ = mezCZ + W2 / 2 - railThick / 2;
+          const sideRailXSpan = L2 - wt;
+          box(
+            sideRailXSpan,
+            railH - 0.05,
+            railThick,
+            mezCX + wt / 2,
+            cyRailing - 0.025,
+            sideRailZ,
+            wallMat2,
+            wallGroup,
+            true,
+            "wall",
+            2,
+          );
+          box(
+            sideRailXSpan,
+            0.05,
+            railThick + 0.04,
+            mezCX + wt / 2,
+            H1 + 0.09 + railH - 0.025,
+            sideRailZ,
+            frameMat,
+            wallGroup,
+            false,
+            "wall",
+            2,
+          );
+        }
+
+        buildRooms(bed2, cr2, mezCX, mezCZ, L2, W2, 1.5, H1, wallMat2, true, 2);
+        addDimensionLabels(L2, W2, mezCX, mezCZ, 2);
       }
     }
 
@@ -3279,7 +3294,7 @@ export function initRenderer(configData) {
       const maxHallwayDepth = W2 - bedDepth;
 
       // Define COMPRESSED L-shaped stairwell dimensions
-      const sw = 1.6; // Compressed width
+      const sw = Math.min(1.6, Math.max(1.0, (L2 - wt * 2) * 0.5)); // Scale with mezzanine size
       const sd = Math.min(2.1, maxHallwayDepth - 0.1); // Keep it just inside the hallway
       const landingSize = sw / 2;
 
@@ -3288,8 +3303,16 @@ export function initRenderer(configData) {
       const holeW = sw;
       const holeD = landingSize;
 
+      // Inset stairs and stairwell from outer walls so they never poke through exterior CHB
+      const stairInsetZ = wt + 0.04;
+      const stairInsetX = wt + 0.04;
+      const maxStairZ = slZ + W2 / 2 - stairInsetZ;
+      const stairCZ = maxStairZ - sd / 2;
+      const maxStairX = slX + L2 / 2 - stairInsetX;
+      const stairCX = maxStairX - sw / 2;
+
       // Piece 1: Back slab (Covers everything behind Flight 2, including covering Flight 1 and the landing)
-      const p1D = W2 - holeD;
+      const p1D = Math.max(0.05, W2 - holeD - stairInsetZ);
       if (p1D > 0.05) {
         box(
           L2,
@@ -3307,7 +3330,7 @@ export function initRenderer(configData) {
       }
 
       // Piece 2: Left slab (Covers the space beside Flight 2 at the front of the house)
-      const p2W = L2 - holeW;
+      const p2W = Math.max(0.05, L2 - holeW - stairInsetX);
       if (p2W > 0.05) {
         box(
           p2W,
@@ -3315,7 +3338,7 @@ export function initRenderer(configData) {
           holeD,
           slX - L2 / 2 + p2W / 2,
           H1,
-          slZ + W2 / 2 - holeD / 2,
+          stairCZ + sd / 2 - holeD / 2,
           slabMat2,
           slabGroup,
           true,
@@ -3325,8 +3348,6 @@ export function initRenderer(configData) {
       }
 
       // Generate stairs in the hole (Layer 1 so they only appear in 1st floor view)
-      const stairCX = slX + L2 / 2 - sw / 2;
-      const stairCZ = slZ + W2 / 2 - sd / 2;
       addStairs(stairCX, stairCZ, sw, sd, H1, slabMat2, 1);
     }
 
@@ -3356,8 +3377,10 @@ export function initRenderer(configData) {
          // Same for Loft Mezzanine footprint
         const inL2 = cx >= -L / 2 - 0.1 && cx <= -L / 2 + L2 + 0.1;
         const inW2 = cz >= -W / 2 - 0.1 && cz <= -W / 2 + W2 + 0.1;
-        if ((inL2 && inW2)) {
+        if (inL2 && inW2) {
            goesToSecondFloor = true;
+        } else {
+           actualH = H1;
         }
       }
 
