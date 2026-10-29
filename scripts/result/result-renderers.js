@@ -134,7 +134,7 @@ export function writeConstructionPhases(phases) {
 
 /**
  * Renders the detailed labor breakdown table.
- * @param {Array} breakdown - [{ role, dailyWage, days, total }, ...]
+ * @param {Array} breakdown - [{ role, workers, dailyWage, days, total }, ...]
  */
 export function writeLaborBreakdown(breakdown) {
   const container = document.getElementById("laborBreakdownTable");
@@ -144,9 +144,10 @@ export function writeLaborBreakdown(breakdown) {
     <table class="materials-tbl mt-3">
       <thead>
         <tr>
-          <th style="width: 40%;">Labor Role (DOLE Std)</th>
-          <th style="width: 20%; text-align: center;">Daily Wage</th>
-          <th style="width: 20%; text-align: center;">Est. Days</th>
+          <th style="width: 35%;">Labor Role (DOLE Std)</th>
+          <th style="width: 15%; text-align: center;">Workers</th>
+          <th style="width: 15%; text-align: center;">Daily Wage</th>
+          <th style="width: 15%; text-align: center;">Est. Days</th>
           <th style="width: 20%; text-align: right;">Total Bayad</th>
         </tr>
       </thead>
@@ -156,9 +157,10 @@ export function writeLaborBreakdown(breakdown) {
             (item) => `
           <tr>
             <td>${item.role}</td>
+            <td style="text-align: center; font-weight: 600;">${item.workers || 1}</td>
             <td style="text-align: center;">${currency.format(item.dailyWage)}</td>
             <td style="text-align: center;">${item.days}</td>
-            <td style="text-align: right;">${currency.format(item.total)}</td>
+            <td style="text-align: right; font-weight: 600;">${currency.format(item.total)}</td>
           </tr>
         `,
           )
@@ -166,6 +168,59 @@ export function writeLaborBreakdown(breakdown) {
       </tbody>
     </table>
   `;
+}
+
+/* --- Tools & Equipment List -------------------------------- */
+
+/**
+ * Renders the construction tools & equipment list table.
+ * @param {Object} toolsData - { tools, totalCost, displayMode }
+ */
+export function writeToolsTable(toolsData) {
+  const container = document.getElementById("toolsTable");
+  if (!container || !toolsData?.tools?.length) return;
+
+  const showPrice = toolsData.displayMode === "with-price";
+
+  // Group by category
+  const grouped = {};
+  toolsData.tools.forEach(tool => {
+    const cat = tool.category || "General";
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(tool);
+  });
+
+  container.innerHTML = Object.entries(grouped)
+    .map(([cat, items]) => `
+      <div class="materials-group">
+        <h3 class="materials-category">🛠️ ${cat}</h3>
+        <table class="materials-tbl">
+          <thead>
+            <tr>
+              <th style="width: ${showPrice ? '65%' : '80%'};">Tool / Equipment</th>
+              ${showPrice 
+                ? '<th style="width: 35%; text-align: right;">Estimated Unit Price</th>' 
+                : '<th style="width: 20%; text-align: center;">Status</th>'}
+            </tr>
+          </thead>
+          <tbody>
+            ${items
+              .map(
+                (item) => `
+              <tr>
+                <td>${item.tool_key}</td>
+                ${showPrice 
+                  ? `<td style="text-align: right;">${currency.format(parseFloat(item.unit_price) || 0)}</td>` 
+                  : `<td style="text-align: center;"><span class="badge bg-secondary">Included</span></td>`}
+              </tr>
+            `,
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+    `)
+    .join("");
 }
 
 /* --- Image Helpers ----------------------------------------- */
@@ -190,4 +245,48 @@ export function showImage(imgId, placeholderId, url) {
 export function setGeneratedImages({ houseRenderUrl, floorPlanUrl }) {
   showImage("houseRenderImg", "houseRenderPlaceholder", houseRenderUrl);
   showImage("floorPlanImg",   "floorPlanPlaceholder",   floorPlanUrl);
+}
+
+/* --- Budget Fit Badges ------------------------------------- */
+export function writeBudgetFitBadges(budgetFit) {
+  if (!budgetFit || budgetFit.status === "NO_BUDGET") return;
+  const container = document.getElementById("budgetBars")?.parentElement;
+  if (!container) return;
+  
+  const formatter = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  if (budgetFit.status === "UNDERFUNDED") {
+    const el = document.createElement("div");
+    el.className = "alert alert-danger mt-4";
+    el.innerHTML = `<strong>⚠️ Budget Underfunded</strong><br>Your budget is significantly below the minimum floor cost of <strong>${formatter.format(budgetFit.floorCost)}</strong> required to build the basic structural core. Please increase your budget or reduce the floor area to proceed.`;
+    container.insertBefore(el, document.getElementById("budgetBars"));
+    return;
+  }
+
+  const badgeHtml = `
+    <div class="mt-4 mb-4" style="background: var(--surface); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
+      <h4 style="margin-top:0; margin-bottom: 1rem; font-size: 1rem; color: var(--text-muted);">Budget Fit Engine</h4>
+      <div style="display:flex; flex-direction:column; gap: 0.8rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-left: 4px solid #f59e0b; padding-left: 10px;">
+          <span><strong>🏗️ Core</strong> <span class="badge bg-success ms-2">${budgetFit.coreGrade}</span></span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-left: 4px solid #3b82f6; padding-left: 10px;">
+          <span><strong>🔌 Utilities</strong> <span class="badge bg-secondary ms-2">${budgetFit.utilitiesGrade}</span></span>
+          ${budgetFit.utilityFlags?.length ? '<span style="font-size:0.85rem; color:var(--bs-danger);">⚠️ Constrained</span>' : ''}
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-left: 4px solid #10b981; padding-left: 10px;">
+          <span><strong>🎨 Finishes</strong> <span class="badge bg-secondary ms-2">${budgetFit.finishesGrade}</span></span>
+          <span style="font-size:0.85rem; color:var(--text-muted);">— Upgrades available</span>
+        </div>
+      </div>
+      <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display:flex; justify-content:space-between; font-size:0.9rem;">
+        <span><strong>Status:</strong> <span style="color:var(--bs-success)">${budgetFit.status}</span></span>
+        <span><strong>Floor Cost:</strong> ${formatter.format(budgetFit.floorCost)}</span>
+      </div>
+    </div>
+  `;
+  
+  const el = document.createElement("div");
+  el.innerHTML = badgeHtml;
+  container.insertBefore(el, document.getElementById("budgetBars"));
 }

@@ -70,9 +70,12 @@ export function validateInputs(data, houseType) {
   }
 
   if (houseType === "half-metal" || houseType === "half-amakan") {
-    const chbBaseWallHeight = data.chbBaseWallHeight || 1.5;
+    const chbBaseWallHeight = data.chbBaseWallHeight !== undefined ? Number(data.chbBaseWallHeight) : 0.9;
     if (chbBaseWallHeight >= wallHeight) {
       return "CHB base wall height must be less than total wall height.";
+    }
+    if (chbBaseWallHeight > 1.5) {
+      return "CHB base wall height cannot exceed 1.5 meters for half-wall construction.";
     }
   }
 

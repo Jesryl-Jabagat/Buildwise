@@ -11,7 +11,7 @@ export const houseTypes = {
     title: "Half Amakan",
     pill: "Selected / Bungalow / Half Amakan",
     description:
-      "Traditional amakan texture with a practical modern structural core. Ideal for ₱50k-₱80k budgets.",
+      "Traditional amakan texture with a practical modern structural core. Ideal for ₱100k-₱150k budgets.",
     material: ["Amakan panels", "Concrete base", "Coco Lumber framing"],
     image: "../assets/house-type/amakan.png",
     minBudget: 50000,
@@ -21,9 +21,9 @@ export const houseTypes = {
     title: "Half Metal Cladding",
     pill: "Selected / Bungalow / Half Metal",
     description:
-      "Durable metal exterior paired with conventional bungalow framing. Ideal for ₱80k-₱120k budgets.",
+      "Durable metal exterior paired with conventional bungalow framing. Ideal for ₱120k-₱170k budgets.",
     material: ["Metal cladding", "Concrete base", "Coco Lumber framing"],
-    image: "../assets/house-type/metal cladding.png",
+    image: "../assets/house-type/metal_cladding.png",
     minBudget: 80000,
     maxBudget: 150000,
   },
@@ -31,7 +31,7 @@ export const houseTypes = {
     title: "CHB House",
     pill: "Selected / Bungalow / CHB",
     description:
-      "Solid Concrete Hollow Block wall construction for long-term durability. Ideal for ₱120k+ budgets.",
+      "Solid Concrete Hollow Block wall construction for long-term durability. Ideal for ₱150k+ budgets.",
     material: [
       "Concrete hollow block",
       "Rebar reinforcement",
@@ -47,7 +47,7 @@ export const houseTypes = {
     description:
       "High ceilings, open floor plans, and modern architectural aesthetics. Ideal for ₱150k+ budgets.",
     material: ["Steel framing", "Concrete slab", "Glass frontage"],
-    image: "../assets/house-type/loft style.png",
+    image: "../assets/house-type/loft_style.png",
     minBudget: 150000,
     maxBudget: 1000000,
   },
@@ -57,7 +57,7 @@ export const houseTypes = {
     description:
       "Vertical expansion for maximum space efficiency and family zoning. Requires significant budget.",
     material: ["Reinforced concrete", "CHB walls", "Long span roofing"],
-    image: "../assets/house-type/two storey.png",
+    image: "../assets/house-type/two_storey.png",
     minBudget: 250000,
     maxBudget: 5000000,
   },

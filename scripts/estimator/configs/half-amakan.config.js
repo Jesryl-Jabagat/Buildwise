@@ -8,8 +8,10 @@ export function estimate(data) {
   const L = data.length || data.groundLength || 0;
   const W = data.width || data.groundWidth || 0;
   const wallHeight = data.wallHeight || data.groundWallHeight || 2.7;
-  const chbBaseWallHeight = data.chbBaseWallHeight !== undefined ? data.chbBaseWallHeight : 0.9;
-  const lightWallHeight = wallHeight - chbBaseWallHeight;
+  const rawBase = data.chbBaseWallHeight !== undefined ? Number(data.chbBaseWallHeight) : 0.9;
+  // Guard: Base wall in half-amakan shouldn't exceed 1.2m or 50% of wall height
+  const chbBaseWallHeight = Math.min(Math.max(rawBase > 0 ? rawBase : 0.9, 0.4), Math.min(1.2, wallHeight * 0.5));
+  const lightWallHeight = Math.max(0, wallHeight - chbBaseWallHeight);
   
   const D = F.calcGlobalDerived(L, W, wallHeight, data.soilCondition, true);
   const sections = [];
@@ -17,7 +19,9 @@ export function estimate(data) {
   sections.push(F.calcFootingsAndColumns1Storey(D.numCols, D.soilMultiplier));
   sections.push(F.calcLightweightSlab(D.floorArea));
   
-  const chbBase = F.calcHalfCHBWalls(L, W, chbBaseWallHeight);
+  // Deduct exterior entrance doorway opening at CHB base (0.9m width)
+  const baseDoorDeduction = 0.9 * chbBaseWallHeight;
+  const chbBase = F.calcHalfCHBWalls(L, W, chbBaseWallHeight, baseDoorDeduction);
   const chbWallArea = chbBase.chbWallArea;
   delete chbBase.chbWallArea;
   sections.push(chbBase);
@@ -39,9 +43,9 @@ export function estimate(data) {
   sections.push(F.calcFormworks(D.floorArea));
   const totalBeds = data.bedrooms || 0;
   const totalCRs = data.bathrooms || data.crs || 0;
-  sections.push(F.calcDoorsAndWindows(totalBeds, totalCRs));
-  sections.push(F.calcPlumbing(totalCRs, 1));
-  sections.push(F.calcElectrical(D.floorArea, totalBeds, totalCRs));
+  sections.push(F.calcDoorsAndWindows(totalBeds, totalCRs, data.materialGrade));
+  if (data.includePlumbing !== false) { sections.push(F.calcPlumbing(totalCRs, 1)); }
+  if (data.includeElectrical !== false) { sections.push(F.calcElectrical(D.floorArea, totalBeds, totalCRs, data.includeACwiring)); }
 
   return sumObjects(...sections);
 }

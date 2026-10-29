@@ -8,8 +8,10 @@ export function calcBedroomsTableA(count, wallingMaterialType) {
   
   if (isLight) {
     // 2-Wall Trick (Inner Perimeter = 5m fallback for 2m x 3m minimum habitable space)
+    // Deduct interior bedroom door opening (0.8m width) at the 0.9m CHB base
     const innerPerimeter = 5;
-    const chbArea = innerPerimeter * 0.9;
+    const doorOpeningAtBase = 0.8 * 0.9;
+    const chbArea = Math.max(0, (innerPerimeter * 0.9) - doorOpeningAtBase);
     const sheetCount = Math.ceil(Math.ceil(innerPerimeter / 1.2) * Math.ceil(1.8 / 2.4) * 1.05) * count;
     
     return {
@@ -24,14 +26,12 @@ export function calcBedroomsTableA(count, wallingMaterialType) {
   }
   
   // Default CHB Residential Bedroom (standard 3m×3m partition walls)
+  // Interior partitions don't need structural columns/beams — only light 10mm vertical dowels
   return {
-    chb: 100 * count,
-    cement: 12 * count,
-    screenedSand: 0.3 * count,
-    gravel: 0.5 * count,
-    rebar16mm: 6 * count,
-    rebar12mm: 12 * count,
-    rebar10mm: 6 * count
+    chb: 60 * count,           // ~60 blocks for a 2-wall partition (not 100)
+    cement: 6 * count,          // mortar only, no structural concrete
+    screenedSand: 0.2 * count,
+    rebar10mm: 4 * count        // light vertical dowels only, no heavy 16mm/12mm
   };
 }
 
@@ -53,9 +53,11 @@ export function calcCRsTableA(count, wallingMaterialType) {
   
   if (isLight) {
     // 2-Wall Trick CR (Inner Perimeter = 2.9m fallback for 1.2m x 1.7m CR)
-    // CRs even in lightweight houses use Full CHB for moisture reasons.
+    // CR in lightweight houses uses CHB partition up to standard 2.1m door height
+    // Deduct standard CR door opening (0.7m x 2.1m = 1.47 sqm)
     const innerPerimeter = 2.9;
-    const wallArea = innerPerimeter * 2.7;
+    const crDoorArea = 0.7 * 2.1;
+    const wallArea = Math.max(0, (innerPerimeter * 2.1) - crDoorArea);
     
     return {
       chb: Math.ceil(wallArea * 12.5 * 1.05) * count,

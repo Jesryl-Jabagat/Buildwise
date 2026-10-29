@@ -32,15 +32,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const targetUrl = mode === 'ai' ? `analyzing.html?type=${key}` : `configure.html?type=${key}`;
     
     html += `
-      <div class="col-md-4" style="position:relative;">
-        <div class="model-card" style="${cardStyle}">
-          ${badgeHtml}
-          <img src="${data.image}" alt="${data.title}">
-          <span class="model-card-body">
-            <strong>${data.title}</strong>
-            <span>${data.description}</span>
-            ${isAllowed ? `<a href="${targetUrl}" class="btn btn-sm btn-dark mt-2" style="position:relative; z-index:2;">CONFIGURE</a>` : `<span class="text-danger small mt-2 d-block">Requires min. ₱${data.minBudget.toLocaleString()}</span>`}
-          </span>
+      <div class="col-md-4 mb-4" style="position:relative;">
+        <div class="design-card ${!isAllowed ? 'locked' : ''}">
+          ${isAllowed && budget > 0 ? `<div class="design-card-badge">✨ Rule-Based AI Pick</div>` : ''}
+          <div class="design-card-img-wrapper">
+            <img src="${data.image}" alt="${data.title}">
+          </div>
+          <div class="design-card-body">
+            <div class="design-card-title">${data.title}</div>
+            <div class="design-card-desc">${data.description}</div>
+            ${isAllowed ? `<a href="${targetUrl}" class="btn-ai text-center" style="text-decoration:none;">CONFIGURE</a>` : `<div class="design-card-locked-msg">Requires min. ₱${data.minBudget.toLocaleString()}</div>`}
+          </div>
         </div>
       </div>
     `;

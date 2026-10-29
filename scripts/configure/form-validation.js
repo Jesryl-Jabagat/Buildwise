@@ -20,6 +20,7 @@ export function getUserInput(form) {
   const data = {
     typeKey: submittedTypeKey,
     title:   submittedType.title,
+    layoutVariant: ['standard', 'mirrored'][Math.floor(Math.random() * 2)]
   };
 
   let totalRooms = 0;
@@ -47,6 +48,14 @@ export function getUserInput(form) {
     if (cleanVal !== "" && !isNaN(cleanVal)) {
       const num = parseFloat(cleanVal);
       data[key] = num;
+      
+      // Safety limits
+      if ((key === "length" || key === "width") && num > 30) {
+        if (!confirm(`Warning: You entered a ${key} of ${num} meters, which is extremely large and may crash the 3D renderer or cause memory issues. Are you sure you want to proceed?`)) {
+          return null;
+        }
+      }
+      
       if (key.toLowerCase().includes("bedrooms")) totalRooms += num;
       if (key.toLowerCase().includes("crs"))      totalBaths += num;
       continue;
@@ -58,9 +67,10 @@ export function getUserInput(form) {
       continue;
     }
 
-    // Convert percentage strings (e.g. "10%" → 0.1)
+    // Convert percentage strings (e.g. "10%" -> 10 as whole number).
+    // Formula functions (calcCeiling, calcTiling) divide by 100 themselves.
     if (cleanVal.endsWith("%")) {
-      data[key] = parseFloat(cleanVal.replace("%", "")) / 100;
+      data[key] = parseFloat(cleanVal.replace("%", ""));
       continue;
     }
 
@@ -101,6 +111,11 @@ export function getUserInput(form) {
   if (data.groundWallHeight  && data.groundWallHeight  < 2) { alert("Wall height must be at least 2 meters."); return null; }
   if (data.secondFloorWallHeight && data.secondFloorWallHeight < 2) { alert("Wall height must be at least 2 meters."); return null; }
 
+  if (data.chbBaseWallHeight !== undefined && data.chbBaseWallHeight > 1.5) {
+    alert("CHB base wall height cannot exceed 1.5 meters for half-wall construction.");
+    return null;
+  }
+
   const gfArea   = l1 * w1;
   const mezzArea = l2 * w2;
   if (submittedTypeKey === "loft" && mezzArea > (0.5 * gfArea)) {
@@ -120,6 +135,22 @@ export function getUserInput(form) {
   data.finishLevel  = data.materialGrade || "Standard";
   data.mainMaterial = data.chbType || data.wallingMaterialType || submittedType.material[0];
   data.layoutPriority = "Engineer formula inputs";
+
+  // Forward landType and location from setup
+  try {
+    const setupRaw = localStorage.getItem("buildwiseSetup");
+    if (setupRaw) {
+      const setup = JSON.parse(setupRaw);
+      data.landType = setup.landType || "Flat";
+      data.location = setup.location || "";
+    } else {
+      data.landType = "Flat";
+      data.location = "";
+    }
+  } catch (e) {
+    data.landType = "Flat";
+    data.location = "";
+  }
 
   return data;
 }
