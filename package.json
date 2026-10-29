@@ -1,6 +1,7 @@
 {
   "name": "buildwise-frontend",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {},
   "dependencies": {
     "@neondatabase/serverless": "^0.9.0",

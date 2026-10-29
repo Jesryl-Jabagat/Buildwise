@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Make sure we have the latest materials and tools from Neon / local cache
     await Promise.all([
         syncMaterialsFromDb().catch(() => {}),
-        syncToolsFromDb().catch(() => {})
+        syncToolsFromDb().catch(() => {}),
+        syncLaborFromDb().catch(() => {})
     ]);
     let currentCatalog = getEffectiveCatalog();
     let currentTools = getEffectiveTools();
@@ -432,7 +433,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ role_key: role, daily_wage: val })
-                }).catch(err => console.warn(Error syncing labor rate ${role} to DB:, err));
+                }).catch(err => console.warn(`Error syncing labor rate ${role} to DB:`, err));
             });
 
             // Background sync labor multipliers to database
@@ -443,7 +444,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ type_key: type, multiplier: val })
-                }).catch(err => console.warn(Error syncing labor multiplier ${type} to DB:, err));
+                }).catch(err => console.warn(`Error syncing labor multiplier ${type} to DB:`, err));
             });
 
             // 3. Gather Tools updates
