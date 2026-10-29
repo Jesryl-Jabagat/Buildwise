@@ -134,7 +134,7 @@ export function writeConstructionPhases(phases) {
 
 /**
  * Renders the detailed labor breakdown table.
- * @param {Array} breakdown - [{ role, dailyWage, days, total }, ...]
+ * @param {Array} breakdown - [{ role, workers, dailyWage, days, total }, ...]
  */
 export function writeLaborBreakdown(breakdown) {
   const container = document.getElementById("laborBreakdownTable");
@@ -144,9 +144,10 @@ export function writeLaborBreakdown(breakdown) {
     <table class="materials-tbl mt-3">
       <thead>
         <tr>
-          <th style="width: 40%;">Labor Role (DOLE Std)</th>
-          <th style="width: 20%; text-align: center;">Daily Wage</th>
-          <th style="width: 20%; text-align: center;">Est. Days</th>
+          <th style="width: 35%;">Labor Role (DOLE Std)</th>
+          <th style="width: 15%; text-align: center;">Workers</th>
+          <th style="width: 15%; text-align: center;">Daily Wage</th>
+          <th style="width: 15%; text-align: center;">Est. Days</th>
           <th style="width: 20%; text-align: right;">Total Bayad</th>
         </tr>
       </thead>
@@ -156,9 +157,10 @@ export function writeLaborBreakdown(breakdown) {
             (item) => `
           <tr>
             <td>${item.role}</td>
+            <td style="text-align: center; font-weight: 600;">${item.workers || 1}</td>
             <td style="text-align: center;">${currency.format(item.dailyWage)}</td>
             <td style="text-align: center;">${item.days}</td>
-            <td style="text-align: right;">${currency.format(item.total)}</td>
+            <td style="text-align: right; font-weight: 600;">${currency.format(item.total)}</td>
           </tr>
         `,
           )
@@ -166,6 +168,59 @@ export function writeLaborBreakdown(breakdown) {
       </tbody>
     </table>
   `;
+}
+
+/* --- Tools & Equipment List -------------------------------- */
+
+/**
+ * Renders the construction tools & equipment list table.
+ * @param {Object} toolsData - { tools, totalCost, displayMode }
+ */
+export function writeToolsTable(toolsData) {
+  const container = document.getElementById("toolsTable");
+  if (!container || !toolsData?.tools?.length) return;
+
+  const showPrice = toolsData.displayMode === "with-price";
+
+  // Group by category
+  const grouped = {};
+  toolsData.tools.forEach(tool => {
+    const cat = tool.category || "General";
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(tool);
+  });
+
+  container.innerHTML = Object.entries(grouped)
+    .map(([cat, items]) => `
+      <div class="materials-group">
+        <h3 class="materials-category">🛠️ ${cat}</h3>
+        <table class="materials-tbl">
+          <thead>
+            <tr>
+              <th style="width: ${showPrice ? '65%' : '80%'};">Tool / Equipment</th>
+              ${showPrice 
+                ? '<th style="width: 35%; text-align: right;">Estimated Unit Price</th>' 
+                : '<th style="width: 20%; text-align: center;">Status</th>'}
+            </tr>
+          </thead>
+          <tbody>
+            ${items
+              .map(
+                (item) => `
+              <tr>
+                <td>${item.tool_key}</td>
+                ${showPrice 
+                  ? `<td style="text-align: right;">${currency.format(parseFloat(item.unit_price) || 0)}</td>` 
+                  : `<td style="text-align: center;"><span class="badge bg-secondary">Included</span></td>`}
+              </tr>
+            `,
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+    `)
+    .join("");
 }
 
 /* --- Image Helpers ----------------------------------------- */

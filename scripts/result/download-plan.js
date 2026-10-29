@@ -61,9 +61,33 @@ function setupPDFPage() {
         const laborTbody = document.getElementById("pdf-labor-tbody");
         estimateData.summary.laborBreakdown.forEach(lb => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${lb.role}</td><td>${lb.days}</td><td class="text-end">${currency.format(lb.total)}</td>`;
+            tr.innerHTML = `<td>${lb.role}</td><td class="text-center">${lb.workers || 1}</td><td class="text-center">${lb.days}</td><td class="text-end">${currency.format(lb.total)}</td>`;
             laborTbody.appendChild(tr);
         });
+
+        // Tools & Equipment in PDF
+        const toolsSection = document.getElementById("pdf-tools-section");
+        const toolsTbody = document.getElementById("pdf-tools-tbody");
+        if (estimateData.summary.toolsData && toolsSection && toolsTbody) {
+            toolsSection.style.display = "block";
+            const showPrice = estimateData.summary.toolsData.displayMode === "with-price";
+            const colHeader = document.getElementById("pdf-tools-col-header");
+            if (colHeader) colHeader.textContent = showPrice ? "Cost" : "Status";
+
+            estimateData.summary.toolsData.tools.forEach(tool => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `<td>${tool.tool_key}</td><td class="text-end">${showPrice ? currency.format(tool.unit_price || 0) : '<span class="badge bg-secondary">Included</span>'}</td>`;
+                toolsTbody.appendChild(tr);
+            });
+
+            const toolsTotalWrap = document.getElementById("pdf-tools-total-wrap");
+            const toolsTotal = document.getElementById("pdf-tools-total");
+            if (showPrice) {
+                if (toolsTotal) toolsTotal.innerText = currency.format(estimateData.summary.toolsData.totalCost);
+            } else {
+                if (toolsTotalWrap) toolsTotalWrap.style.display = "none";
+            }
+        }
         
         // Phases
         const phasesDiv = document.getElementById("pdf-phases");

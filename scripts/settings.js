@@ -1,5 +1,6 @@
 import { DEFAULT_TIER_CATALOG, getEffectiveCatalog, syncMaterialsFromDb, refreshCustomPrices } from './estimator/prices.js';
 import { DEFAULT_LABOR_RATES, DEFAULT_LABOR_MULTIPLIERS, refreshCustomLabor } from './estimator/labor.js';
+import { DEFAULT_TOOLS_LIST, getEffectiveTools, syncToolsFromDb, refreshCustomTools } from './estimator/tools.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById('settings-container');
@@ -7,9 +8,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnReset = document.getElementById('btn-reset');
     const btnSave = document.getElementById('btn-save');
 
-    // Make sure we have the latest materials catalog from Neon
-    await syncMaterialsFromDb();
+    // Make sure we have the latest materials and tools from Neon / local cache
+    await Promise.all([
+        syncMaterialsFromDb().catch(() => {}),
+        syncToolsFromDb().catch(() => {})
+    ]);
     let currentCatalog = getEffectiveCatalog();
+    let currentTools = getEffectiveTools();
 
     // Load custom labor from localStorage
     let customLabor = { rates: {}, multipliers: {} };
@@ -25,8 +30,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // State
-    let activeTab = 'tiers'; // 'tiers' | 'labor'
+    let activeTab = 'tiers'; // 'tiers' | 'labor' | 'tools'
     let searchTerm = '';
+    let toolSearchTerm = '';
 
     function showToast(msg) {
         if (!toastContainer) return;
@@ -53,6 +59,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             <button type="button" class="tier-tab-btn ${activeTab === 'labor' ? 'active' : ''}" data-tab="labor">
                 👷 Labor Wages & Rates
             </button>
+            <button type="button" class="tier-tab-btn ${activeTab === 'tools' ? 'active' : ''}" data-tab="tools">
+                🔧 Tools & Equipment (${currentTools.length})
+            </button>
         `;
         tabsWrap.addEventListener('click', (e) => {
             const btn = e.target.closest('.tier-tab-btn');
@@ -65,8 +74,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (activeTab === 'tiers') {
             renderTiersView();
-        } else {
+        } else if (activeTab === 'labor') {
             renderLaborView();
+        } else if (activeTab === 'tools') {
+            renderToolsView();
         }
     }
 
@@ -243,6 +254,93 @@ document.addEventListener('DOMContentLoaded', async () => {
         container.appendChild(multCard);
     }
 
+    function renderToolsView() {
+        // Top search bar
+        const topBar = document.createElement('div');
+        topBar.className = 'top-action-bar';
+        topBar.innerHTML = `
+            <div class="search-bar-wrap" style="flex:1; margin-bottom:0;">
+                <input type="text" id="tool-search" placeholder="🔍 Search tool name or category..." value="${toolSearchTerm}">
+            </div>
+        `;
+        container.appendChild(topBar);
+
+        const searchInput = topBar.querySelector('#tool-search');
+        searchInput.addEventListener('input', (e) => {
+            toolSearchTerm = e.target.value.toLowerCase();
+            filterToolRows();
+        });
+
+        const toolsCard = document.createElement('div');
+        toolsCard.className = 'settings-card';
+        toolsCard.id = 'tools-catalog-content';
+
+        toolsCard.innerHTML = `
+            <h2>🔧 Construction Tools & Equipment</h2>
+            <p style="color:var(--color-muted); font-size:0.9rem; margin-bottom: 20px;">
+                Manage unit prices for tools and equipment used in the project. These prices are applied when the <strong>Include Tools & Equipment</strong> option is enabled in house configurations.
+            </p>
+        `;
+
+        // Group tools by category
+        const grouped = {};
+        currentTools.forEach(tool => {
+            const cat = tool.category || 'General';
+            if (!grouped[cat]) grouped[cat] = [];
+            grouped[cat].push(tool);
+        });
+
+        for (const [catName, items] of Object.entries(grouped)) {
+            const catHeader = document.createElement('h3');
+            catHeader.style.cssText = 'color:var(--color-accent); font-size:1.15rem; margin: 25px 0 12px; border-bottom: 1px dashed var(--color-border); padding-bottom: 6px;';
+            catHeader.textContent = `🛠️ ${catName}`;
+            catHeader.className = 'cat-section-title';
+            toolsCard.appendChild(catHeader);
+
+            const catList = document.createElement('div');
+            catList.className = 'cat-tools-list';
+
+            items.forEach(tool => {
+                const row = document.createElement('div');
+                row.className = 'tool-item-row';
+                row.setAttribute('data-tool-key', tool.tool_key);
+                row.setAttribute('data-search-text', `${tool.tool_key} ${catName}`.toLowerCase());
+
+                row.innerHTML = `
+                    <div class="tool-item-info">
+                        <span class="tool-item-title">${tool.tool_key}</span>
+                        <span class="tool-item-category">${catName}</span>
+                    </div>
+                    <div class="tier-input-price-wrap tool-item-price-wrap">
+                        <span>₱</span>
+                        <input type="number" step="1" min="0" placeholder="0.00" 
+                            data-tool-key="${tool.tool_key}" 
+                            data-tool-id="${tool.id || ''}" 
+                            value="${tool.unit_price}">
+                    </div>
+                `;
+                catList.appendChild(row);
+            });
+
+            toolsCard.appendChild(catList);
+        }
+
+        container.appendChild(toolsCard);
+        filterToolRows();
+    }
+
+    function filterToolRows() {
+        const rows = container.querySelectorAll('.tool-item-row');
+        rows.forEach(row => {
+            const text = row.getAttribute('data-search-text') || '';
+            if (!toolSearchTerm || text.includes(toolSearchTerm)) {
+                row.style.display = 'flex';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
     // Save All Changes (Updates Database + LocalStorage)
     btnSave.addEventListener('click', async (e) => {
         e.preventDefault();
@@ -326,9 +424,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             localStorage.setItem('buildwise-custom-labor', JSON.stringify(newCustomLabor));
             refreshCustomLabor();
 
+            // 3. Gather Tools updates
+            const toolPriceInputs = container.querySelectorAll('input[data-tool-key]');
+            if (toolPriceInputs.length > 0) {
+                toolPriceInputs.forEach(input => {
+                    const toolKey = input.getAttribute('data-tool-key');
+                    const toolId = input.getAttribute('data-tool-id');
+                    const price = parseFloat(input.value) || 0;
+                    
+                    const existingTool = currentTools.find(t => t.tool_key === toolKey);
+                    if (existingTool) {
+                        existingTool.unit_price = price;
+                    }
+
+                    // Background sync to database
+                    fetch('/api/tools', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: toolId || undefined,
+                            tool_key: toolKey,
+                            unit_price: price
+                        })
+                    }).catch(err => console.warn(`Error syncing tool ${toolKey} to DB:`, err));
+                });
+
+                localStorage.setItem('buildwise-tools-catalog', JSON.stringify(currentTools));
+                refreshCustomTools();
+            }
+
             btnSave.textContent = "✔ SAVED!";
             btnSave.style.backgroundColor = "#28a745";
-            showToast("All material tier prices and brands saved successfully!");
+            showToast("Settings (Materials, Labor & Tools) saved successfully!");
 
             setTimeout(() => {
                 btnSave.textContent = origText;
@@ -345,14 +472,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Reset Defaults
     btnReset.addEventListener('click', () => {
-        if (confirm("Are you sure you want to reset all material tiers and labor settings back to default baseline values?")) {
+        if (confirm("Are you sure you want to reset all material tiers, labor settings, and tool prices back to default baseline values?")) {
             localStorage.removeItem('buildwise-materials-catalog');
             localStorage.removeItem('buildwise-custom-labor');
+            localStorage.removeItem('buildwise-tools-catalog');
             refreshCustomPrices();
             refreshCustomLabor();
+            refreshCustomTools();
             currentCatalog = { ...DEFAULT_TIER_CATALOG };
+            currentTools = [...DEFAULT_TOOLS_LIST];
             renderView();
-            showToast("Settings reset to defaults.");
+            showToast("All settings reset to defaults.");
         }
     });
 

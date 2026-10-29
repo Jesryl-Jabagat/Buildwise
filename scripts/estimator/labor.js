@@ -2,6 +2,7 @@
 
 export const DEFAULT_LABOR_RATES = {
     "Lead Carpenter / Master Builder": 550,
+    "Mason": 550,
     "Helper / Ordinary Laborer": 400,
     "Electrician": 600,
     "Plumber": 600,

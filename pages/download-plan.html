@@ -136,10 +136,22 @@
 
                 <h4 class="section-heading">Labor Breakdown</h4>
                 <table class="table table-sm" style="font-size: 12px;">
-                  <thead><tr><th>Role</th><th>Days</th><th class="text-end">Cost</th></tr></thead>
+                  <thead><tr><th>Role</th><th class="text-center">Workers</th><th class="text-center">Days</th><th class="text-end">Cost</th></tr></thead>
                   <tbody id="pdf-labor-tbody">
                   </tbody>
                 </table>
+
+                <div id="pdf-tools-section" style="display:none; margin-top: 15px;">
+                  <h4 class="section-heading">Tools &amp; Equipment</h4>
+                  <table class="table table-sm" style="font-size: 11px;">
+                    <thead><tr><th>Tool / Equipment</th><th class="text-end" id="pdf-tools-col-header">Cost</th></tr></thead>
+                    <tbody id="pdf-tools-tbody">
+                    </tbody>
+                  </table>
+                  <div class="text-end fw-bold" id="pdf-tools-total-wrap" style="font-size: 13px; margin-top: -8px; margin-bottom: 16px; color: #d89a2b;">
+                    Tools Total: <span id="pdf-tools-total">PHP 0</span>
+                  </div>
+                </div>
               </div>
 
               <div class="data-col col-6">

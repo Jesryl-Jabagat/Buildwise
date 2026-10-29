@@ -277,3 +277,40 @@
             gap: 12px;
             margin-bottom: 20px;
         }
+
+        /* Tool Settings Styles */
+        .tool-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: color-mix(in srgb, var(--color-bg) 40%, transparent);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .tool-item-row:hover {
+            border-color: var(--color-accent);
+            background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+        }
+        .tool-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .tool-item-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--color-text);
+        }
+        .tool-item-category {
+            font-size: 0.78rem;
+            color: var(--color-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tool-item-price-wrap {
+            width: 170px;
+            min-width: 140px;
+        }

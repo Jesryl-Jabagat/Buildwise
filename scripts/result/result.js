@@ -14,6 +14,7 @@ import {
   writeMaterialsTable,
   writeConstructionPhases,
   writeLaborBreakdown,
+  writeToolsTable,
   writeBudgetFitBadges,
   setGeneratedImages,
 } from "./result-renderers.js";
@@ -160,6 +161,9 @@ function setupResultPage() {
     const colorClasses = ["bg-success", "bg-info", "bg-warning", "bg-primary", "bg-secondary", "bg-dark"];
     const budgetRows   = estimateData.materialsList.map((cat, idx) => [cat.category, cat.total, colorClasses[idx % colorClasses.length]]);
     budgetRows.push(["Labor Estimate",    estimateData.summary.laborEstimate, "bg-secondary"]);
+    if (estimateData.summary.toolsData && estimateData.summary.toolsData.displayMode === "with-price") {
+      budgetRows.push(["Tools & Equipment", estimateData.summary.toolsData.totalCost, "bg-warning"]);
+    }
     budgetRows.push(["Contingency (5%)", estimateData.summary.contingency,   "bg-danger"]);
 
     writeBudgetBars(budgetRows, estimateData.summary.grandTotal);
@@ -188,6 +192,42 @@ function setupResultPage() {
     // Labor Breakdown
     if (estimateData.summary && estimateData.summary.laborBreakdown) {
       writeLaborBreakdown(estimateData.summary.laborBreakdown);
+    }
+
+    // Tools & Equipment Table
+    const toolsCard = document.getElementById("toolsCard");
+    if (estimateData.summary.toolsData) {
+      if (toolsCard) toolsCard.style.display = "block";
+      writeToolsTable(estimateData.summary.toolsData);
+      
+      const toolsNote = document.getElementById("toolsNote");
+      const toolsTotalRow = document.getElementById("toolsTotalRow");
+      const toolsTotalAmount = document.getElementById("toolsTotalAmount");
+      
+      if (estimateData.summary.toolsData.displayMode === "with-price") {
+        if (toolsNote) toolsNote.textContent = "Prices included in Total Cost Estimate";
+        if (toolsTotalRow) toolsTotalRow.style.display = "flex";
+        if (toolsTotalAmount) toolsTotalAmount.textContent = currency.format(estimateData.summary.toolsData.totalCost);
+      } else {
+        if (toolsNote) toolsNote.textContent = "Reference checklist only — ₱0 added to total budget";
+        if (toolsTotalRow) toolsTotalRow.style.display = "none";
+      }
+    } else {
+      if (toolsCard) toolsCard.style.display = "none";
+    }
+
+    // Dynamic Regional Pricing & DOLE Wage Labels
+    const reg = estimateData.summary && estimateData.summary.regionalAdjustment;
+    if (reg) {
+      const laborNote = document.querySelector("#laborBreakdownCard .materials-note");
+      if (laborNote) {
+        laborNote.textContent = `Based on DOLE Wage Rates (${reg.shortLabel} • ${reg.laborPercentLabel})`;
+      }
+
+      const materialsNote = document.getElementById("materialsNote");
+      if (materialsNote) {
+        materialsNote.textContent = `Priced for ${reg.shortLabel} local hardware store market (Store index: ${reg.materialPercentLabel})`;
+      }
     }
 
   }

@@ -61,6 +61,7 @@ export function wireConditionalFields(form) {
     const paintSecondFloor = formData.get("paintSecondFloor") === "Yes";
 
     const includeElectrical = formData.get("includeElectrical") !== "No";
+    const includeTools = formData.get("includeTools") === "Yes";
 
     form.querySelectorAll('.conditional-field').forEach(field => {
       const condition = field.dataset.condition;
@@ -68,6 +69,7 @@ export function wireConditionalFields(form) {
 
       if      (condition === 'showTiles')           isVisible = showTiles;
       else if (condition === 'includeElectrical')   isVisible = includeElectrical;
+      else if (condition === 'includeTools')        isVisible = includeTools;
       else if (condition === 'showLoftCeiling')     isVisible = showLoftCeiling;
       else if (condition === 'showTwoStoreyCeiling')isVisible = showTwoStoreyCeiling;
       else if (condition === 'hasCeiling')          isVisible = hasCeiling;

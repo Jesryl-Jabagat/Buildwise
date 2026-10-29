@@ -1,5 +1,7 @@
+import { getRegionalFactors } from "./regional.js";
 import { formatMaterialCost } from "./prices.js";
 import { getLaborRates, getLaborMultiplier } from "./labor.js";
+import { getEffectiveTools, getToolsCost } from "./tools.js";
 
 import * as chbConfig from "./configs/chb.config.js";
 import * as amakanConfig from "./configs/half-amakan.config.js";
@@ -15,10 +17,10 @@ const configs = {
   "two-storey": twoStoreyConfig
 };
 
-function generateTimelineAndLabor(laborCost, floorArea, materialsList = []) {
+function generateTimelineAndLabor(laborCost, floorArea, materialsList = [], regionalLaborMult = 1.0) {
   const laborRates = getLaborRates();
   // Compute average wage from custom settings
-  const avgWage = (laborRates["Lead Carpenter / Master Builder"] + laborRates["Helper / Ordinary Laborer"]) / 2;
+  const avgWage = Math.round(((laborRates["Lead Carpenter / Master Builder"] + laborRates["Helper / Ordinary Laborer"]) / 2) * regionalLaborMult);
   
   // Base crew size determined by floor area
   let baseCrew = 3;
@@ -88,7 +90,7 @@ function generateTimelineAndLabor(laborCost, floorArea, materialsList = []) {
   });
 
   return { 
-    stats: { workers: `${Math.max(2, baseCrew - 2)}-${baseCrew + 1}`, buildDays: totalBuildDays }, 
+    stats: { workers: `${Math.max(2, baseCrew - 2)}-${baseCrew + 1}`, buildDays: totalBuildDays, workingDays: totalWorkingDays }, 
     phases: phases 
   };
 }
@@ -238,6 +240,9 @@ export function generateEstimate(data) {
   const typeKey = data.typeKey || "loft";
   const config = configs[typeKey] || configs["loft"];
   const grade = data.materialGrade || data.finishLevel || "Standard";
+  const regionalFactors = getRegionalFactors(data.location);
+  const regionalMatMult = regionalFactors.materialMultiplier || 1.0;
+  const regionalLaborMult = regionalFactors.laborMultiplier || 1.0;
   
   const rawQuantities = config.estimate(data);
 
@@ -283,6 +288,12 @@ export function generateEstimate(data) {
       }
 
       const priced = formatMaterialCost(priceName, Math.round(qty * 100) / 100, grade);
+      
+      // Apply regional local store pricing adjustment
+      if (regionalMatMult !== 1.0) {
+        priced.unitCost = Math.round(priced.unitCost * regionalMatMult * 100) / 100;
+        priced.total = Math.round(priced.qty * priced.unitCost * 100) / 100;
+      }
       
       // Apply color tint multiplier
       if (key === "topcoat" && theme) {
@@ -330,6 +341,10 @@ export function generateEstimate(data) {
   let contingencyMultiplier = 0.05;
   let laborEstimate = totalMaterialsCost * laborMultiplier;
 
+  const floorArea = data.floorArea || (data.length * data.width) || 30;
+  let forecasting = generateTimelineAndLabor(laborEstimate, floorArea, formattedCategories, regionalLaborMult);
+  const totalWorkingDays = (forecasting.stats && forecasting.stats.workingDays) || 30;
+
   const hasPlumbingList = formattedCategories.some(c => c.category === "Plumbing");
   const hasElectricalList = formattedCategories.some(c => c.category === "Electrical");
   const finishesCat = formattedCategories.find(c => c.category === "Finishes");
@@ -338,34 +353,94 @@ export function generateEstimate(data) {
 
   const laborRates = getLaborRates();
 
+  const hasMasonryWork = formattedCategories.some(c => c.category === "Foundation & Structure" || c.category === "Walling");
+
   const rawLaborRoles = [
-    { role: "Lead Carpenter / Master Builder", wage: laborRates["Lead Carpenter / Master Builder"], baseWeight: 0.35 },
-    { role: "Helper / Ordinary Laborer", wage: laborRates["Helper / Ordinary Laborer"], baseWeight: 0.45 }
+    { 
+      role: "Lead Carpenter / Master Builder", 
+      wage: Math.round(laborRates["Lead Carpenter / Master Builder"] * regionalLaborMult), 
+      workers: 1, 
+      days: totalWorkingDays 
+    }
   ];
-  
-  if (hasElectricalList) rawLaborRoles.push({ role: "Electrician", wage: laborRates["Electrician"], baseWeight: 0.05 });
-  if (hasPlumbingList) rawLaborRoles.push({ role: "Plumber", wage: laborRates["Plumber"], baseWeight: 0.05 });
-  if (hasTilesList) rawLaborRoles.push({ role: "Tile Setter", wage: laborRates["Tile Setter"], baseWeight: 0.08 });
-  if (hasPaintingList) rawLaborRoles.push({ role: "Painter", wage: laborRates["Painter"], baseWeight: 0.05 });
 
-  const totalBaseWeight = rawLaborRoles.reduce((sum, r) => sum + r.baseWeight, 0);
+  if (hasMasonryWork) {
+    rawLaborRoles.push({ 
+      role: "Mason", 
+      wage: Math.round((laborRates["Mason"] || 550) * regionalLaborMult), 
+      workers: floorArea >= 70 ? 2 : 1, 
+      days: totalWorkingDays 
+    });
+  }
 
-  let laborBreakdown = rawLaborRoles.map(r => {
-    const normalizedPct = r.baseWeight / totalBaseWeight;
-    const allocatedCost = laborEstimate * normalizedPct;
-    const days = Math.max(1, Math.ceil(allocatedCost / r.wage));
-    return {
-      role: r.role,
-      dailyWage: r.wage,
-      days: days,
-      total: days * r.wage
-    };
+  const helperCount = Math.max(2, Math.min(4, Math.ceil(floorArea / 25)));
+  rawLaborRoles.push({ 
+    role: "Helper / Ordinary Laborer", 
+    wage: Math.round(laborRates["Helper / Ordinary Laborer"] * regionalLaborMult), 
+    workers: helperCount, 
+    days: totalWorkingDays 
   });
+  
+  if (hasElectricalList) {
+    rawLaborRoles.push({ 
+      role: "Electrician", 
+      wage: Math.round(laborRates["Electrician"] * regionalLaborMult), 
+      workers: 1, 
+      days: Math.max(3, Math.round(totalWorkingDays * 0.25)) 
+    });
+  }
+  if (hasPlumbingList) {
+    rawLaborRoles.push({ 
+      role: "Plumber", 
+      wage: Math.round(laborRates["Plumber"] * regionalLaborMult), 
+      workers: 1, 
+      days: Math.max(3, Math.round(totalWorkingDays * 0.25)) 
+    });
+  }
+  if (hasTilesList) {
+    rawLaborRoles.push({ 
+      role: "Tile Setter", 
+      wage: Math.round(laborRates["Tile Setter"] * regionalLaborMult), 
+      workers: 1, 
+      days: Math.max(4, Math.round(totalWorkingDays * 0.30)) 
+    });
+  }
+  if (hasPaintingList) {
+    rawLaborRoles.push({ 
+      role: "Painter", 
+      wage: Math.round(laborRates["Painter"] * regionalLaborMult), 
+      workers: 1, 
+      days: Math.max(4, Math.round(totalWorkingDays * 0.35)) 
+    });
+  }
+
+  let laborBreakdown = rawLaborRoles.map(r => ({
+    role: r.role,
+    workers: r.workers,
+    dailyWage: r.wage,
+    days: r.days,
+    total: r.workers * r.wage * r.days
+  }));
 
   laborEstimate = laborBreakdown.reduce((sum, r) => sum + r.total, 0);
+
+  // ── Tools & Equipment Integration ───────────────────────────────────────────
+  let toolsData = null;
+  if (data.includeTools) {
+    const allTools = getEffectiveTools();
+    const toolsCost = getToolsCost(allTools);
+    const isWithPrice = data.toolsDisplayMode !== "list-only";
+
+    toolsData = {
+      tools: allTools,
+      totalCost: isWithPrice ? toolsCost : 0,
+      displayMode: isWithPrice ? "with-price" : "list-only"
+    };
+  }
+
   let subTotal = totalMaterialsCost + laborEstimate;
   let contingency = totalMaterialsCost * contingencyMultiplier;
-  let grandTotal = subTotal + contingency;
+  let grandTotal = subTotal + contingency + (toolsData ? toolsData.totalCost : 0);
 
   // ── Budget Reconciliation Pass ─────────────────────────────────────────────
   // (Removed maximum limit constraint as requested by the user)
@@ -388,8 +463,7 @@ export function generateEstimate(data) {
     }
   }
 
-  const floorArea = data.floorArea || (data.length * data.width) || 30;
-  const forecasting = generateTimelineAndLabor(laborEstimate, floorArea, formattedCategories);
+  forecasting = generateTimelineAndLabor(laborEstimate, floorArea, formattedCategories, regionalLaborMult);
 
   return {
     materialsList: formattedCategories,
@@ -397,8 +471,25 @@ export function generateEstimate(data) {
       totalMaterials: totalMaterialsCost,
       laborEstimate: laborEstimate,
       laborBreakdown: laborBreakdown,
+      toolsData: toolsData,
       contingency: contingency,
-      grandTotal: grandTotal
+      grandTotal: grandTotal,
+      regionalAdjustment: {
+        location: data.location || "Standard",
+        label: regionalFactors.label,
+        shortLabel: regionalFactors.shortLabel,
+        laborMultiplier: regionalLaborMult,
+        materialMultiplier: regionalMatMult,
+        laborPercentLabel: (regionalLaborMult > 1 
+          ? `+${Math.round((regionalLaborMult - 1) * 100)}%` 
+          : regionalLaborMult < 1 
+            ? `${Math.round((regionalLaborMult - 1) * 100)}%` 
+            : "Base"),
+        materialPercentLabel: (regionalMatMult > 1 
+          ? `+${Math.round((regionalMatMult - 1) * 100)}%` 
+          : "Base"),
+        description: regionalFactors.description
+      }
     },
     feasibility,
     forecasting,

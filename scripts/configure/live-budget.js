@@ -78,6 +78,14 @@ function updateMeter(form, typeKey, budget, submitBtn) {
     rawData.budget = Number(budgetField.value.replace(/[^0-9]/g, "")) || budget;
   }
 
+  // Forward location from setup so regional multipliers apply in real time
+  try {
+    const setupDataStored = JSON.parse(localStorage.getItem('buildwiseSetup') || '{}');
+    rawData.location = (setupDataStored && setupDataStored.location) || "";
+  } catch (_) {
+    rawData.location = "";
+  }
+
   // ── Normalize toggle fields from "Yes"/"No" strings to booleans ────────────
   // FormData always returns strings. The estimator configs check these with
   // plain `if (data.applyTilesGround)` — "No" is truthy, so without this fix
