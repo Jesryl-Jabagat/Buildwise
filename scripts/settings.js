@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         topBar.className = 'top-action-bar';
         topBar.innerHTML = `
             <div class="search-bar-wrap" style="flex:1; margin-bottom:0;">
-                <input type="text" id="material-search" placeholder="ðŸ” Search material name, brand, or category..." value="${searchTerm}">
+                <input type="text" id="material-search" placeholder="🔍 Search material name, brand, or category..." value="${searchTerm}">
             </div>
         `;
         container.appendChild(topBar);
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (const [catName, items] of Object.entries(grouped)) {
             const catHeader = document.createElement('h3');
             catHeader.style.cssText = 'color:var(--color-accent); font-size:1.15rem; margin: 25px 0 12px; border-bottom: 1px dashed var(--color-border); padding-bottom: 6px;';
-            catHeader.textContent = `ðŸ“ ${catName}`;
+            catHeader.textContent = `📁 ${catName}`;
             catHeader.className = 'cat-section-title';
             catalogCard.appendChild(catHeader);
 
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 row.innerHTML = `
                     <div class="tier-item-header">
                         <span class="tier-item-title">${item.key}</span>
-                        <span class="tier-item-meta">${catName} â€¢ [${item.unit || 'unit'}]</span>
+                        <span class="tier-item-meta">${catName} • [${item.unit || 'unit'}]</span>
                     </div>
                     <div class="tier-columns-grid">
                         <!-- BASIC TIER -->
@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         topBar.className = 'top-action-bar';
         topBar.innerHTML = `
             <div class="search-bar-wrap" style="flex:1; margin-bottom:0;">
-                <input type="text" id="tool-search" placeholder="ðŸ” Search tool name or category..." value="${toolSearchTerm}">
+                <input type="text" id="tool-search" placeholder="🔍 Search tool name or category..." value="${toolSearchTerm}">
             </div>
         `;
         container.appendChild(topBar);
@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (const [catName, items] of Object.entries(grouped)) {
             const catHeader = document.createElement('h3');
             catHeader.style.cssText = 'color:var(--color-accent); font-size:1.15rem; margin: 25px 0 12px; border-bottom: 1px dashed var(--color-border); padding-bottom: 6px;';
-            catHeader.textContent = `ðŸ› ï¸ ${catName}`;
+            catHeader.textContent = `🛠️ ${catName}`;
             catHeader.className = 'cat-section-title';
             toolsCard.appendChild(catHeader);
 
