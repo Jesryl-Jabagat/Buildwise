@@ -61,7 +61,7 @@ function setupPDFPage() {
         const laborTbody = document.getElementById("pdf-labor-tbody");
         estimateData.summary.laborBreakdown.forEach(lb => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${lb.role}</td><td class="text-center">${lb.workers || 1}</td><td class="text-center">${lb.days}</td><td class="text-end">${currency.format(lb.total)}</td>`;
+            tr.innerHTML = `<td><strong>${lb.role}</strong>${lb.phasesText ? `<br><small style="color: #666;">${lb.phasesText}</small>` : ''}</td><td class="text-center">${lb.workers || 1}</td><td class="text-center">${lb.days}</td><td class="text-end">${currency.format(lb.total)}</td>`;
             laborTbody.appendChild(tr);
         });
 
@@ -98,7 +98,7 @@ function setupPDFPage() {
                 <div class="phase-bullet"></div>
                 <div class="phase-content">
                     <h5>${ph.name}</h5>
-                    <p>${ph.days} Days • ${ph.workers} Workers</p>
+                    <p>${ph.days} Days • ${ph.workers} Workers${ph.crewDetails ? `<br><small style="color: #666;">Crew: ${ph.crewDetails}</small>` : ''}</p>
                 </div>
             `;
             phasesDiv.appendChild(div);

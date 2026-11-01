@@ -118,7 +118,10 @@ export function writeConstructionPhases(phases) {
     .map(
       (phase) => `
       <div class="phase-row">
-        <span class="phase-name">${phase.name}</span>
+        <div>
+          <span class="phase-name">${phase.name}</span>
+          ${phase.crewDetails ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 3px;">👥 ${phase.crewDetails}</div>` : ''}
+        </div>
         <span class="phase-days">${phase.days} days</span>
         <span class="phase-workers">${phase.workers} workers</span>
       </div>
@@ -156,7 +159,10 @@ export function writeLaborBreakdown(breakdown) {
           .map(
             (item) => `
           <tr>
-            <td>${item.role}</td>
+            <td>
+              <div style="font-weight: 600;">${item.role}</div>
+              ${item.phasesText ? `<div style="font-size: 0.75rem; color: var(--color-accent, #1f7a5c); margin-top: 2px;">📍 ${item.phasesText}</div>` : ''}
+            </td>
             <td style="text-align: center; font-weight: 600;">${item.workers || 1}</td>
             <td style="text-align: center;">${currency.format(item.dailyWage)}</td>
             <td style="text-align: center;">${item.days}</td>
