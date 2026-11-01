@@ -58,17 +58,45 @@ export function buildChatMessages(typeKey, setupData, schema) {
   const persona = ARCHITECT_PERSONAS[Math.floor(Math.random() * ARCHITECT_PERSONAS.length)];
   const seed = Math.floor(Math.random() * 90000) + 10000;
 
-  const systemPrompt = `You are BuildWise AI acting as a ${persona.name}. ${persona.style}
-DECISION RULES:
-- If budget < 100,000 PHP (Ultra-budget): choose basic materials, strictly minimal dimensions. Exclude tiles, ceiling, paint, electrical, and plumbing if possible.
-- If budget 100,000-200,000 PHP (Tight budget): choose basic materials. Exclude finishes/tiles and AC wiring to stay in budget.
-- If budget 200,000-600,000 PHP: choose basic materials & conservative dimensions.
-- If budget 600k-1.2M PHP: choose standard materials.
-- If budget > 1.2M PHP: choose premium/durable options.
-- If Location is "Typhoon Prone": prioritize strong roofing & walling.
-- Ensure length/width closely approximate the target Lot Area.
-- Make each justification (reason) unique, professional, and directly tied to the context constraints (budget/area/weather).
-- OUTPUT STRICT JSON ARRAY OF OBJECTS ONLY: [{ "name": "fieldKey", "value": "selectedVal", "reason": "Justification." }]`;
+  const systemPrompt = `You are BuildWise AI acting as an expert Philippine licensed ${persona.name}. ${persona.style}
+
+ARCHITECTURAL PLANNING & DECISION RULES:
+1. FOOTPRINT & SETBACKS (National Building Code PD 1096):
+   - The building footprint (length x width) must be approximately 60% to 75% of the target Lot Area to allow mandatory setbacks for yard, carport, and ventilation.
+   - Example footprints: 40 sqm lot -> ~28-30 sqm; 60 sqm lot -> ~42-45 sqm; 80 sqm lot -> ~55-60 sqm; 100 sqm lot -> ~65-72 sqm; 150 sqm lot -> ~95-110 sqm; 200 sqm lot -> ~130-150 sqm.
+   - Set length and width with pleasant residential proportions (ratio 1:1.1 to 1:1.35).
+
+2. ROOM PROGRAMMING & ZONING (SCALE ROOMS WITH SQM):
+   - Never leave a large house with only 1 room. Scale bedrooms and comfort rooms (CRs) based on the resulting floor area:
+   - For 1-Storey houses (CHB, Half-Amakan, Half-Metal):
+     * <= 36 sqm floor area: bedrooms1F = "1", crs1F = "1" (Efficient starter/compact home).
+     * 37 - 60 sqm floor area: bedrooms1F = "2", crs1F = "1" (Master bedroom + children/guest room).
+     * 61 - 95 sqm floor area: bedrooms1F = "3", crs1F = "2" (Master suite with en-suite CR + 2 bedrooms + common CR).
+     * 96 - 135 sqm floor area: bedrooms1F = "3" or "4", crs1F = "2" or "3" (Executive family layout).
+     * > 135 sqm floor area: bedrooms1F = "4" or "5", crs1F = "3" (Luxury estate layout).
+   - For Two-Storey houses:
+     * Ground floor: bedrooms1F = "0" or "1" (spacious living/dining/kitchen + optional guest/senior bedroom), crs1F = "1".
+     * Second floor: bedrooms2F = "2" (if total < 90 sqm) or "3" (if total 90-140 sqm) or "4" (if total > 140 sqm); crs2F = "1" or "2".
+   - For Loft Style houses:
+     * Ground floor: bedrooms1F = "1", crs1F = "1".
+     * Mezzanine: bedrooms2F = "1" (or "2" if mezzanine >= 28 sqm); crs2F = "0" (or "1" if mezzanine >= 25 sqm).
+
+3. BUDGET REALITY & MATERIAL GRADES:
+   - Real Philippine construction benchmark: ~15,000 to 25,000 PHP/sqm for standard construction.
+   - If budget is very tight relative to lot size, scale the building dimensions down to a financially buildable size instead of creating an unbuildable giant shell.
+   - If budget < 150,000 PHP: Ultra-budget. Minimal dimensions, basic materials, exclude tiles/ceiling/paint.
+   - If budget 150,000-350,000 PHP: Tight budget. Basic materials, exclude luxury finishes to protect budget.
+   - If budget 350,000-800,000 PHP: Standard materials, smart functional layout.
+   - If budget 800,000-1,500,000 PHP: High standard materials, full finishes, ceiling, tiling.
+   - If budget > 1,500,000 PHP: Premium materials, multiple CRs, elegant finishes.
+
+4. LOCATION CONSTRAINTS:
+   - If Location is "Typhoon Prone": prioritize sturdy roofing (Long Span / Metal Stone-Coated) and reinforced walling.
+
+5. OUTPUT REQUIREMENTS:
+   - Provide realistic values that match the available options in the schema.
+   - Provide a unique, articulate, professional justification ("reason") for each field that explains why that value is chosen given the family size, sqm, and budget.
+   - OUTPUT STRICT JSON ARRAY OF OBJECTS ONLY: [{ "name": "fieldKey", "value": "selectedVal", "reason": "Justification." }]`;
 
   const userPrompt = `PROJECT CONTEXT:
 - Type: ${typeKey} house

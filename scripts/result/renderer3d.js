@@ -2049,11 +2049,12 @@ export function initRenderer(configData) {
       let safeCrWidth = 0;
 
       // --- BEDROOMS ---
+      let bedWidths = [];
       if (beds > 0) {
         let bedDepthPercent = 0.45;
         if (flW <= 7) bedDepthPercent = 0.5;
         if (flW <= 5) bedDepthPercent = 0.55;
-        bedDepth = Math.min(4.5, flW * bedDepthPercent);
+        bedDepth = Math.min(4.8, flW * bedDepthPercent);
 
         const remainingW = flW - bedDepth;
         if (remainingW < 3.0) hallwayWidth = 0; // Skip hallway if too narrow
@@ -2061,21 +2062,38 @@ export function initRenderer(configData) {
         const bedFrontZ = houseBackZ + bedDepth;
         hallwayFrontZ = bedFrontZ + hallwayWidth;
 
-        let bedWidth;
+        const availWingL = flL - wt;
         if (beds === 1) {
-          // Keep the original corner box layout, but limit width so it doesn't push against the front door
-          bedWidth = Math.min(4.5, (flL - wt) * 0.6);
+          const maxW = flL * flW >= 55 ? 5.2 : 4.5;
+          const w = Math.min(maxW, availWingL * 0.6);
+          bedWidths = [w];
+        } else if (beds === 2) {
+          const totalTarget = Math.min(availWingL, 9.2);
+          const masterW = Math.max(2.8, totalTarget * 0.55);
+          const bed2W = Math.max(2.4, totalTarget - masterW);
+          bedWidths = [masterW, bed2W];
+        } else if (beds === 3) {
+          const totalTarget = Math.min(availWingL, 13.5);
+          const masterW = Math.max(3.2, totalTarget * 0.38);
+          const rem = (totalTarget - masterW) / 2;
+          bedWidths = [masterW, rem, rem];
         } else {
-          bedWidth = Math.min(4.5, (flL - wt) / beds);
+          const totalTarget = Math.min(availWingL, 4.2 * beds);
+          const masterW = Math.max(3.0, totalTarget * 0.28);
+          const rem = (totalTarget - masterW) / (beds - 1);
+          bedWidths = [masterW];
+          for (let b = 1; b < beds; b++) {
+            bedWidths.push(rem);
+          }
         }
-        totalBedWidth = bedWidth * beds;
+        totalBedWidth = bedWidths.reduce((a, b) => a + b, 0);
 
         // Pre-calculate CR dimensions so we can shift bedroom doors if needed
         if (crs > 0) {
           safeCrDepth = Math.min(1.8, flW * (flW <= 7 ? 0.25 : 0.2));
           safeCrWidth = Math.min(1.8, (flL - wt) / crs);
-          safeCrDepth = Math.max(0.8, Math.min(safeCrDepth, bedDepth * 0.4));
-          safeCrWidth = Math.max(0.8, Math.min(safeCrWidth, bedWidth * 0.5));
+          safeCrDepth = Math.max(0.8, Math.min(safeCrDepth, bedDepth * 0.45));
+          safeCrWidth = Math.max(0.8, Math.min(safeCrWidth, bedWidths[0] * 0.5));
         }
 
         // Front wall of bedrooms (back wall of hallway)
@@ -2094,8 +2112,10 @@ export function initRenderer(configData) {
           layer,
         );
 
+        let currentRoomLeftX = houseLeftX;
         for (let i = 0; i < beds; i++) {
-          const roomLeftX = houseLeftX + i * bedWidth;
+          const bedWidth = bedWidths[i];
+          const roomLeftX = currentRoomLeftX;
           const roomCenterX = roomLeftX + bedWidth / 2;
 
           // Partition Wall
@@ -2275,13 +2295,18 @@ export function initRenderer(configData) {
             );
 
             const area = Math.round(bedWidth * bedDepth * 10) / 10;
+            const roomName =
+              i === 0 && (beds > 1 || flL * flW >= 55)
+                ? "Master Bedroom"
+                : `Bedroom ${i + 1}`;
             const label = createTextSprite(
-              `Bedroom ${i + 1}\n(${area} sqm)`,
+              `${roomName}\n(${area} sqm)`,
               layer,
             );
             label.position.set(roomCenterX, 20, houseBackZ + bedDepth / 2);
             blueprintGroup.add(label);
           }
+          currentRoomLeftX += bedWidth;
         }
       }
 
@@ -2291,11 +2316,6 @@ export function initRenderer(configData) {
 
         if (beds > 0) {
           // safeCrWidth and safeCrDepth were pre-calculated above!
-          const bedWidth =
-            beds === 1
-              ? Math.min(4.5, (flL - wt) * 0.6)
-              : Math.min(4.5, (flL - wt) / beds);
-
           // 1st CR is always Common
           crPlacements.push({
             type: "common",
@@ -2305,10 +2325,13 @@ export function initRenderer(configData) {
             depth: safeCrDepth,
           });
 
-          // 2nd CR and beyond are En-suites distributed among bedrooms
+          // 2nd CR and beyond are En-suites distributed among bedrooms starting with Master Bed (i=0)
           for (let i = 1; i < crs; i++) {
             const bedIndex = (i - 1) % beds; // Distribute across available bedrooms
-            const roomLeftX = houseLeftX + bedIndex * bedWidth;
+            let roomLeftX = houseLeftX;
+            for (let b = 0; b < bedIndex; b++) {
+              roomLeftX += bedWidths[b] || 0;
+            }
             crPlacements.push({
               type: "ensuite",
               x: roomLeftX + safeCrWidth / 2,
@@ -2494,7 +2517,13 @@ export function initRenderer(configData) {
             );
 
             const area = Math.round(crWidth * crDepth * 10) / 10;
-            const label = createTextSprite(`CR ${i + 1}\n(${area} sqm)`, layer);
+            const crTitle =
+              cr.type === "ensuite"
+                ? "Master Bath"
+                : crs > 1
+                  ? "Common CR"
+                  : "Comfort Room";
+            const label = createTextSprite(`${crTitle}\n(${area} sqm)`, layer);
             label.position.set(cr.x, 20, cr.z);
             blueprintGroup.add(label);
           }
@@ -2979,11 +3008,18 @@ export function initRenderer(configData) {
     // The -Z wall has bedrooms starting from the back (-X).
     let livingOtherSideStartX = -L / 2 + wt / 2;
     if (bed1 > 0) {
-      const bedWidth =
-        bed1 === 1
-          ? Math.min(4.5, (L - wt) * 0.6)
-          : Math.min(4.5, (L - wt) / bed1);
-      livingOtherSideStartX += bedWidth * bed1; // Skip all bedroom footprints
+      let totalBWidth = 0;
+      if (bed1 === 1) {
+        const maxW = L * W >= 55 ? 5.2 : 4.5;
+        totalBWidth = Math.min(maxW, (L - wt) * 0.6);
+      } else if (bed1 === 2) {
+        totalBWidth = Math.min(L - wt, 9.2);
+      } else if (bed1 === 3) {
+        totalBWidth = Math.min(L - wt, 13.5);
+      } else {
+        totalBWidth = Math.min(L - wt, 4.2 * bed1);
+      }
+      livingOtherSideStartX += totalBWidth; // Skip all bedroom footprints
     }
     const availableOtherSideL = livingSideEndX - livingOtherSideStartX;
     if (availableOtherSideL > 1.5) {
@@ -3165,50 +3201,53 @@ export function initRenderer(configData) {
     porchLabel.position.set(porchCX, 20, porchCenterZ);
     blueprintGroup.add(porchLabel);
 
-    // ---- 5. FLOOR SLAB ----
-    // Calculate Living Area properly for the label
-    let livingArea = L * W;
-    // Rough subtraction of bedrooms/CRs (handled more precisely in cost, but this is a rough visual label)
-    if (bed1 > 0) livingArea -= L * W * 0.45;
-    livingArea = Math.round(livingArea * 10) / 10;
+    // ---- 5. FLOOR SLAB & PUBLIC LIVING / DINING / KITCHEN ZONING ----
+    let groundBedArea = 0;
+    if (bed1 > 0) {
+      let gBedDepth = Math.min(4.8, W * (W <= 5 ? 0.55 : W <= 7 ? 0.5 : 0.45));
+      let gBedW = 0;
+      if (bed1 === 1) gBedW = Math.min(L * W >= 55 ? 5.2 : 4.5, (L - wt) * 0.6);
+      else if (bed1 === 2) gBedW = Math.min(L - wt, 9.2);
+      else if (bed1 === 3) gBedW = Math.min(L - wt, 13.5);
+      else gBedW = Math.min(L - wt, 4.2 * bed1);
+      groundBedArea = gBedDepth * gBedW;
+    }
+    let groundCrArea = cr1 * 2.8;
+    let livingArea = Math.max(12, Math.round((L * W - groundBedArea - groundCrArea) * 10) / 10);
 
     const mainLabelLayer =
       type === "Two Storey" || type === "Loft Style" ? 1 : 0;
-    const mainLabel = createTextSprite(
-      `Living / Kitchen\n(${livingArea} sqm)`,
-      mainLabelLayer,
-    );
-    mainLabel.position.set(L * 0.25, 20, doorZ);
-    blueprintGroup.add(mainLabel);
 
-    // --- INTERIOR FURNISHING (LIVING / KITCHEN) ---
+    // --- INTERIOR FURNISHING (LIVING / KITCHEN / DINING) ---
     const availSpaceKit = frontX - livingOtherSideStartX; // Kitchen is on -Z wall (near bedrooms)
     const availSpaceTV = frontX - livingSideStartX; // TV is on +Z wall (near CRs)
 
     // Dynamically scale furniture based on available space to prevent clipping
     const maxSofaW = Math.min(
-      2.0,
-      Math.max(0.8, Math.min(availSpaceKit, availSpaceTV) - 0.4),
+      L * W >= 60 ? 2.6 : 2.0,
+      Math.max(1.2, Math.min(availSpaceKit, availSpaceTV) - 0.4),
     );
-    const maxTvW = Math.min(1.5, Math.max(0.8, availSpaceTV - 0.4));
+    const maxTvW = Math.min(
+      L * W >= 60 ? 2.0 : 1.5,
+      Math.max(1.0, availSpaceTV - 0.4),
+    );
 
     // Align TV and Sofa to the left partition wall so the main right hallway is perfectly open
     const partitionX = Math.max(livingSideStartX, livingOtherSideStartX);
     const actualAvailSpace = frontX - partitionX;
 
-    // Scale down furniture if the room is extremely narrow
-    const finalTvW = Math.min(maxTvW, actualAvailSpace - 0.2);
-    const finalSofaW = Math.min(maxSofaW, actualAvailSpace - 0.2);
+    // Scale down furniture if the room is narrow
+    const finalTvW = Math.min(maxTvW, Math.max(1.0, actualAvailSpace - 0.2));
+    const finalSofaW = Math.min(maxSofaW, Math.max(1.2, actualAvailSpace - 0.2));
 
-    // Tuck TV against the outer front wall (+X side), but shifted slightly right (towards partition)
+    // Tuck TV against outer front wall (+X side), shifted towards partition
     let tvX = frontX - finalTvW / 2 - 0.9;
     const tvZ = W / 2 - wt / 2 - 0.2;
     buildFurniture("tv", tvX, tvZ, Math.PI, layer1F, finalTvW);
 
-    // Align Sofa with the TV, shifted right along with it
+    // Align Sofa with the TV
     let sofaX = tvX;
-    // Make the sofa a little bit forward (closer to TV)
-    const tvSofaDist = Math.min(1.4, Math.max(1.0, W * 0.30));
+    const tvSofaDist = Math.min(2.0, Math.max(1.2, W * 0.32));
     const sofaZ = tvZ - tvSofaDist;
     buildFurniture("sofa", sofaX, sofaZ, 0, layer1F, finalSofaW);
 
@@ -3216,7 +3255,7 @@ export function initRenderer(configData) {
     let kitW, kitX, kitZ, kitRot;
     if (availSpaceKit >= 1.5) {
       // Enough space on the back wall (-Z) next to the bedrooms
-      kitW = Math.min(2.0, Math.max(0.8, availSpaceKit - 0.5));
+      kitW = Math.min(L * W >= 60 ? 2.8 : 2.0, Math.max(1.0, availSpaceKit - 0.5));
       kitX = livingOtherSideStartX + kitW / 2 + 0.2;
       kitZ = -W / 2 + wt / 2 + 0.5;
       kitRot = 0;
@@ -3225,7 +3264,6 @@ export function initRenderer(configData) {
       const maxKitOnRight = doorZ - doorW2 / 2 - groundBedFrontZ - 0.2;
 
       // Place on the left wall (CR wall)
-      // Need to avoid the CR door which is at crDoorZ = houseFrontZ - crDepth/2
       const crDepthApprox = 1.8;
       const crDoorZ = W / 2 - wt / 2 - crDepthApprox / 2;
       const spaceBeforeDoor = crDoorZ - 0.4 - groundBedFrontZ;
@@ -3242,44 +3280,101 @@ export function initRenderer(configData) {
         kitZ = crDoorZ + 0.4 + kitW / 2 + 0.1;
         kitRot = Math.PI / 2;
       } else {
-        // Force it on the right wall
-        // Make it flush against the actual bedroom wall (actualBedFrontZ + wt)
-        // and flush against the front wall (frontX - 0.4)
-        const bedWallFrontFace = actualBedFrontZ + 0.2; // wt is 0.2
+        const bedWallFrontFace = actualBedFrontZ + 0.2;
         const spaceForKit = doorZ - doorW2 / 2 - 0.2 - bedWallFrontFace;
         kitW = Math.max(0.6, Math.min(2.5, spaceForKit));
-        kitX = frontX - 0.4; // 0.3 (half of kitchen depth 0.6) + 0.1 (half of wall wt 0.2)
-        kitZ = bedWallFrontFace + kitW / 2; // Starts exactly at the bedroom wall's surface
+        kitX = frontX - 0.4;
+        kitZ = bedWallFrontFace + kitW / 2;
         kitRot = -Math.PI / 2;
       }
     }
     buildFurniture("kitchen", kitX, kitZ, kitRot, layer1F, kitW);
 
+    // Refrigerator! Place next to kitchen counter if space allows
+    if (availSpaceKit >= 2.6 && kitRot === 0) {
+      const fridgeX = kitX + kitW / 2 + 0.45;
+      const fridgeZ = kitZ;
+      buildFurniture("fridge", fridgeX, fridgeZ, 0, layer1F);
+    }
+
     // Dining Table (dynamically centered between the living area and kitchen)
     let diningX, diningZ;
     let maxDiningW = Math.min(
-      1.2,
-      Math.max(0.7, (frontX - livingSideStartX) * 0.3),
+      L * W >= 60 ? 1.6 : 1.2,
+      Math.max(0.8, (frontX - livingSideStartX) * 0.35),
     );
     let diningRot = Math.PI / 2;
 
     if (availSpaceKit >= 1.5) {
       diningX = (sofaX + kitX) / 2;
       diningZ = (sofaZ + kitZ) / 2;
-      // Push dining slightly to the right (+X) if cramped
       if (Math.min(availSpaceKit, availSpaceTV) < 2.5) {
         diningX += 0.2;
       }
     } else {
       // Kitchen is on a side wall.
-      // Place the dining table directly between the TV and sofa to act as a center/coffee table
       diningX = sofaX;
       diningZ = (sofaZ + tvZ) / 2;
-      diningRot = 0; // Rotate to align with TV and Sofa
-      maxDiningW = Math.min(1.0, Math.max(0.6, tvSofaDist - 0.6)); // Scale based on TV-Sofa distance
+      diningRot = 0;
+      maxDiningW = Math.min(1.0, Math.max(0.6, tvSofaDist - 0.6));
+    }
+    buildFurniture("dining", diningX, diningZ, diningRot, layer1F, maxDiningW);
+
+    // Architectural Kitchen Bar Peninsula for spacious floor plans (>= 75 sqm)
+    if (L * W >= 75 && availSpaceKit >= 3.2 && kitRot === 0) {
+      const barL = Math.min(1.8, availSpaceKit * 0.4);
+      const barH = 1.05;
+      const barX = kitX + kitW / 2 - 0.3;
+      const barZ = kitZ + 1.2;
+      box(
+        0.35,
+        barH,
+        barL,
+        barX,
+        barH / 2,
+        barZ,
+        mat,
+        wallGroup,
+        true,
+        "wall",
+        layer1F,
+      );
     }
 
-    buildFurniture("dining", diningX, diningZ, diningRot, layer1F, maxDiningW);
+    // Blueprint 2D Zone Labels
+    if (L * W < 45) {
+      const mainLabel = createTextSprite(
+        `Living / Kitchen\n(${livingArea} sqm)`,
+        mainLabelLayer,
+      );
+      mainLabel.position.set(L * 0.25, 20, doorZ);
+      blueprintGroup.add(mainLabel);
+    } else {
+      const livingSqm = Math.round(livingArea * 0.45 * 10) / 10;
+      const diningSqm = Math.round(livingArea * 0.30 * 10) / 10;
+      const kitchenSqm = Math.round(livingArea * 0.25 * 10) / 10;
+
+      const livingLabel = createTextSprite(
+        `Living Area\n(${livingSqm} sqm)`,
+        mainLabelLayer,
+      );
+      livingLabel.position.set(sofaX, 20, (tvZ + sofaZ) / 2);
+      blueprintGroup.add(livingLabel);
+
+      const diningLabel = createTextSprite(
+        `Dining Area\n(${diningSqm} sqm)`,
+        mainLabelLayer,
+      );
+      diningLabel.position.set(diningX, 20, diningZ);
+      blueprintGroup.add(diningLabel);
+
+      const kitchenLabel = createTextSprite(
+        `Kitchen\n(${kitchenSqm} sqm)`,
+        mainLabelLayer,
+      );
+      kitchenLabel.position.set(kitX, 20, kitZ);
+      blueprintGroup.add(kitchenLabel);
+    }
 
     box(L, 0.2, W, 0, 0.1, 0, slabMat, slabGroup, true, "wall", baseLayer);
     if (needsSlab) {
