@@ -258,121 +258,223 @@ const AGENT_PROFILES = {
 const AGENT_ORDER = ["architect", "engineer", "designer", "optimizer"];
 
 /**
+ * Maps form field names to clear, human-readable display titles without acronyms.
+ * Dynamically adjusts floor-specific labels depending on whether the house has 1 floor or 2 floors.
+ */
+function getFieldDisplayName(name, isTwoFloor) {
+  const labels1Floor = {
+    crs1F: "Comfort Room",
+    bedrooms1F: "Bedroom",
+    length: "House Length",
+    width: "House Width",
+    wallHeight: "Wall Height",
+    applyTilesGround: "Floor Tiling",
+    plasterGroundFloor: "Wall Plastering",
+    paintGroundFloor: "Wall Painting",
+    ceilingGroundFloor: "Ceiling",
+  };
+
+  const labels2Floor = {
+    crs1F: "Comfort Room (1st Floor)",
+    crs2F: "Comfort Room (2nd Floor)",
+    bedrooms1F: "Bedroom (1st Floor)",
+    bedrooms2F: "Bedroom (2nd Floor)",
+    length: "Ground Floor Length",
+    width: "Ground Floor Width",
+    secondFloorLength: "2nd Floor Length",
+    secondFloorWidth: "2nd Floor Width",
+    groundLength: "Ground Floor Length",
+    groundWidth: "Ground Floor Width",
+    groundWallHeight: "Ground Floor Wall Height",
+    secondFloorWallHeight: "2nd Floor Wall Height",
+    applyTilesGround: "Ground Floor Tiling",
+    applyTilesSecond: "2nd Floor Tiling",
+    plasterGroundFloor: "Ground Floor Plastering",
+    plasterSecondFloor: "2nd Floor Plastering",
+    paintGroundFloor: "Ground Floor Painting",
+    paintSecondFloor: "2nd Floor Painting",
+    ceilingGroundFloor: "Ground Floor Ceiling",
+    mezzanineCeiling: "Mezzanine Ceiling",
+    mezzanineLength: "Mezzanine Length",
+    mezzanineWidth: "Mezzanine Width",
+  };
+
+  const commonLabels = {
+    hasStairs: "Stairs",
+    roofType: "Roof Type",
+    roofStyle: "Roof Style",
+    materialGrade: "Material Grade",
+    soilCondition: "Soil Condition",
+    includeTools: "Tools & Equipment",
+    toolsDisplayMode: "Tools Cost Option",
+    includeElectrical: "Electrical Wiring",
+    includePlumbing: "Plumbing Installation",
+    includeACwiring: "Air Conditioning Circuit",
+    hasACWiring: "Air Conditioning Circuit",
+    includePlastering: "Wall Plastering",
+    includePainting: "Wall Painting",
+    hasCeiling: "Ceiling Installation",
+    ceilingWastage: "Ceiling Wastage Factor",
+    boardType: "Ceiling Board Type",
+    paintColorTheme: "Paint Color Theme",
+    tileSize: "Tile Size",
+    tileBreakage: "Tile Breakage Allowance",
+    chbType: "Concrete Hollow Block Type",
+    chbBaseWallHeight: "Base Wall Height",
+    wallingTypeAboveChb: "Upper Wall Material",
+  };
+
+  if (isTwoFloor && labels2Floor[name]) return labels2Floor[name];
+  if (!isTwoFloor && labels1Floor[name]) return labels1Floor[name];
+  if (commonLabels[name]) return commonLabels[name];
+
+  // Fallback: convert camelCase nicely
+  const formatted = name.replace(/([A-Z])/g, ' $1').trim();
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
+/**
  * Main animation loop for the dedicated Analyzing page.
  * Applies values silently to the hidden form and renders chat bubbles.
  */
-async function runAnalyzingLoop(form, suggestions) {
+async function runAnalyzingLoop(form, suggestions, typeKey) {
   const feed = document.getElementById("aiFeed");
   const progress = document.getElementById("aiProgress");
   const header = document.getElementById("aiHeader");
   const container = document.querySelector(".analyzing-container");
   if (!feed) return;
 
-  // Sort suggestions by agent
-  suggestions.sort((a, b) => {
-    const agentA = AGENT_MAP[a.name] || "optimizer";
-    const agentB = AGENT_MAP[b.name] || "optimizer";
-    return AGENT_ORDER.indexOf(agentA) - AGENT_ORDER.indexOf(agentB);
-  });
+  const isTwoFloor = typeKey === 'two-storey' || typeKey === 'loft' || form.querySelector('[name="bedrooms2F"], [name="crs2F"], [name="secondFloorLength"]') !== null;
 
-  let currentStep = 0;
-  const totalSteps = suggestions.length;
-  let currentAgentKey = null;
-  let isFirstBubble = true;
+  // Track user scroll state so we don't fight user when they scroll up to inspect items
+  let userScrolledUp = false;
+  let userInteracting = false;
 
-  for (const suggestion of suggestions) {
-    if (isFirstBubble && container) {
-      container.classList.add("has-bubbles");
-      isFirstBubble = false;
-    }
-    
-    currentStep++;
-    if (progress) {
-      progress.innerText = `Step ${currentStep} of ${totalSteps} — Configuring...`;
-    }
-    const { name, value, reason } = suggestion;
-    const { el, isToggle, toggleCheckbox } = getElementForName(form, name);
+  const onTouchStart = () => { userInteracting = true; };
+  const onTouchEnd = () => { setTimeout(() => { userInteracting = false; }, 350); };
+  const onScroll = () => {
+    const scrollBottom = window.innerHeight + window.scrollY;
+    const totalHeight = document.documentElement.scrollHeight;
+    // If user has scrolled more than 220px up from the bottom, they are reviewing previous items
+    userScrolledUp = (totalHeight - scrollBottom) > 220;
+  };
 
-    if (!el) continue;
+  window.addEventListener("touchstart", onTouchStart, { passive: true });
+  window.addEventListener("touchend", onTouchEnd, { passive: true });
+  window.addEventListener("scroll", onScroll, { passive: true });
 
-    const agentKey = AGENT_MAP[name] || "optimizer";
-    const agent = AGENT_PROFILES[agentKey];
+  try {
+    // Sort suggestions by agent
+    suggestions.sort((a, b) => {
+      const agentA = AGENT_MAP[a.name] || "optimizer";
+      const agentB = AGENT_MAP[b.name] || "optimizer";
+      return AGENT_ORDER.indexOf(agentA) - AGENT_ORDER.indexOf(agentB);
+    });
 
-    // Transition header if agent changes
-    if (agentKey !== currentAgentKey) {
-      if (header) {
-        if (container) container.style.setProperty("--orb-color", agent.color);
-        
-        const h2 = header.querySelector("h2");
-        const status = header.querySelector("#aiStatus");
-        
-        if (h2) {
-           h2.style.opacity = 0;
-           setTimeout(() => {
-             h2.innerText = `${agent.emoji} ${agent.name}`;
-             h2.style.opacity = 1;
-           }, 250);
-        }
-        
-        if (status) {
-           status.style.opacity = 0;
-           setTimeout(() => {
-             status.innerText = agent.action;
-             status.style.opacity = 1;
-           }, 250);
-        }
+    let currentStep = 0;
+    const totalSteps = suggestions.length;
+    let currentAgentKey = null;
+    let isFirstBubble = true;
+
+    for (const suggestion of suggestions) {
+      if (isFirstBubble && container) {
+        container.classList.add("has-bubbles");
+        isFirstBubble = false;
       }
-      currentAgentKey = agentKey;
       
-      // Give a tiny bit of extra pause for transition before bubble appears
-      await new Promise(r => setTimeout(r, 600));
-    }
-
-    // Apply the value to the hidden form instantly
-    if (isToggle) {
-      const isChecking = value === toggleCheckbox.dataset.on;
-      if (toggleCheckbox.checked !== isChecking) {
-        toggleCheckbox.checked = isChecking;
-        toggleCheckbox.dispatchEvent(new Event("change", { bubbles: true }));
+      currentStep++;
+      if (progress) {
+        progress.innerText = `Step ${currentStep} of ${totalSteps} — Configuring...`;
       }
-    } else {
-      el.value = value;
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-      el.dispatchEvent(new Event("change", { bubbles: true }));
+      const { name, value, reason } = suggestion;
+      const { el, isToggle, toggleCheckbox } = getElementForName(form, name);
+
+      if (!el) continue;
+
+      const agentKey = AGENT_MAP[name] || "optimizer";
+      const agent = AGENT_PROFILES[agentKey];
+
+      // Transition header if agent changes
+      if (agentKey !== currentAgentKey) {
+        if (header) {
+          if (container) container.style.setProperty("--orb-color", agent.color);
+          
+          const h2 = header.querySelector("h2");
+          const status = header.querySelector("#aiStatus");
+          
+          if (h2) {
+             h2.style.opacity = 0;
+             setTimeout(() => {
+               h2.innerText = `${agent.emoji} ${agent.name}`;
+               h2.style.opacity = 1;
+             }, 250);
+          }
+          
+          if (status) {
+             status.style.opacity = 0;
+             setTimeout(() => {
+               status.innerText = agent.action;
+               status.style.opacity = 1;
+             }, 250);
+          }
+        }
+        currentAgentKey = agentKey;
+        
+        // Give a tiny bit of extra pause for transition before bubble appears
+        await new Promise(r => setTimeout(r, 600));
+      }
+
+      // Apply the value to the hidden form instantly
+      if (isToggle) {
+        const isChecking = value === toggleCheckbox.dataset.on;
+        if (toggleCheckbox.checked !== isChecking) {
+          toggleCheckbox.checked = isChecking;
+          toggleCheckbox.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      } else {
+        el.value = value;
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+
+      // Format the field name to look nicer
+      const finalName = getFieldDisplayName(name, isTwoFloor);
+      
+      // Format the value nicely
+      let displayValue = String(value);
+      if (displayValue === "true") displayValue = "Yes";
+      if (displayValue === "false") displayValue = "No";
+      displayValue = displayValue.replace(/([A-Z])/g, ' $1').trim();
+      displayValue = displayValue.charAt(0).toUpperCase() + displayValue.slice(1);
+
+      // Render the chat bubble
+      const bubble = document.createElement("div");
+      bubble.className = "ai-bubble";
+      bubble.style.setProperty("--agent-color", agent.color);
+      bubble.innerHTML = `
+        <div class="ai-bubble-icon" style="background: color-mix(in srgb, ${agent.color} 20%, transparent)">${agent.emoji}</div>
+        <div class="ai-bubble-content">
+          <div class="ai-bubble-field" style="background: ${agent.color}">${finalName}</div>
+          <div class="ai-bubble-value">${displayValue}</div>
+          <span class="agent-tag">${agent.name}</span>
+          <div class="ai-bubble-text">${reason}</div>
+        </div>
+      `;
+      
+      feed.appendChild(bubble);
+      
+      // Natural whole-page auto-scroll: only scrolls if the user is near bottom and not currently touching/interacting
+      if (!userScrolledUp && !userInteracting) {
+        bubble.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      // Pause to simulate generation and let the user read
+      await new Promise((r) => setTimeout(r, 1200));
     }
-
-    // Format the field name to look nicer (e.g. "roofStyle" -> "Roof Style")
-    const formattedName = name.replace(/([A-Z])/g, ' $1').trim();
-    const finalName = formattedName.charAt(0).toUpperCase() + formattedName.slice(1);
-    
-    // Format the value nicely
-    let displayValue = String(value);
-    if (displayValue === "true") displayValue = "Yes";
-    if (displayValue === "false") displayValue = "No";
-    displayValue = displayValue.replace(/([A-Z])/g, ' $1').trim();
-    displayValue = displayValue.charAt(0).toUpperCase() + displayValue.slice(1);
-
-    // Render the chat bubble
-    const bubble = document.createElement("div");
-    bubble.className = "ai-bubble";
-    bubble.style.setProperty("--agent-color", agent.color);
-    bubble.innerHTML = `
-      <div class="ai-bubble-icon" style="background: color-mix(in srgb, ${agent.color} 20%, transparent)">${agent.emoji}</div>
-      <div class="ai-bubble-content">
-        <div class="ai-bubble-field" style="background: ${agent.color}">${finalName}</div>
-        <div class="ai-bubble-value">${displayValue}</div>
-        <span class="agent-tag">${agent.name}</span>
-        <div class="ai-bubble-text">${reason}</div>
-      </div>
-    `;
-    
-    feed.appendChild(bubble);
-    
-    // Auto-scroll smoothly ONLY inside the feed container (no full-page jumping)
-    feed.scrollTo({ top: feed.scrollHeight, behavior: 'smooth' });
-
-    // Pause to simulate generation and let the user read
-    await new Promise((r) => setTimeout(r, 1200));
+  } finally {
+    window.removeEventListener("touchstart", onTouchStart);
+    window.removeEventListener("touchend", onTouchEnd);
+    window.removeEventListener("scroll", onScroll);
   }
 }
 
@@ -494,7 +596,7 @@ export async function startAiAnalyzing(form, typeKey, setupData) {
         if (status) status.innerText = "Applying optimal materials and styles...";
       }
 
-      await runAnalyzingLoop(form, suggestions);
+      await runAnalyzingLoop(form, suggestions, typeKey);
       
       // Update header to complete
       if (header) {
