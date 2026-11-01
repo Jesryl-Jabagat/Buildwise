@@ -2011,6 +2011,8 @@ export function initRenderer(configData) {
     }
 
     // ---- 1.5 INTERIOR ROOMS ----
+    let groundFloorTotalBedWidth = 0;
+
     function buildRooms(
       numBeds,
       numCRs,
@@ -2062,23 +2064,24 @@ export function initRenderer(configData) {
         const bedFrontZ = houseBackZ + bedDepth;
         hallwayFrontZ = bedFrontZ + hallwayWidth;
 
-        const availWingL = flL - wt;
+        // Ensure bedroom wing leaves space for the front public zone (living / kitchen / entry)
+        const maxBedWingL = flL > 6 ? Math.max(3.2, flL - wt - 3.2) : (flL - wt) * 0.65;
         if (beds === 1) {
           const maxW = flL * flW >= 55 ? 5.2 : 4.5;
-          const w = Math.min(maxW, availWingL * 0.6);
+          const w = Math.min(maxW, maxBedWingL * 0.6);
           bedWidths = [w];
         } else if (beds === 2) {
-          const totalTarget = Math.min(availWingL, 9.2);
+          const totalTarget = Math.min(maxBedWingL, 9.2);
           const masterW = Math.max(2.8, totalTarget * 0.55);
           const bed2W = Math.max(2.4, totalTarget - masterW);
           bedWidths = [masterW, bed2W];
         } else if (beds === 3) {
-          const totalTarget = Math.min(availWingL, 13.5);
+          const totalTarget = Math.min(maxBedWingL, 13.5);
           const masterW = Math.max(3.2, totalTarget * 0.38);
           const rem = (totalTarget - masterW) / 2;
           bedWidths = [masterW, rem, rem];
         } else {
-          const totalTarget = Math.min(availWingL, 4.2 * beds);
+          const totalTarget = Math.min(maxBedWingL, 3.5 * beds);
           const masterW = Math.max(3.0, totalTarget * 0.28);
           const rem = (totalTarget - masterW) / (beds - 1);
           bedWidths = [masterW];
@@ -2087,6 +2090,9 @@ export function initRenderer(configData) {
           }
         }
         totalBedWidth = bedWidths.reduce((a, b) => a + b, 0);
+        if (isBaseFloor && (layer === 1 || layer === 0)) {
+          groundFloorTotalBedWidth = totalBedWidth;
+        }
 
         // Pre-calculate CR dimensions so we can shift bedroom doors if needed
         if (crs > 0) {
@@ -3006,21 +3012,7 @@ export function initRenderer(configData) {
 
     // --- Dynamic Side Windows for Living/Kitchen (-Z wall) ---
     // The -Z wall has bedrooms starting from the back (-X).
-    let livingOtherSideStartX = -L / 2 + wt / 2;
-    if (bed1 > 0) {
-      let totalBWidth = 0;
-      if (bed1 === 1) {
-        const maxW = L * W >= 55 ? 5.2 : 4.5;
-        totalBWidth = Math.min(maxW, (L - wt) * 0.6);
-      } else if (bed1 === 2) {
-        totalBWidth = Math.min(L - wt, 9.2);
-      } else if (bed1 === 3) {
-        totalBWidth = Math.min(L - wt, 13.5);
-      } else {
-        totalBWidth = Math.min(L - wt, 4.2 * bed1);
-      }
-      livingOtherSideStartX += totalBWidth; // Skip all bedroom footprints
-    }
+    let livingOtherSideStartX = -L / 2 + wt / 2 + groundFloorTotalBedWidth;
     const availableOtherSideL = livingSideEndX - livingOtherSideStartX;
     if (availableOtherSideL > 1.5) {
       const numOtherWins = Math.max(1, Math.floor(availableOtherSideL / 3.0));
@@ -3333,7 +3325,7 @@ export function initRenderer(configData) {
         barX,
         barH / 2,
         barZ,
-        mat,
+        wallMat,
         wallGroup,
         true,
         "wall",
