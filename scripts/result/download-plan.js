@@ -38,22 +38,35 @@ function setupPDFPage() {
         // Full Materials List (all items)
         const matTbody = document.getElementById("pdf-materials-tbody");
         estimateData.materialsList.forEach(cat => {
+            const isPkg = cat.isPackage || cat.category === "Plumbing" || cat.category === "Electrical";
             // Category header row
             const catRow = document.createElement("tr");
+            const headerTitle = isPkg ? `${cat.category.toUpperCase()} PACKAGE (PAKYAW)` : cat.category.toUpperCase();
             catRow.innerHTML = `
-                <td colspan="3" style="font-weight: 700; background: #f5f7f4; padding: 4px 6px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #1f7a5c;">${cat.category}</td>
+                <td colspan="3" style="font-weight: 700; background: #f5f7f4; padding: 4px 6px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #1f7a5c;">${headerTitle}</td>
             `;
             matTbody.appendChild(catRow);
-            // Individual item rows
-            cat.items.forEach(item => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td style="padding-left: 12px;">${item.name}</td>
-                    <td class="text-center" style="white-space:nowrap;">${item.qty} ${item.unit || ''}</td>
-                    <td class="text-end">${currency.format(item.total)}</td>
+            
+            if (isPkg) {
+                const pkgRow = document.createElement("tr");
+                pkgRow.innerHTML = `
+                    <td style="padding-left: 12px; font-weight: 600;">Complete ${cat.category} Package (Lump-Sum)<br><small style="color: #666; font-size: 8px;">Includes rough-in, fixtures & connections (${cat.items.length} items)</small></td>
+                    <td class="text-center" style="white-space:nowrap;">1 lot</td>
+                    <td class="text-end" style="font-weight: 700;">${currency.format(cat.total)}</td>
                 `;
-                matTbody.appendChild(tr);
-            });
+                matTbody.appendChild(pkgRow);
+            } else {
+                // Individual item rows
+                cat.items.forEach(item => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td style="padding-left: 12px;">${item.name}</td>
+                        <td class="text-center" style="white-space:nowrap;">${item.qty} ${item.unit || ''}</td>
+                        <td class="text-end">${currency.format(item.total)}</td>
+                    `;
+                    matTbody.appendChild(tr);
+                });
+            }
         });
         document.getElementById("pdf-materials-total").innerText = currency.format(estimateData.summary.totalMaterials);
         
@@ -61,7 +74,9 @@ function setupPDFPage() {
         const laborTbody = document.getElementById("pdf-labor-tbody");
         estimateData.summary.laborBreakdown.forEach(lb => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td><strong>${lb.role}</strong>${lb.phasesText ? `<br><small style="color: #666;">${lb.phasesText}</small>` : ''}</td><td class="text-center">${lb.workers || 1}</td><td class="text-center">${lb.days}</td><td class="text-end">${currency.format(lb.total)}</td>`;
+            const isPkg = lb.isPackage || lb.workers === "Package";
+            const workerCol = isPkg ? "Package" : (lb.workers || 1);
+            tr.innerHTML = `<td><strong>${lb.role}</strong>${lb.phasesText ? `<br><small style="color: #666;">${lb.phasesText}</small>` : ''}</td><td class="text-center">${workerCol}</td><td class="text-center">${lb.days}</td><td class="text-end">${currency.format(lb.total)}</td>`;
             laborTbody.appendChild(tr);
         });
 
@@ -94,11 +109,13 @@ function setupPDFPage() {
         estimateData.forecasting.phases.forEach(ph => {
             const div = document.createElement("div");
             div.className = "timeline-phase";
+            const isPkg = ph.isPackage || ph.workers === "Package" || String(ph.name).toLowerCase().includes("plumbing") || String(ph.name).toLowerCase().includes("elec.");
+            const workersCol = isPkg ? "Package" : `${ph.workers} Workers`;
             div.innerHTML = `
                 <div class="phase-bullet"></div>
                 <div class="phase-content">
                     <h5>${ph.name}</h5>
-                    <p>${ph.days} Days • ${ph.workers} Workers${ph.crewDetails ? `<br><small style="color: #666;">Crew: ${ph.crewDetails}</small>` : ''}</p>
+                    <p>${ph.days} Days • ${workersCol}${ph.crewDetails ? `<br><small style="color: #666;">Crew: ${ph.crewDetails}</small>` : ''}</p>
                 </div>
             `;
             phasesDiv.appendChild(div);

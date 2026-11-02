@@ -129,13 +129,6 @@ function generateTimelineAndLabor(totalMaterialsCost, floorArea, materialsList =
   // Final Phase: Utilities (Plumbing & Electrical) & Turnover
   const hasUtilitiesPhase = hasPlumbing || hasElectrical;
   if (hasUtilitiesPhase) {
-    const p5Roles = {
-      "Lead Carpenter / Master Builder": 1,
-      "Helper / Ordinary Laborer": helperCount
-    };
-    if (hasElectrical) p5Roles["Electrician"] = 1;
-    if (hasPlumbing) p5Roles["Plumber"] = 1;
-
     const utils = [];
     if (hasPlumbing) utils.push("Plumbing");
     if (hasElectrical) utils.push("Elec.");
@@ -146,7 +139,8 @@ function generateTimelineAndLabor(totalMaterialsCost, floorArea, materialsList =
       rawPct: 0.10,
       delay: 3,
       delayNote: "final inspection",
-      roles: p5Roles
+      isPackage: true,
+      roles: {} // Subcontract pakyaw: handled as a specialized package rather than daily site laborers
     });
   } else {
     // Append turnover to the last active phase
@@ -181,6 +175,18 @@ function generateTimelineAndLabor(totalMaterialsCost, floorArea, materialsList =
     const totalDays = p.activeDays + (p.delay || 0);
     totalBuildDays += totalDays;
 
+    if (p.isPackage) {
+      const displayName = p.delay ? `${finalName} (incl. ${p.delay}d ${p.delayNote})` : finalName;
+      return {
+        name: displayName,
+        days: totalDays,
+        activeDays: p.activeDays,
+        workers: "Package",
+        isPackage: true,
+        crewDetails: "Specialized Subcontract (Pakyaw Package)"
+      };
+    }
+
     // Calculate total workers in this phase from role assignments
     let phaseWorkerCount = 0;
     const crewParts = [];
@@ -214,8 +220,6 @@ function generateTimelineAndLabor(totalMaterialsCost, floorArea, materialsList =
     "Lead Carpenter / Master Builder": wageCarpenter,
     "Mason": wageMason,
     "Helper / Ordinary Laborer": wageHelper,
-    "Electrician": wageElectrician,
-    "Plumber": wagePlumber,
     "Tile Setter": wageTileSetter,
     "Painter": wagePainter
   };
@@ -224,8 +228,6 @@ function generateTimelineAndLabor(totalMaterialsCost, floorArea, materialsList =
     "Lead Carpenter / Master Builder": 1,
     "Mason": masonCount,
     "Helper / Ordinary Laborer": helperCount,
-    "Electrician": hasElectrical ? 1 : 0,
-    "Plumber": hasPlumbing ? 1 : 0,
     "Tile Setter": hasTiles ? 1 : 0,
     "Painter": hasPainting ? 1 : 0
   };
@@ -234,8 +236,6 @@ function generateTimelineAndLabor(totalMaterialsCost, floorArea, materialsList =
     "Lead Carpenter / Master Builder",
     "Mason",
     "Helper / Ordinary Laborer",
-    "Electrician",
-    "Plumber",
     "Tile Setter",
     "Painter"
   ];
@@ -267,11 +267,45 @@ function generateTimelineAndLabor(totalMaterialsCost, floorArea, materialsList =
     }
   });
 
+  // Specialized Pakyaw Subcontract Packages for Electrical & Plumbing
+  const packagePhaseIndex = finalizedPhases.findIndex(p => p.isPackage);
+  const packagePhaseText = packagePhaseIndex !== -1 ? `Phase ${packagePhaseIndex + 1}` : "Phase 4";
+  const utilPhase = activePhasesConfig.find(p => p.key === "utilities");
+  const utilDays = utilPhase?.activeDays || 4;
+
+  if (hasElectrical) {
+    const electricalPakyaw = Math.round(Math.max(4500, (floorArea * 150) + (utilDays * wageElectrician * 1.2)));
+    laborBreakdown.push({
+      role: "Electrical Works (Pakyaw Package)",
+      isPackage: true,
+      workers: "Package",
+      dailyWage: "Pakyaw Contract",
+      days: `${utilDays}d scope`,
+      total: electricalPakyaw,
+      phasesText: packagePhaseText
+    });
+  }
+
+  if (hasPlumbing) {
+    const plumbingPakyaw = Math.round(Math.max(4000, (floorArea * 120) + (utilDays * wagePlumber * 1.2)));
+    laborBreakdown.push({
+      role: "Plumbing Works (Pakyaw Package)",
+      isPackage: true,
+      workers: "Package",
+      dailyWage: "Pakyaw Contract",
+      days: `${utilDays}d scope`,
+      total: plumbingPakyaw,
+      phasesText: packagePhaseText
+    });
+  }
+
   const totalLaborCost = laborBreakdown.reduce((sum, r) => sum + r.total, 0);
 
-  const workerCounts = finalizedPhases.map(p => p.workers);
-  const minWorkers = Math.min(...workerCounts);
-  const maxWorkers = Math.max(...workerCounts);
+  const numericWorkerCounts = finalizedPhases
+    .filter(p => typeof p.workers === 'number' && !isNaN(p.workers))
+    .map(p => p.workers);
+  const minWorkers = numericWorkerCounts.length ? Math.min(...numericWorkerCounts) : 2;
+  const maxWorkers = numericWorkerCounts.length ? Math.max(...numericWorkerCounts) : 4;
   const workersStat = minWorkers === maxWorkers ? `${minWorkers}` : `${minWorkers}-${maxWorkers}`;
 
   return {
@@ -538,6 +572,7 @@ export function generateEstimate(data) {
         const catTotal = items.reduce((acc, curr) => acc + curr.total, 0);
         formattedCategories.push({
           category: catName,
+          isPackage: catName === 'Plumbing' || catName === 'Electrical',
           items: items,
           total: catTotal
         });

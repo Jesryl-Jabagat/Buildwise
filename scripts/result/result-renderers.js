@@ -68,8 +68,90 @@ export function writeMaterialsTable(materials) {
   if (note) note.hidden = true;
 
   container.innerHTML = materials
-    .map(
-      (group) => `
+    .map((group) => {
+      const isPkg = group.isPackage || group.category === "Plumbing" || group.category === "Electrical";
+      if (isPkg) {
+        const pkgName = group.category === "Plumbing" 
+          ? "Complete Plumbing & Sanitary Package" 
+          : "Complete Electrical & Wiring Package";
+        const pkgDesc = group.category === "Plumbing"
+          ? "PPR lines, sanitary orange pipes, drainage, standard fixtures, valves & fittings"
+          : "THHN wires, flexible hose, conduit piping, switches, outlets, panel board & breakers";
+
+        return `
+        <div class="materials-group package-group" style="background: rgba(31, 122, 92, 0.03); border: 1px solid rgba(31, 122, 92, 0.2); border-radius: 8px; padding: 14px 16px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h3 class="materials-category" style="margin: 0; color: #1f7a5c;">${pkgName}</h3>
+                <span class="badge" style="background: #1f7a5c; color: #fff; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; font-weight: 600; text-transform: uppercase;">Turnkey Package</span>
+              </div>
+              <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">${pkgDesc}</p>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); display: block;">Package Cost</span>
+              <strong style="font-size: 1.15rem; color: #1f7a5c;">${currency.format(group.total)}</strong>
+            </div>
+          </div>
+
+          <table class="materials-tbl" style="background: #fff; border-radius: 6px; overflow: hidden; margin-bottom: 10px;">
+            <thead>
+              <tr>
+                <th style="width: 45%;">Scope / Package Item</th>
+                <th style="width: 15%; text-align: center;">Qty</th>
+                <th style="width: 15%;">Unit</th>
+                <th style="width: 25%; text-align: right;">Package Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>${pkgName}</strong><br><small style="color: var(--text-muted);">Includes all roughing-in, piping, devices & connection supplies</small></td>
+                <td style="text-align: center; font-weight: 600;">1</td>
+                <td>lot / package</td>
+                <td style="text-align: right; font-weight: 700; color: #1f7a5c;">${currency.format(group.total)}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <details style="font-size: 0.84rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px;">
+            <summary style="cursor: pointer; font-weight: 600; color: #1f7a5c; outline: none; user-select: none;">
+              📦 View Itemized Package Inclusions (${group.items.length} materials)
+            </summary>
+            <div style="margin-top: 10px; overflow-x: auto;">
+              <table class="materials-tbl" style="margin: 0; font-size: 0.82rem;">
+                <thead>
+                  <tr style="background: #f8fafc;">
+                    <th>Component Material</th>
+                    <th style="text-align: center;">Est. Qty</th>
+                    <th>Unit</th>
+                    <th style="text-align: right;">Unit Ref.</th>
+                    <th style="text-align: right;">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${group.items
+                    .map(
+                      (item) => `
+                    <tr>
+                      <td>${item.name}</td>
+                      <td style="text-align: center;">${item.qty}</td>
+                      <td>${item.unit}</td>
+                      <td style="text-align: right;">${currency.format(item.unitCost)}</td>
+                      <td style="text-align: right;">${currency.format(item.total)}</td>
+                    </tr>
+                  `
+                    )
+                    .join("")}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+      `;
+      }
+
+      // Default standard materials group
+      return `
       <div class="materials-group">
         <h3 class="materials-category">${group.category}</h3>
         <table class="materials-tbl">
@@ -99,8 +181,8 @@ export function writeMaterialsTable(materials) {
           </tbody>
         </table>
       </div>
-    `,
-    )
+    `;
+    })
     .join("");
 }
 
@@ -115,18 +197,23 @@ export function writeConstructionPhases(phases) {
   if (!container || !phases?.length) return;
 
   container.innerHTML = phases
-    .map(
-      (phase) => `
+    .map((phase) => {
+      const isPkg = phase.isPackage || phase.workers === "Package" || String(phase.name).toLowerCase().includes("plumbing") || String(phase.name).toLowerCase().includes("elec.");
+      const workerDisplay = isPkg
+        ? `<span class="badge" style="background: rgba(31, 122, 92, 0.12); color: #1f7a5c; font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Package</span>`
+        : `${phase.workers} workers`;
+
+      return `
       <div class="phase-row">
         <div>
           <span class="phase-name">${phase.name}</span>
           ${phase.crewDetails ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 3px;">👥 ${phase.crewDetails}</div>` : ''}
         </div>
         <span class="phase-days">${phase.days} days</span>
-        <span class="phase-workers">${phase.workers} workers</span>
+        <span class="phase-workers">${workerDisplay}</span>
       </div>
-    `,
-    )
+    `;
+    })
     .join("");
 
   const note = document.getElementById("timelineNote");
@@ -147,29 +234,40 @@ export function writeLaborBreakdown(breakdown) {
     <table class="materials-tbl mt-3">
       <thead>
         <tr>
-          <th style="width: 35%;">Labor Role (DOLE Std)</th>
+          <th style="width: 35%;">Labor Role / Subcontract</th>
           <th style="width: 15%; text-align: center;">Workers</th>
-          <th style="width: 15%; text-align: center;">Daily Wage</th>
-          <th style="width: 15%; text-align: center;">Est. Days</th>
+          <th style="width: 15%; text-align: center;">Rate Basis</th>
+          <th style="width: 15%; text-align: center;">Est. Days / Scope</th>
           <th style="width: 20%; text-align: right;">Total Bayad</th>
         </tr>
       </thead>
       <tbody>
         ${breakdown
-          .map(
-            (item) => `
+          .map((item) => {
+            const isPkg = item.isPackage || item.workers === "Package";
+            const workersHtml = isPkg
+              ? `<span class="badge" style="background: rgba(31, 122, 92, 0.12); color: #1f7a5c; font-size: 0.75rem; padding: 3px 6px; border-radius: 4px; font-weight: 700;">Package</span>`
+              : (item.workers || 1);
+            const wageHtml = isPkg
+              ? `<span style="color: var(--text-muted); font-size: 0.8rem;">${item.dailyWage}</span>`
+              : currency.format(item.dailyWage);
+            const daysHtml = isPkg
+              ? `<span style="color: var(--text-muted); font-size: 0.8rem;">${item.days}</span>`
+              : item.days;
+
+            return `
           <tr>
             <td>
               <div style="font-weight: 600;">${item.role}</div>
               ${item.phasesText ? `<div style="font-size: 0.75rem; color: var(--color-accent, #1f7a5c); margin-top: 2px;">📍 ${item.phasesText}</div>` : ''}
             </td>
-            <td style="text-align: center; font-weight: 600;">${item.workers || 1}</td>
-            <td style="text-align: center;">${currency.format(item.dailyWage)}</td>
-            <td style="text-align: center;">${item.days}</td>
+            <td style="text-align: center; font-weight: 600;">${workersHtml}</td>
+            <td style="text-align: center;">${wageHtml}</td>
+            <td style="text-align: center;">${daysHtml}</td>
             <td style="text-align: right; font-weight: 600;">${currency.format(item.total)}</td>
           </tr>
-        `,
-          )
+        `;
+          })
           .join("")}
       </tbody>
     </table>
