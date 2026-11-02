@@ -37,7 +37,7 @@ export function getHalfAmakanTemplate() {
           <div class="col-md-6"><label class="form-label" for="halfAmakanLength">Length (m)</label><input class="form-control" id="halfAmakanLength" name="length" type="number" min="1" step="0.5" value="5" required></div>
           <div class="col-md-6"><label class="form-label" for="halfAmakanWidth">Width (m)</label><input class="form-control" id="halfAmakanWidth" name="width" type="number" min="1" step="0.5" value="6" required></div>
           <div class="col-md-6"><label class="form-label" for="halfAmakanBedrooms1F">Bedrooms (1F)</label><select class="form-select room-picker" id="halfAmakanBedrooms1F" name="bedrooms1F"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-          <div class="col-md-6"><label class="form-label" for="halfAmakanCrs1F">Comfort Rooms (1F)</label><select class="form-select room-picker" id="halfAmakanCrs1F" name="crs1F"><option>0</option><option selected>1</option><option>2</option><option>3</option></select></div>
+          <div class="col-md-6"><label class="form-label" for="halfAmakanCrs1F">Comfort Rooms (1F)</label><select class="form-select room-picker" id="halfAmakanCrs1F" name="crs1F"><option selected>1</option><option>2</option><option>3</option></select></div>
         </div>
       </section>
 

@@ -154,7 +154,7 @@ export async function startAiBuilder(form, typeKey, setupData) {
           let currentEstimate = generateEstimate(currentData);
           
           if (currentEstimate.summary && currentEstimate.summary.grandTotal > targetBudget) {
-              const togglesToDisable = ["hasACWiring", "hasTiles", "hasPaint", "hasCeiling"];
+              const togglesToDisable = ["includeACwiring", "applyTilesGround", "applyTilesSecond", "includePainting", "paintGroundFloor", "paintSecondFloor", "hasCeiling", "ceilingGroundFloor", "ceilingSecondFloor"];
               
               for (let t of togglesToDisable) {
                   const hidden = form.querySelector(`input[type="hidden"][name="${t}"]`);

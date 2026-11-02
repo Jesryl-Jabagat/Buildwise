@@ -14,15 +14,15 @@ const mapType = (tk) => {
 };
 
 const mapPaintColor = (theme) => {
-  if (!theme) return "#D8D4CC"; // Darkened from #E8E4DC
-  if (theme.includes("Classic White")) return "#E0E0E0"; // Darkened from #F0F0F0
-  if (theme.includes("Cream")) return "#D8D4CC";
-  if (theme.includes("Earth Tones")) return "#B89278"; // Darkened from #C8A288
-  if (theme.includes("Cool Neutrals")) return "#A0A8B0"; // Darkened from #B0B8C0
-  if (theme.includes("Pastel")) return "#B1C3D0"; // Darkened from #C1D3E0
-  if (theme.includes("Tropical")) return "#EFE9C2"; // Darkened from #FFF9D2
-  if (theme.includes("Modern Minimalist")) return "#F0F0F0"; // Darkened from #FFFFFF
-  return "#D8D4CC";
+  if (!theme) return "#E8E2D5";
+  if (theme.includes("Classic White")) return "#F4F5F7";
+  if (theme.includes("Cream")) return "#F0E4D0";
+  if (theme.includes("Earth Tones")) return "#C28E64"; // Warm rich terracotta clay
+  if (theme.includes("Cool Neutrals")) return "#7D8C99"; // Distinct blue-grey
+  if (theme.includes("Pastel")) return "#99BAC7"; // Soft airy sky-cyan
+  if (theme.includes("Tropical")) return "#EAD67E"; // Warm sunshine amber
+  if (theme.includes("Modern Minimalist")) return "#EAEAEA"; // Clean modern architectural white
+  return "#E8E2D5";
 };
 
 export function initRenderer(configData) {
@@ -1078,7 +1078,7 @@ export function initRenderer(configData) {
   const hardiflexTex = makeHardiflexTex();
   const textureLoader = new THREE.TextureLoader();
   textureLoader.setCrossOrigin("anonymous");
-  const amakanTex = textureLoader.load("../assets/amakan_skin.png");
+  const amakanTex = makeAmakanTex(); // Use robust procedural canvas texture to prevent hollow black rendering
   amakanTex.wrapS = amakanTex.wrapT = THREE.RepeatWrapping;
   amakanTex.repeat.set(4, 4);
   const metalTex = makeMetalTex();
@@ -1306,6 +1306,43 @@ export function initRenderer(configData) {
       const bpGeo = new THREE.EdgesGeometry(
         new THREE.BoxGeometry(cW, 0.01, 0.4),
       );
+      const bpLine = new THREE.LineSegments(bpGeo, fpLineMat);
+      bpGrp.add(bpLine);
+      bpGrp.position.set(cx, 20, cz);
+      bpGrp.rotation.y = rotY;
+      setLayer(bpGrp, layer);
+      blueprintGroup.add(bpGrp);
+    } else if (type === "armchair") {
+      const aW = param || 0.85;
+      const base = new THREE.Mesh(new THREE.BoxGeometry(aW, 0.4, 0.8), sofaMat);
+      base.position.y = 0.2;
+      const back = new THREE.Mesh(new THREE.BoxGeometry(aW, 0.5, 0.2), sofaMat);
+      back.position.set(0, 0.65, -0.3);
+      const armL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.3, 0.8), sofaMat);
+      armL.position.set(-aW / 2 + 0.075, 0.55, 0);
+      const armR = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.3, 0.8), sofaMat);
+      armR.position.set(aW / 2 - 0.075, 0.55, 0);
+      grp.add(base, back, armL, armR);
+
+      const bpGrp = new THREE.Group();
+      const bpGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(aW, 0.01, 0.8));
+      const bpLine = new THREE.LineSegments(bpGeo, fpLineMat);
+      bpGrp.add(bpLine);
+      bpGrp.position.set(cx, 20, cz);
+      bpGrp.rotation.y = rotY;
+      setLayer(bpGrp, layer);
+      blueprintGroup.add(bpGrp);
+    } else if (type === "coffeetable") {
+      const tW = param || 1.1;
+      const tD = 0.6;
+      const top = new THREE.Mesh(new THREE.BoxGeometry(tW, 0.04, tD), woodMat);
+      top.position.y = 0.42;
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(tW * 0.6, 0.4, tD * 0.6), woodMat);
+      leg.position.y = 0.2;
+      grp.add(top, leg);
+
+      const bpGrp = new THREE.Group();
+      const bpGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(tW, 0.01, tD));
       const bpLine = new THREE.LineSegments(bpGeo, fpLineMat);
       bpGrp.add(bpLine);
       bpGrp.position.set(cx, 20, cz);
@@ -1736,6 +1773,7 @@ export function initRenderer(configData) {
         color: paintColor,
         roughness: 0.75,
         metalness: 0.0,
+        side: THREE.DoubleSide,
       });
     } else if (plastering) {
       wallMat = new THREE.MeshStandardMaterial({
@@ -3243,19 +3281,45 @@ export function initRenderer(configData) {
     const sofaZ = tvZ - tvSofaDist;
     buildFurniture("sofa", sofaX, sofaZ, 0, layer1F, finalSofaW);
 
-    // Kitchen Counter
+    // Coffee table centered between TV and Sofa
+    const coffeeTableW = Math.min(1.3, Math.max(0.8, finalSofaW * 0.65));
+    buildFurniture(
+      "coffeetable",
+      sofaX,
+      (tvZ + sofaZ) / 2,
+      0,
+      layer1F,
+      coffeeTableW,
+    );
+
+    // Accent Armchairs for spacious living rooms (>= 55 sqm)
+    if (L * W >= 55 && actualAvailSpace >= 3.0) {
+      buildFurniture(
+        "armchair",
+        sofaX - finalSofaW / 2 - 0.7,
+        (tvZ + sofaZ) / 2,
+        Math.PI / 2,
+        layer1F,
+      );
+      buildFurniture(
+        "armchair",
+        sofaX + finalSofaW / 2 + 0.7,
+        (tvZ + sofaZ) / 2,
+        -Math.PI / 2,
+        layer1F,
+      );
+    }
+
+    // Kitchen Counter & Utility Zoning
     let kitW, kitX, kitZ, kitRot;
+    const isSpaciousHome = L * W >= 80;
+
     if (availSpaceKit >= 1.5) {
-      // Enough space on the back wall (-Z) next to the bedrooms
-      kitW = Math.min(L * W >= 60 ? 2.8 : 2.0, Math.max(1.0, availSpaceKit - 0.5));
+      kitW = Math.min(isSpaciousHome ? 3.0 : 2.0, Math.max(1.2, availSpaceKit - 0.5));
       kitX = livingOtherSideStartX + kitW / 2 + 0.2;
       kitZ = -W / 2 + wt / 2 + 0.5;
       kitRot = 0;
     } else {
-      // Bedrooms take up most of the back wall. Place kitchen in the living area.
-      const maxKitOnRight = doorZ - doorW2 / 2 - groundBedFrontZ - 0.2;
-
-      // Place on the left wall (CR wall)
       const crDepthApprox = 1.8;
       const crDoorZ = W / 2 - wt / 2 - crDepthApprox / 2;
       const spaceBeforeDoor = crDoorZ - 0.4 - groundBedFrontZ;
@@ -3283,28 +3347,24 @@ export function initRenderer(configData) {
     buildFurniture("kitchen", kitX, kitZ, kitRot, layer1F, kitW);
 
     // Refrigerator! Place next to kitchen counter if space allows
-    if (availSpaceKit >= 2.6 && kitRot === 0) {
+    if (availSpaceKit >= 2.4 && kitRot === 0) {
       const fridgeX = kitX + kitW / 2 + 0.45;
       const fridgeZ = kitZ;
       buildFurniture("fridge", fridgeX, fridgeZ, 0, layer1F);
     }
 
-    // Dining Table (dynamically centered between the living area and kitchen)
+    // Dining Table (proportional 6-to-8 seater for large homes)
     let diningX, diningZ;
     let maxDiningW = Math.min(
-      L * W >= 60 ? 1.6 : 1.2,
-      Math.max(0.8, (frontX - livingSideStartX) * 0.35),
+      L * W >= 60 ? 1.8 : 1.2,
+      Math.max(0.9, (frontX - livingSideStartX) * 0.35),
     );
     let diningRot = Math.PI / 2;
 
     if (availSpaceKit >= 1.5) {
-      diningX = (sofaX + kitX) / 2;
-      diningZ = (sofaZ + kitZ) / 2;
-      if (Math.min(availSpaceKit, availSpaceTV) < 2.5) {
-        diningX += 0.2;
-      }
+      diningX = (frontX + livingOtherSideStartX) / 2;
+      diningZ = -W / 6;
     } else {
-      // Kitchen is on a side wall.
       diningX = sofaX;
       diningZ = (sofaZ + tvZ) / 2;
       diningRot = 0;
@@ -3314,7 +3374,7 @@ export function initRenderer(configData) {
 
     // Architectural Kitchen Bar Peninsula for spacious floor plans (>= 75 sqm)
     if (L * W >= 75 && availSpaceKit >= 3.2 && kitRot === 0) {
-      const barL = Math.min(1.8, availSpaceKit * 0.4);
+      const barL = Math.min(2.0, availSpaceKit * 0.4);
       const barH = 1.05;
       const barX = kitX + kitW / 2 - 0.3;
       const barZ = kitZ + 1.2;
@@ -3333,6 +3393,76 @@ export function initRenderer(configData) {
       );
     }
 
+    // Dedicated Service / Laundry Area & Foyer Screen for High SQM (>= 85 sqm)
+    let hasServiceArea = false;
+    let servX = 0, servZ = 0, servW = 0, servD = 0;
+    if (L * W >= 85 && availSpaceKit >= 4.5 && groundWallH >= 2.4) {
+      hasServiceArea = true;
+      servW = 2.8;
+      servD = 2.4;
+      servX = livingOtherSideStartX + servW / 2;
+      servZ = -W / 2 + wt / 2 + servD / 2;
+
+      // Partition wall enclosing service/dirty kitchen area
+      const servWallZ = -W / 2 + wt / 2 + servD;
+      const servDoorW = 0.85;
+      // Wall segment
+      box(
+        servW - servDoorW,
+        groundWallH,
+        wt,
+        servX - servDoorW / 2,
+        groundWallH / 2,
+        servWallZ,
+        wallMat,
+        wallGroup,
+        true,
+        "wall",
+        layer1F,
+      );
+      // Side wall
+      box(
+        wt,
+        groundWallH,
+        servD,
+        servX + servW / 2,
+        groundWallH / 2,
+        servZ,
+        wallMat,
+        wallGroup,
+        true,
+        "wall",
+        layer1F,
+      );
+
+      // Utility sink / laundry bench inside service area
+      buildFurniture("kitchen", servX - 0.4, -W / 2 + wt / 2 + 0.45, 0, layer1F, 1.4);
+    }
+
+    // Entrance Foyer Privacy Screen (>= 90 sqm)
+    if (L * W >= 90 && actualAvailSpace >= 4.0) {
+      const foyerScreenW = 1.8;
+      const foyerScreenX = frontX - 1.8;
+      const foyerScreenZ = doorZ;
+      box(
+        0.12,
+        groundWallH,
+        foyerScreenW,
+        foyerScreenX,
+        groundWallH / 2,
+        foyerScreenZ,
+        woodMat,
+        wallGroup,
+        true,
+        "decor",
+        layer1F,
+      );
+
+      const foyerLabel = createTextSprite("Foyer", mainLabelLayer);
+      foyerLabel.position.set(frontX - 0.9, 20, doorZ);
+      blueprintGroup.add(foyerLabel);
+    }
+
     // Blueprint 2D Zone Labels
     if (L * W < 45) {
       const mainLabel = createTextSprite(
@@ -3342,9 +3472,9 @@ export function initRenderer(configData) {
       mainLabel.position.set(L * 0.25, 20, doorZ);
       blueprintGroup.add(mainLabel);
     } else {
-      const livingSqm = Math.round(livingArea * 0.45 * 10) / 10;
+      const livingSqm = Math.round(livingArea * 0.42 * 10) / 10;
       const diningSqm = Math.round(livingArea * 0.30 * 10) / 10;
-      const kitchenSqm = Math.round(livingArea * 0.25 * 10) / 10;
+      const kitchenSqm = Math.round(livingArea * 0.20 * 10) / 10;
 
       const livingLabel = createTextSprite(
         `Living Area\n(${livingSqm} sqm)`,
@@ -3366,6 +3496,16 @@ export function initRenderer(configData) {
       );
       kitchenLabel.position.set(kitX, 20, kitZ);
       blueprintGroup.add(kitchenLabel);
+
+      if (hasServiceArea) {
+        const servAreaSqm = Math.round(servW * servD * 10) / 10;
+        const servLabel = createTextSprite(
+          `Service / Laundry\n(${servAreaSqm} sqm)`,
+          mainLabelLayer,
+        );
+        servLabel.position.set(servX, 20, servZ);
+        blueprintGroup.add(servLabel);
+      }
     }
 
     box(L, 0.2, W, 0, 0.1, 0, slabMat, slabGroup, true, "wall", baseLayer);

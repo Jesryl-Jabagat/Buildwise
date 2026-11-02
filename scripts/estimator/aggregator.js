@@ -400,7 +400,7 @@ const PRIORITY_GROUPS = {
   finishes: ["Finishes"]
 };
 
-function budgetFitEngine(materialsList, budget, totalLabor, contingency, typeKey) {
+function budgetFitEngine(materialsList, budget, totalLabor, contingency, typeKey, chosenGrade = "Standard", floorArea = 50) {
   if (!budget || budget <= 0) return { status: 'NO_BUDGET' };
   
   let coreCost = 0, utilCost = 0, finCost = 0;
@@ -418,13 +418,35 @@ function budgetFitEngine(materialsList, budget, totalLabor, contingency, typeKey
     return { status: 'UNDERFUNDED', floorCost: totalCost };
   }
   
+  // Dynamic grade calculation based on budget surplus & floor area
+  const surplusRatio = budget / (totalCost || 1);
+  const budgetPerSqm = budget / (floorArea || 1);
+  
+  let coreGrade = (chosenGrade === "Premium" || chosenGrade === "Mid-Range") ? "Premium" : chosenGrade === "Basic" ? "Basic" : "Standard";
+  let utilGrade = "Standard";
+  let finGrade = "Standard";
+
+  if (chosenGrade === "Premium" || surplusRatio >= 1.25 || budgetPerSqm >= 20000) {
+    coreGrade = "Premium";
+    utilGrade = "Premium";
+    finGrade = "Premium";
+  } else if (chosenGrade === "Basic" && surplusRatio < 1.05 && budgetPerSqm < 14000) {
+    coreGrade = "Basic";
+    utilGrade = "Basic";
+    finGrade = "Basic";
+  }
+
+  const upgradePath = [];
+  if (surplusRatio >= 1.25) upgradePath.push('Upgraded to Premium Finishes & Fixtures');
+  else upgradePath.push('Core → Standard Construction');
+
   return { 
     status: 'FITTED', 
-    coreGrade: 'Standard', 
-    utilitiesGrade: 'Basic', 
-    finishesGrade: 'Basic', 
+    coreGrade, 
+    utilitiesGrade: utilGrade, 
+    finishesGrade: finGrade, 
     floorCost: totalCost, 
-    upgradePath: ['Core → Standard'], 
+    upgradePath, 
     utilityFlags: [] 
   };
 }
@@ -586,7 +608,10 @@ export function generateEstimate(data) {
   }
 
 
+  const budgetFit = budgetFitEngine(formattedCategories, Number(data.budget), laborEstimate, contingency, typeKey, grade, Number(data.floorArea) || 50);
+
   return {
+    budgetFit,
     materialsList: formattedCategories,
     summary: {
       totalMaterials: totalMaterialsCost,

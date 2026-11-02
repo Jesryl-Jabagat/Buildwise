@@ -80,21 +80,29 @@ export function getUserInput(form) {
         "",
         "Corrugated GI Sheet / Yero",
         "Long Span Pre-Painted Roofing",
-        "Color Roof / Pre-Painted Corrugated",
+        "Color Roof / Pre-painted Corrugated",
         "Spandrel Ceiling Roof",
         "Polycarbonate Sheet Roofing",
         "Concrete Flat Deck Roof",
         "Metal Stone-Coated / Tile Roof"
       ];
-      const idx = roofTypes.indexOf(cleanVal);
+      const cleanLower = cleanVal.toLowerCase().replace(/\s+/g, ' ');
+      const idx = roofTypes.findIndex(r => r.toLowerCase().replace(/\s+/g, ' ') === cleanLower);
       if (idx > 0) {
-        data[key]          = idx;
-        data.roofStyle     = cleanVal;
+        data[key]      = idx;
+        data.roofStyle = roofTypes[idx];
         continue;
+      } else {
+        data.roofStyle = cleanVal;
       }
     }
 
     data[key] = cleanVal;
+  }
+
+  // Auto-activate includeTools if toolsDisplayMode is specified
+  if (data.toolsDisplayMode) {
+    data.includeTools = true;
   }
 
   /* --- Dimension Extraction & Validation ------------------- */
@@ -127,6 +135,12 @@ export function getUserInput(form) {
   data.floorArea = Math.round((l1 * w1) + (l2 * w2));
 
   /* --- UI Metadata for result.js --------------------------- */
+  // Minimum 1 CR safeguard
+  if (data.crs1F !== undefined && Number(data.crs1F) < 1) {
+    data.crs1F = 1;
+  }
+  if (totalBaths < 1) totalBaths = 1;
+
   data.bedrooms     = totalRooms;
   data.bathrooms    = totalBaths;
   data.familySize   = totalRooms <= 2 ? "Small family" : totalRooms <= 4 ? "Growing family" : "Multi-generation family";

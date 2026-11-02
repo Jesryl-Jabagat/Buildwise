@@ -41,7 +41,7 @@ export function generateSmartFallback(form, typeKey, setupData) {
 
   // 2. Intelligent Room Program (Bedrooms & CRs) based on Floor Area
   let suggestedBed1 = 1;
-  let suggestedCr1 = 1;
+  let suggestedCr1 = Math.max(1, 1);
   let suggestedBed2 = 0;
   let suggestedCr2 = 0;
 
@@ -125,10 +125,15 @@ export function generateSmartFallback(form, typeKey, setupData) {
       value = pickOption(select, suggestedCr2);
       reason = `Allocated ${value} comfort room(s) on upper floor for ensuite and night access.`;
     } else if (name.includes("materialGrade")) {
-      if (budget <= 300000) value = pickOption(select, "Basic");
-      else if (budget > 1200000) value = pickOption(select, "Premium");
-      else value = pickOption(select, "Standard");
-      reason = `Selected ${value} grade to balance long-term durability with the ₱${budget.toLocaleString()} budget.`;
+      const budgetPerSqm = budget / (totalFloorArea || 30);
+      if (budgetPerSqm >= 20000 || budget > 900000) {
+        value = options.find(o => o.toLowerCase().includes("premium")) || options.find(o => o.toLowerCase().includes("mid")) || options[options.length - 1];
+      } else if (budgetPerSqm < 12000 && budget <= 280000) {
+        value = options.find(o => o.toLowerCase().includes("basic")) || options[0];
+      } else {
+        value = options.find(o => o.toLowerCase().includes("standard") || o.toLowerCase().includes("mid")) || options[0];
+      }
+      reason = `Selected ${value} grade to balance architectural quality with the ₱${budget.toLocaleString()} budget.`;
     } else if (name.includes("soilCondition")) {
       if (landType.toLowerCase().includes("rock")) {
         value = options.find((o) => o.toLowerCase().includes("rock") || o.toLowerCase().includes("firm")) || options[0];
@@ -139,16 +144,43 @@ export function generateSmartFallback(form, typeKey, setupData) {
       }
       reason = `Configured foundation specs suitable for ${landType} ground conditions.`;
     } else if (name.includes("roofType") || name.includes("roofStyle")) {
+      const budgetPerSqm = budget / (totalFloorArea || 30);
       if (location.toLowerCase().includes("typhoon")) {
         value = options.find((o) => o.toLowerCase().includes("long span") || o.toLowerCase().includes("pre-painted")) || options[0];
         reason = `Selected high-tensile pre-painted roofing for enhanced wind resistance in typhoon-prone zones.`;
+      } else if (budgetPerSqm >= 22000 || budget >= 1200000) {
+        value = options.find((o) => o.toLowerCase().includes("tile roof") || o.toLowerCase().includes("deck")) || options.find((o) => o.toLowerCase().includes("long span")) || options[0];
+        reason = `Selected premium architectural roofing with superior insulation and longevity.`;
+      } else if (budgetPerSqm >= 12000 || budget >= 450000) {
+        value = options.find((o) => o.toLowerCase().includes("long span") || o.toLowerCase().includes("color roof")) || options[0];
+        reason = `Selected durable pre-painted corrugated roofing for cost-effective weather resistance.`;
       } else {
-        value = budget > 900000 ? (options.find((o) => o.toLowerCase().includes("long span")) || options[0]) : options[0];
-        reason = `Selected reliable roofing profile matched to local climate conditions.`;
+        value = options[0];
+        reason = `Selected reliable corrugated GI roofing profile matched to budget.`;
       }
+    }
     } else if (name.includes("tileSize")) {
-      value = budget > 800000 ? (options.find((o) => o.includes("40x40") || o.includes("30x30")) || options[0]) : (options.find((o) => o.includes("30x30")) || options[0]);
-      reason = `Standardized tile dimensions to optimize installation labor and minimize tile cuts.`;
+      const budgetPerSqm = budget / (totalFloorArea || 30);
+      if (budgetPerSqm >= 22000 || budget >= 1200000) {
+        value = options.find((o) => o.includes("60x60") || o.includes("50x50")) || options[options.length - 1];
+      } else if (budgetPerSqm >= 13000 || budget >= 500000) {
+        value = options.find((o) => o.includes("40x40") || o.includes("30x60")) || options.find((o) => o.includes("30x30")) || options[0];
+      } else {
+        value = options.find((o) => o.includes("30x30")) || options[0];
+      }
+      reason = `Standardized ${value.split(" ")[0]} tile dimensions to optimize installation labor and minimize tile cuts.`;
+    } else if (name.toLowerCase().includes("paintcolor") || name.toLowerCase().includes("painttheme")) {
+      const palleteOptions = [
+        "Cream / Warm Beige",
+        "Earth Tones - Terracotta Clay Sandy Brown",
+        "Cool Neutrals - Light Grey Blue-Grey",
+        "Modern Minimalist - Pure White + one dark accent",
+        "Classic White & Off-White"
+      ];
+      // Pick dynamic color theme based on seed/budget
+      const pick = budget > 800000 ? palleteOptions[1] : budget > 400000 ? palleteOptions[0] : palleteOptions[3];
+      value = options.find((o) => o.includes(pick)) || options[0];
+      reason = `Selected architectural color palette to give the home distinctive aesthetic character.`;
     } else {
       value = options[0];
       reason = `Applied standard engineering configuration.`;

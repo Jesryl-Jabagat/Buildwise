@@ -110,11 +110,17 @@ function setupConfigPage() {
         alert("Failed to load AI module. If you are opening this file locally (file:///), your browser might block ES modules. Try using Live Server. Error: " + err.message);
       });
     } else {
-      // Pre-fill smart default dimensions from setup area
+      // Pre-fill smart default dimensions and room counts from setup area
       if (setupData.area && setupData.area > 0) {
-        const side = Math.sqrt(setupData.area);
-        const length = Math.round(side * 10) / 10;
-        const width = Math.round((setupData.area / length) * 10) / 10;
+        // Smart footprint coverage (~65% to 75% for building code setbacks)
+        const coverage = setupData.area <= 40 ? 0.75 : setupData.area <= 80 ? 0.70 : 0.65;
+        let targetFootprint = setupData.area * coverage;
+        if (setupData.budget && setupData.budget > 0) {
+          const maxAffordable = setupData.budget / 14000;
+          if (targetFootprint > maxAffordable) targetFootprint = Math.max(25, maxAffordable);
+        }
+        const length = Math.round(Math.sqrt(targetFootprint * 1.25) * 2) / 2;
+        const width = Math.round((targetFootprint / length) * 2) / 2;
         
         const l1Input = form.querySelector('[name="length"], [name="groundLength"]');
         const w1Input = form.querySelector('[name="width"], [name="groundWidth"]');
@@ -122,28 +128,68 @@ function setupConfigPage() {
         if (l1Input && w1Input) {
           l1Input.value = length;
           w1Input.value = width;
-          // Dispatch events so live-budget and area display pick it up
           l1Input.dispatchEvent(new Event('input', { bubbles: true }));
           w1Input.dispatchEvent(new Event('input', { bubbles: true }));
           l1Input.dispatchEvent(new Event('change', { bubbles: true }));
           w1Input.dispatchEvent(new Event('change', { bubbles: true }));
         }
-      }
 
-      // In manual mode, try to pre-fill from a previous result (Edit Choices flow)
-      prefillFormFromLocalStorage(form, typeKey);
+        // Pre-fill smart room counts based on footprint
+        const isTwoStorey = typeKey === 'two-storey';
+        const isLoft = typeKey === 'loft';
+
+        let recBed1 = 1;
+        let recCr1 = 1;
+        let recBed2 = 0;
+        let recCr2 = 0;
+
+        if (isTwoStorey) {
+          recBed1 = targetFootprint > 65 ? 1 : 0;
+          recCr1 = 1;
+          recBed2 = targetFootprint > 90 ? 3 : 2;
+          recCr2 = targetFootprint > 70 ? 2 : 1;
+        } else if (isLoft) {
+          recBed1 = 1;
+          recCr1 = 1;
+          recBed2 = targetFootprint >= 45 ? 2 : 1;
+          recCr2 = targetFootprint >= 50 ? 1 : 0;
+        } else {
+          // Single Storey (CHB, Half-Amakan, Half-Metal)
+          recBed1 = targetFootprint <= 36 ? 1 : targetFootprint <= 60 ? 2 : targetFootprint <= 95 ? 3 : targetFootprint <= 140 ? 4 : 5;
+          recCr1 = targetFootprint <= 60 ? 1 : targetFootprint <= 120 ? 2 : 3;
+        }
+
+        const b1 = form.querySelector('[name="bedrooms1F"]');
+        const c1 = form.querySelector('[name="crs1F"]');
+        const b2 = form.querySelector('[name="bedrooms2F"]');
+        const c2 = form.querySelector('[name="crs2F"]');
+
+        if (b1) { b1.value = String(recBed1); b1.dispatchEvent(new Event('change', { bubbles: true })); }
+        if (c1) { c1.value = String(recCr1); c1.dispatchEvent(new Event('change', { bubbles: true })); }
+        if (b2) { b2.value = String(recBed2); b2.dispatchEvent(new Event('change', { bubbles: true })); }
+        if (c2) { c2.value = String(recCr2); c2.dispatchEvent(new Event('change', { bubbles: true })); }
+
+        // Prefill non-spatial settings (materials, finishes) from previous result if any
+        prefillFormFromLocalStorage(form, typeKey, true);
+      } else {
+        // In manual mode without area, pre-fill from previous result
+        prefillFormFromLocalStorage(form, typeKey, false);
+      }
     }
   } else {
     // If no setupDataStr at all, still try to prefill just in case
-    prefillFormFromLocalStorage(form, typeKey);
+    prefillFormFromLocalStorage(form, typeKey, false);
   }
 }
 
 /**
  * Reads buildwiseResult from localStorage. If it matches the current house type,
  * it pre-fills the form fields so the user doesn't have to start from scratch.
+ * @param {HTMLFormElement} form
+ * @param {string} currentTypeKey
+ * @param {boolean} ignoreSpatial If true, skips overwriting dimensions and room counts
  */
-function prefillFormFromLocalStorage(form, currentTypeKey) {
+function prefillFormFromLocalStorage(form, currentTypeKey, ignoreSpatial = false) {
   try {
     const savedResult = localStorage.getItem('buildwiseResult');
     if (!savedResult) return;
@@ -151,8 +197,15 @@ function prefillFormFromLocalStorage(form, currentTypeKey) {
     const data = JSON.parse(savedResult);
     if (data.typeKey !== currentTypeKey) return; // Only pre-fill if it's the same house type
     
+    const spatialKeys = [
+      "length", "width", "groundLength", "groundWidth",
+      "secondFloorLength", "secondFloorWidth", "mezzanineLength", "mezzanineWidth",
+      "bedrooms1F", "crs1F", "bedrooms2F", "crs2F"
+    ];
+
     // Loop through all keys in the saved data and populate matching form fields
     for (const [key, value] of Object.entries(data)) {
+      if (ignoreSpatial && spatialKeys.includes(key)) continue;
       const input = form.elements[key];
       if (!input) continue; // Skip if field doesn't exist in this template
       
