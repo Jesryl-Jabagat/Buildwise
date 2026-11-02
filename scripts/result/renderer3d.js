@@ -2160,21 +2160,23 @@ export function initRenderer(configData) {
           bedStartX += safeCrWidth;
         }
 
-        // Front wall of bedrooms (back wall of hallway)
-        // Added +wt to length and adjusted X center to overlap exterior wall and side wall seamlessly
-        box(
-          totalBedWidth + wt,
-          wallH,
-          wt,
-          bedStartX + totalBedWidth / 2,
-          cy,
-          bedFrontZ,
-          mat,
-          wallGroup,
-          true,
-          "wall",
-          layer,
-        );
+        // In Loft Style, bedrooms are open-concept (no front walls, no partition walls, no bedroom doors!)
+        if (!isLoft) {
+          // Front wall of bedrooms (back wall of hallway)
+          box(
+            totalBedWidth + wt,
+            wallH,
+            wt,
+            bedStartX + totalBedWidth / 2,
+            cy,
+            bedFrontZ,
+            mat,
+            wallGroup,
+            true,
+            "wall",
+            layer,
+          );
+        }
 
         let currentRoomLeftX = bedStartX;
         for (let i = 0; i < beds; i++) {
@@ -2182,9 +2184,8 @@ export function initRenderer(configData) {
           const roomLeftX = currentRoomLeftX;
           const roomCenterX = roomLeftX + bedWidth / 2;
 
-          // Partition Wall
-          // Added +wt to depth to overlap back exterior wall and front wall seamlessly
-          if (i > 0)
+          // Partition Wall (only for standard enclosed homes, not open loft)
+          if (!isLoft && i > 0)
             box(
               wt,
               wallH,
@@ -2199,8 +2200,8 @@ export function initRenderer(configData) {
               layer,
             );
 
-          // Side wall for the right-most bedroom (if it doesn't span full width)
-          if (i === beds - 1 && (bedStartX - houseLeftX + totalBedWidth) < flL - wt - 0.1) {
+          // Side wall for the right-most bedroom (only for standard enclosed homes, not open loft)
+          if (!isLoft && i === beds - 1 && (bedStartX - houseLeftX + totalBedWidth) < flL - wt - 0.1) {
             box(
               wt,
               wallH,
@@ -2216,8 +2217,8 @@ export function initRenderer(configData) {
             );
           }
 
-          // Bedroom Door
-          if (isBaseFloor) {
+          // Bedroom Door (skip in Loft Style so sleeping area is completely open!)
+          if (isBaseFloor && !isLoft) {
             const dW = Math.min(0.9, bedWidth - 0.4);
             let doorX = roomCenterX;
 
@@ -2343,15 +2344,19 @@ export function initRenderer(configData) {
             }
 
             // Add Bed
-            // Rotate the bed 90 degrees and push it against a side wall
-            // This guarantees the door swing will NEVER hit the bed!
-            const bedRot = i % 2 === 0 ? Math.PI / 2 : -Math.PI / 2;
-            const bedX =
-              i % 2 === 0 ? roomLeftX + 1.1 : roomLeftX + bedWidth - 1.1;
+            let bedRot = i % 2 === 0 ? Math.PI / 2 : -Math.PI / 2;
+            let bedX = i % 2 === 0 ? roomLeftX + 1.1 : roomLeftX + bedWidth - 1.1;
+            let bedZ = houseBackZ + 0.85;
+            if (isLoft) {
+              // In Loft Style, bed faces forward into the open room/over the mezzanine railing
+              bedRot = 0;
+              bedX = roomCenterX;
+              bedZ = houseBackZ + 1.1;
+            }
             buildFurniture(
               "bed",
               bedX,
-              houseBackZ + 0.85,
+              bedZ,
               bedRot,
               layer,
               null,
@@ -2359,10 +2364,9 @@ export function initRenderer(configData) {
             );
 
             const area = Math.round(bedWidth * bedDepth * 10) / 10;
-            const roomName =
-              i === 0 && (beds > 1 || flL * flW >= 55)
-                ? "Master Bedroom"
-                : `Bedroom ${i + 1}`;
+            const roomName = isLoft
+              ? (layer === 2 ? "Mezzanine Loft" : "Loft Sleeping Area")
+              : (i === 0 && (beds > 1 || flL * flW >= 55) ? "Master Bedroom" : `Bedroom ${i + 1}`);
             const label = createTextSprite(
               `${roomName}\n(${area} sqm)`,
               layer,
@@ -3353,8 +3357,21 @@ export function initRenderer(configData) {
     const finalTvW = Math.min(maxTvW, Math.max(1.0, actualAvailSpace - 0.2));
     const finalSofaW = Math.min(maxSofaW, Math.max(1.2, actualAvailSpace - 0.2));
 
+    // In Loft Style, stairs are along the +Z wall from (-L/2 + L2) to (-L/2 + L2 + stairW).
+    // Ensure the living furniture is shifted towards +X and never overlaps the stairs!
+    let stairClearX = -L / 2 + wt / 2;
+    if (type === "Loft Style") {
+      const stairW = Math.min(1.4, Math.max(1.0, (L - L2 - wt) * 0.5));
+      stairClearX = -L / 2 + L2 + stairW + 0.4;
+    }
+
     // Tuck TV against outer front wall (+X side), shifted towards partition
     let tvX = frontX - finalTvW / 2 - 0.9;
+    if (type === "Loft Style") {
+      if (tvX - finalTvW / 2 < stairClearX) {
+        tvX = Math.min(frontX - finalTvW / 2 - 0.25, stairClearX + finalTvW / 2);
+      }
+    }
     const tvZ = W / 2 - wt / 2 - 0.2;
     buildFurniture("tv", tvX, tvZ, Math.PI, layer1F, finalTvW);
 
@@ -3376,7 +3393,7 @@ export function initRenderer(configData) {
     );
 
     // Accent Armchairs for spacious living rooms (>= 55 sqm)
-    if (L * W >= 55 && actualAvailSpace >= 3.0) {
+    if (L * W >= 55 && actualAvailSpace >= 3.0 && type !== "Loft Style") {
       buildFurniture(
         "armchair",
         sofaX - finalSofaW / 2 - 0.7,
@@ -3384,6 +3401,16 @@ export function initRenderer(configData) {
         Math.PI / 2,
         layer1F,
       );
+      buildFurniture(
+        "armchair",
+        sofaX + finalSofaW / 2 + 0.7,
+        (tvZ + sofaZ) / 2,
+        -Math.PI / 2,
+        layer1F,
+      );
+    } else if (type === "Loft Style" && (frontX - (sofaX + finalSofaW / 2)) >= 1.0) {
+      // In Loft Style, ONLY place an armchair on the front-door (+X) side if there is ample clearance.
+      // NEVER place an armchair on the stair (-X) side!
       buildFurniture(
         "armchair",
         sofaX + finalSofaW / 2 + 0.7,
