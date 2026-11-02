@@ -251,6 +251,13 @@
             font-weight: 500;
             letter-spacing: 1px;
         }
+        .eng-details .blurred-license {
+            filter: blur(5px);
+            user-select: none;
+            -webkit-user-select: none;
+            display: inline-block;
+            letter-spacing: 2px;
+        }
         .eng-id-showcase {
             display: flex;
             gap: 20px;
