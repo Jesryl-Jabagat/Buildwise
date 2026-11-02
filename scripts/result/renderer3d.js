@@ -3353,45 +3353,39 @@ export function initRenderer(configData) {
       // 1. Kitchen under mezzanine along -Z wall (sharing CR plumbing)
       buildFurniture("kitchen", loftKitX, loftKitZ, 0, layer1F, loftKitW);
 
-      // Refrigerator next to kitchen
-      const loftFridgeX = loftKitX + loftKitW / 2 + 0.45;
+      // Refrigerator next to kitchen (under mezzanine)
+      const loftFridgeX = Math.min(mezEdgeX - 0.35, loftKitX + loftKitW / 2 + 0.45);
       const loftFridgeZ = loftKitZ;
       buildFurniture("fridge", loftFridgeX, loftFridgeZ, 0, layer1F);
 
-      // 2. Dining Table near kitchen under mezzanine transition
-      const loftDiningX = Math.min(frontX - 1.2, Math.max(loftFridgeX + 0.8, mezEdgeX + 0.3));
-      const loftDiningZ = -W / 4;
-      const loftDiningW = Math.min(1.2, Math.max(0.8, (W / 2) * 0.4));
-      buildFurniture("dining", loftDiningX, loftDiningZ, Math.PI / 2, layer1F, loftDiningW);
+      // 2. Dining Table: Placed in the kitchen zone under the mezzanine (never enters living area)
+      const loftDiningX = Math.min(mezEdgeX - 0.3, (loftKitchenStartX + loftFridgeX) / 2);
+      const loftDiningZ = -W / 2 + wt / 2 + 1.6;
+      const loftDiningW = Math.min(1.1, Math.max(0.7, (W / 2) * 0.38));
+      buildFurniture("dining", loftDiningX, loftDiningZ, 0, layer1F, loftDiningW);
 
-      // 3. Living Room Lounge (TV, Sofa, Coffee Table): Inside the double-height space
-      // Placed towards -Z and center, completely clear of the entrance door (+X, +Z) and stairs (+Z)
-      const doubleHeightStartX = Math.max(mezEdgeX + 0.3, loftDiningX + 0.8);
-      const loungeAvailX = Math.max(1.8, frontX - doubleHeightStartX);
-      const loungeCenterX = doubleHeightStartX + loungeAvailX / 2;
+      // 3. Living Room Lounge (TV, Sofa, Coffee Table): Exclusively in the double-height space
+      // Placed safely inside, with guaranteed margins so nothing ever clips through exterior walls
+      const loungeAvailX = frontX - mezEdgeX;
+      const finalTvW = Math.min(1.6, Math.max(1.0, loungeAvailX * 0.45));
+      const finalSofaW = Math.min(1.8, Math.max(1.1, loungeAvailX * 0.5));
 
-      const finalTvW = Math.min(1.8, Math.max(1.0, loungeAvailX - 0.4));
-      const finalSofaW = Math.min(2.0, Math.max(1.2, loungeAvailX - 0.2));
-
-      // TV mounted along -Z wall in double-height area (facing +Z into room)
-      const tvX = Math.min(frontX - 1.0, loungeCenterX);
+      // Center the living lounge safely inside the double-height room
+      const livingCenterX = mezEdgeX + loungeAvailX * 0.52;
+      const tvX = Math.min(frontX - finalTvW / 2 - 0.5, Math.max(mezEdgeX + finalTvW / 2 + 0.4, livingCenterX));
       const tvZ = -W / 2 + wt / 2 + 0.2;
       buildFurniture("tv", tvX, tvZ, 0, layer1F, finalTvW);
 
       // Coffee Table in front of TV
-      const coffeeTableW = Math.min(1.2, Math.max(0.7, finalSofaW * 0.6));
-      const coffeeTableZ = tvZ + 1.1;
+      const coffeeTableW = Math.min(1.1, Math.max(0.65, finalSofaW * 0.55));
+      const coffeeTableZ = tvZ + 0.95;
       buildFurniture("coffeetable", tvX, coffeeTableZ, 0, layer1F, coffeeTableW);
 
-      // Sofa facing the TV (looking towards -Z)
+      // Sofa facing the TV (looking towards -Z), strictly bounded inside the room
       const sofaX = tvX;
-      const sofaZ = tvZ + 1.9;
+      const sofaDist = Math.min(1.6, Math.max(1.1, (W / 2 - wt) * 0.55));
+      const sofaZ = Math.min(W / 2 - wt - 1.2, tvZ + sofaDist + 0.4);
       buildFurniture("sofa", sofaX, sofaZ, Math.PI, layer1F, finalSofaW);
-
-      // Optional cozy armchair beside coffee table if width allows
-      if (W >= 5.5 && (sofaZ + 1.2) < (W / 2 - 1.0)) {
-        buildFurniture("armchair", sofaX + finalSofaW / 2 + 0.65, coffeeTableZ, -Math.PI / 2, layer1F);
-      }
     } else {
       // Standard furniture layout for other house styles (CHB, Bungalow, Two-Storey, etc.)
       const availSpaceKit = frontX - livingOtherSideStartX;
