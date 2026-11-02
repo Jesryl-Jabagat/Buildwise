@@ -251,6 +251,57 @@
             font-weight: 500;
             letter-spacing: 1px;
         }
+        .eng-id-showcase {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        .eng-id-frame {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            width: 280px;
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .eng-id-frame img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: contain;
+            filter: blur(4px);
+            transform: scale(1.05);
+            user-select: none;
+            pointer-events: none;
+        }
+        .eng-id-badge {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 15, 20, 0.85);
+            border: 1px solid var(--color-border);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            color: var(--color-muted);
+            font-size: 0.72rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .eng-id-badge svg {
+            color: var(--color-accent);
+        }
+
         .disclaimer-box {
             background: rgba(255, 0, 0, 0.03);
             border: 1px solid #4a1c1c;
