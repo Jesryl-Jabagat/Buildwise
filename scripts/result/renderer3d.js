@@ -2833,7 +2833,8 @@ export function initRenderer(configData) {
           );
         }
 
-      buildRooms(bed2, cr2, mezCX, mezCZ, L2, W2, 1.5, H1, wallMat2, true, 2);
+      const loftMezzBeds = Math.max(1, bed2);
+      buildRooms(loftMezzBeds, cr2, mezCX, mezCZ, L2, W2, 1.5, H1, wallMat2, true, 2);
       addDimensionLabels(L2, W2, mezCX, mezCZ, 2);
     } else {
       wallRing(L, W, totalH, 0, wallMat, baseLayer);
@@ -3336,151 +3337,176 @@ export function initRenderer(configData) {
       type === "Two Storey" || type === "Loft Style" ? 1 : 0;
 
     // --- INTERIOR FURNISHING (LIVING / KITCHEN / DINING) ---
-    const availSpaceKit = frontX - livingOtherSideStartX; // Kitchen is on -Z wall (near bedrooms)
-    const availSpaceTV = frontX - livingSideStartX; // TV is on +Z wall (near CRs)
-
-    // Dynamically scale furniture based on available space to prevent clipping
-    const maxSofaW = Math.min(
-      L * W >= 60 ? 2.6 : 2.0,
-      Math.max(1.2, Math.min(availSpaceKit, availSpaceTV) - 0.4),
-    );
-    const maxTvW = Math.min(
-      L * W >= 60 ? 2.0 : 1.5,
-      Math.max(1.0, availSpaceTV - 0.4),
-    );
-
-    // Align TV and Sofa to the left partition wall so the main right hallway is perfectly open
-    const partitionX = Math.max(livingSideStartX, livingOtherSideStartX);
-    const actualAvailSpace = frontX - partitionX;
-
-    // Scale down furniture if the room is narrow
-    const finalTvW = Math.min(maxTvW, Math.max(1.0, actualAvailSpace - 0.2));
-    const finalSofaW = Math.min(maxSofaW, Math.max(1.2, actualAvailSpace - 0.2));
-
-    // In Loft Style, stairs are along the +Z wall from (-L/2 + L2) to (-L/2 + L2 + stairW).
-    // Ensure the living furniture is shifted towards +X and never overlaps the stairs!
-    let stairClearX = -L / 2 + wt / 2;
     if (type === "Loft Style") {
-      const stairW = Math.min(1.4, Math.max(1.0, (L - L2 - wt) * 0.5));
-      stairClearX = -L / 2 + L2 + stairW + 0.4;
-    }
+      // ============================================================
+      //  DEDICATED LOFT STYLE GROUND FLOOR FURNITURE LAYOUT
+      //  (Applied exclusively to Loft Style; all other types untouched)
+      // ============================================================
+      const mezEdgeX = -L / 2 + L2;
+      const safeCrW = cr1 > 0 ? Math.min(1.8, Math.max(0.8, (L - wt) / cr1)) : 1.5;
+      const loftKitchenStartX = -L / 2 + wt / 2 + (cr1 > 0 ? safeCrW : 0) + 0.2;
+      const availUnderMezzX = Math.max(1.6, mezEdgeX - loftKitchenStartX);
+      const loftKitW = Math.min(2.4, Math.max(1.3, availUnderMezzX - 0.6));
+      const loftKitX = loftKitchenStartX + loftKitW / 2;
+      const loftKitZ = -W / 2 + wt / 2 + 0.45;
 
-    // Tuck TV against outer front wall (+X side), shifted towards partition
-    let tvX = frontX - finalTvW / 2 - 0.9;
-    if (type === "Loft Style") {
-      if (tvX - finalTvW / 2 < stairClearX) {
-        tvX = Math.min(frontX - finalTvW / 2 - 0.25, stairClearX + finalTvW / 2);
+      // 1. Kitchen under mezzanine along -Z wall (sharing CR plumbing)
+      buildFurniture("kitchen", loftKitX, loftKitZ, 0, layer1F, loftKitW);
+
+      // Refrigerator next to kitchen
+      const loftFridgeX = loftKitX + loftKitW / 2 + 0.45;
+      const loftFridgeZ = loftKitZ;
+      buildFurniture("fridge", loftFridgeX, loftFridgeZ, 0, layer1F);
+
+      // 2. Dining Table near kitchen under mezzanine transition
+      const loftDiningX = Math.min(frontX - 1.2, Math.max(loftFridgeX + 0.8, mezEdgeX + 0.3));
+      const loftDiningZ = -W / 4;
+      const loftDiningW = Math.min(1.2, Math.max(0.8, (W / 2) * 0.4));
+      buildFurniture("dining", loftDiningX, loftDiningZ, Math.PI / 2, layer1F, loftDiningW);
+
+      // 3. Living Room Lounge (TV, Sofa, Coffee Table): Inside the double-height space
+      // Placed towards -Z and center, completely clear of the entrance door (+X, +Z) and stairs (+Z)
+      const doubleHeightStartX = Math.max(mezEdgeX + 0.3, loftDiningX + 0.8);
+      const loungeAvailX = Math.max(1.8, frontX - doubleHeightStartX);
+      const loungeCenterX = doubleHeightStartX + loungeAvailX / 2;
+
+      const finalTvW = Math.min(1.8, Math.max(1.0, loungeAvailX - 0.4));
+      const finalSofaW = Math.min(2.0, Math.max(1.2, loungeAvailX - 0.2));
+
+      // TV mounted along -Z wall in double-height area (facing +Z into room)
+      const tvX = Math.min(frontX - 1.0, loungeCenterX);
+      const tvZ = -W / 2 + wt / 2 + 0.2;
+      buildFurniture("tv", tvX, tvZ, 0, layer1F, finalTvW);
+
+      // Coffee Table in front of TV
+      const coffeeTableW = Math.min(1.2, Math.max(0.7, finalSofaW * 0.6));
+      const coffeeTableZ = tvZ + 1.1;
+      buildFurniture("coffeetable", tvX, coffeeTableZ, 0, layer1F, coffeeTableW);
+
+      // Sofa facing the TV (looking towards -Z)
+      const sofaX = tvX;
+      const sofaZ = tvZ + 1.9;
+      buildFurniture("sofa", sofaX, sofaZ, Math.PI, layer1F, finalSofaW);
+
+      // Optional cozy armchair beside coffee table if width allows
+      if (W >= 5.5 && (sofaZ + 1.2) < (W / 2 - 1.0)) {
+        buildFurniture("armchair", sofaX + finalSofaW / 2 + 0.65, coffeeTableZ, -Math.PI / 2, layer1F);
       }
-    }
-    const tvZ = W / 2 - wt / 2 - 0.2;
-    buildFurniture("tv", tvX, tvZ, Math.PI, layer1F, finalTvW);
-
-    // Align Sofa with the TV
-    let sofaX = tvX;
-    const tvSofaDist = Math.min(2.0, Math.max(1.2, W * 0.32));
-    const sofaZ = tvZ - tvSofaDist;
-    buildFurniture("sofa", sofaX, sofaZ, 0, layer1F, finalSofaW);
-
-    // Coffee table centered between TV and Sofa
-    const coffeeTableW = Math.min(1.3, Math.max(0.8, finalSofaW * 0.65));
-    buildFurniture(
-      "coffeetable",
-      sofaX,
-      (tvZ + sofaZ) / 2,
-      0,
-      layer1F,
-      coffeeTableW,
-    );
-
-    // Accent Armchairs for spacious living rooms (>= 55 sqm)
-    if (L * W >= 55 && actualAvailSpace >= 3.0 && type !== "Loft Style") {
-      buildFurniture(
-        "armchair",
-        sofaX - finalSofaW / 2 - 0.7,
-        (tvZ + sofaZ) / 2,
-        Math.PI / 2,
-        layer1F,
-      );
-      buildFurniture(
-        "armchair",
-        sofaX + finalSofaW / 2 + 0.7,
-        (tvZ + sofaZ) / 2,
-        -Math.PI / 2,
-        layer1F,
-      );
-    } else if (type === "Loft Style" && (frontX - (sofaX + finalSofaW / 2)) >= 1.0) {
-      // In Loft Style, ONLY place an armchair on the front-door (+X) side if there is ample clearance.
-      // NEVER place an armchair on the stair (-X) side!
-      buildFurniture(
-        "armchair",
-        sofaX + finalSofaW / 2 + 0.7,
-        (tvZ + sofaZ) / 2,
-        -Math.PI / 2,
-        layer1F,
-      );
-    }
-
-    // Kitchen Counter & Utility Zoning
-    let kitW, kitX, kitZ, kitRot;
-    const isSpaciousHome = L * W >= 80;
-
-    if (availSpaceKit >= 1.5) {
-      kitW = Math.min(isSpaciousHome ? 3.0 : 2.0, Math.max(1.2, availSpaceKit - 0.5));
-      kitX = livingOtherSideStartX + kitW / 2 + 0.2;
-      kitZ = -W / 2 + wt / 2 + 0.5;
-      kitRot = 0;
     } else {
-      const crDepthApprox = 1.8;
-      const crDoorZ = W / 2 - wt / 2 - crDepthApprox / 2;
-      const spaceBeforeDoor = crDoorZ - 0.4 - groundBedFrontZ;
-      const spaceAfterDoor = W / 2 - wt / 2 - (crDoorZ + 0.4);
+      // Standard furniture layout for other house styles (CHB, Bungalow, Two-Storey, etc.)
+      const availSpaceKit = frontX - livingOtherSideStartX;
+      const availSpaceTV = frontX - livingSideStartX;
 
-      if (spaceBeforeDoor >= 0.8) {
-        kitW = Math.min(2.0, spaceBeforeDoor - 0.2);
-        kitX = livingSideStartX + 0.5;
-        kitZ = groundBedFrontZ + kitW / 2 + 0.1;
-        kitRot = Math.PI / 2;
-      } else if (spaceAfterDoor >= 0.8) {
-        kitW = Math.min(2.0, spaceAfterDoor - 0.2);
-        kitX = livingSideStartX + 0.5;
-        kitZ = crDoorZ + 0.4 + kitW / 2 + 0.1;
-        kitRot = Math.PI / 2;
+      const maxSofaW = Math.min(
+        L * W >= 60 ? 2.6 : 2.0,
+        Math.max(1.2, Math.min(availSpaceKit, availSpaceTV) - 0.4),
+      );
+      const maxTvW = Math.min(
+        L * W >= 60 ? 2.0 : 1.5,
+        Math.max(1.0, availSpaceTV - 0.4),
+      );
+
+      const partitionX = Math.max(livingSideStartX, livingOtherSideStartX);
+      const actualAvailSpace = frontX - partitionX;
+
+      const finalTvW = Math.min(maxTvW, Math.max(1.0, actualAvailSpace - 0.2));
+      const finalSofaW = Math.min(maxSofaW, Math.max(1.2, actualAvailSpace - 0.2));
+
+      let tvX = frontX - finalTvW / 2 - 0.9;
+      const tvZ = W / 2 - wt / 2 - 0.2;
+      buildFurniture("tv", tvX, tvZ, Math.PI, layer1F, finalTvW);
+
+      let sofaX = tvX;
+      const tvSofaDist = Math.min(2.0, Math.max(1.2, W * 0.32));
+      const sofaZ = tvZ - tvSofaDist;
+      buildFurniture("sofa", sofaX, sofaZ, 0, layer1F, finalSofaW);
+
+      const coffeeTableW = Math.min(1.3, Math.max(0.8, finalSofaW * 0.65));
+      buildFurniture(
+        "coffeetable",
+        sofaX,
+        (tvZ + sofaZ) / 2,
+        0,
+        layer1F,
+        coffeeTableW,
+      );
+
+      if (L * W >= 55 && actualAvailSpace >= 3.0) {
+        buildFurniture(
+          "armchair",
+          sofaX - finalSofaW / 2 - 0.7,
+          (tvZ + sofaZ) / 2,
+          Math.PI / 2,
+          layer1F,
+        );
+        buildFurniture(
+          "armchair",
+          sofaX + finalSofaW / 2 + 0.7,
+          (tvZ + sofaZ) / 2,
+          -Math.PI / 2,
+          layer1F,
+        );
+      }
+
+      let kitW, kitX, kitZ, kitRot;
+      const isSpaciousHome = L * W >= 80;
+
+      if (availSpaceKit >= 1.5) {
+        kitW = Math.min(isSpaciousHome ? 3.0 : 2.0, Math.max(1.2, availSpaceKit - 0.5));
+        kitX = livingOtherSideStartX + kitW / 2 + 0.2;
+        kitZ = -W / 2 + wt / 2 + 0.5;
+        kitRot = 0;
       } else {
-        const bedWallFrontFace = actualBedFrontZ + 0.2;
-        const spaceForKit = doorZ - doorW2 / 2 - 0.2 - bedWallFrontFace;
-        kitW = Math.max(0.6, Math.min(2.5, spaceForKit));
-        kitX = frontX - 0.4;
-        kitZ = bedWallFrontFace + kitW / 2;
-        kitRot = -Math.PI / 2;
+        const crDepthApprox = 1.8;
+        const crDoorZ = W / 2 - wt / 2 - crDepthApprox / 2;
+        const spaceBeforeDoor = crDoorZ - 0.4 - groundBedFrontZ;
+        const spaceAfterDoor = W / 2 - wt / 2 - (crDoorZ + 0.4);
+
+        if (spaceBeforeDoor >= 0.8) {
+          kitW = Math.min(2.0, spaceBeforeDoor - 0.2);
+          kitX = livingSideStartX + 0.5;
+          kitZ = groundBedFrontZ + kitW / 2 + 0.1;
+          kitRot = Math.PI / 2;
+        } else if (spaceAfterDoor >= 0.8) {
+          kitW = Math.min(2.0, spaceAfterDoor - 0.2);
+          kitX = livingSideStartX + 0.5;
+          kitZ = crDoorZ + 0.4 + kitW / 2 + 0.1;
+          kitRot = Math.PI / 2;
+        } else {
+          const bedWallFrontFace = actualBedFrontZ + 0.2;
+          const spaceForKit = doorZ - doorW2 / 2 - 0.2 - bedWallFrontFace;
+          kitW = Math.max(0.6, Math.min(2.5, spaceForKit));
+          kitX = frontX - 0.4;
+          kitZ = bedWallFrontFace + kitW / 2;
+          kitRot = -Math.PI / 2;
+        }
       }
-    }
-    buildFurniture("kitchen", kitX, kitZ, kitRot, layer1F, kitW);
+      buildFurniture("kitchen", kitX, kitZ, kitRot, layer1F, kitW);
 
-    // Refrigerator! Place next to kitchen counter if space allows
-    if (availSpaceKit >= 2.4 && kitRot === 0) {
-      const fridgeX = kitX + kitW / 2 + 0.45;
-      const fridgeZ = kitZ;
-      buildFurniture("fridge", fridgeX, fridgeZ, 0, layer1F);
-    }
+      if (availSpaceKit >= 2.4 && kitRot === 0) {
+        const fridgeX = kitX + kitW / 2 + 0.45;
+        const fridgeZ = kitZ;
+        buildFurniture("fridge", fridgeX, fridgeZ, 0, layer1F);
+      }
 
-    // Dining Table (proportional 6-to-8 seater for large homes)
-    let diningX, diningZ;
-    let maxDiningW = Math.min(
-      L * W >= 60 ? 1.8 : 1.2,
-      Math.max(0.9, (frontX - livingSideStartX) * 0.35),
-    );
-    let diningRot = Math.PI / 2;
+      let diningX, diningZ;
+      let maxDiningW = Math.min(
+        L * W >= 60 ? 1.8 : 1.2,
+        Math.max(0.9, (frontX - livingSideStartX) * 0.35),
+      );
+      let diningRot = Math.PI / 2;
 
-    if (availSpaceKit >= 1.5) {
-      diningX = (frontX + livingOtherSideStartX) / 2;
-      diningZ = -W / 6;
-    } else {
-      diningX = sofaX;
-      diningZ = (sofaZ + tvZ) / 2;
-      diningRot = 0;
-      maxDiningW = Math.min(1.0, Math.max(0.6, tvSofaDist - 0.6));
+      if (availSpaceKit >= 1.5) {
+        diningX = (frontX + livingOtherSideStartX) / 2;
+        diningZ = -W / 6;
+      } else {
+        diningX = sofaX;
+        diningZ = (sofaZ + tvZ) / 2;
+        diningRot = 0;
+        maxDiningW = Math.min(1.0, Math.max(0.6, tvSofaDist - 0.6));
+      }
+      buildFurniture("dining", diningX, diningZ, diningRot, layer1F, maxDiningW);
     }
-    buildFurniture("dining", diningX, diningZ, diningRot, layer1F, maxDiningW);
 
     // Architectural Kitchen Bar Peninsula for spacious floor plans (>= 75 sqm)
     if (L * W >= 75 && availSpaceKit >= 3.2 && kitRot === 0) {
