@@ -63,8 +63,8 @@ export function generateSmartFallback(form, typeKey, setupData) {
   } else if (isLoft) {
     suggestedBed1 = 1; // 1 bedroom on ground floor
     suggestedCr1 = 1;  // 1 common CR on ground floor
-    suggestedBed2 = mezzanineArea >= 24 ? 2 : 1; // Loft sleeping area
-    suggestedCr2 = mezzanineArea >= 25 ? 1 : 0;
+    suggestedBed2 = 1; // 1 Master Loft Suite (clean, open layout)
+    suggestedCr2 = mezzanineArea >= 28 ? 1 : 0;
   } else {
     // 1-Storey houses (CHB, Half-Amakan, Half-Metal)
     if (totalFloorArea <= 36) {

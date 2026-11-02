@@ -1696,7 +1696,7 @@ export function initRenderer(configData) {
     dnText.scale.set(1.4, 0.35, 1);
     dnText.position.set(0, 0, 0);
     group2.add(dnText);
-    group2.position.set(cx, 20, cz + sd / 2 - landingSize / 2);
+    group2.position.set(cx - sw / 2 + landingSize / 2, 20, cz + sd / 2 - landingSize / 2);
     blueprintGroup.add(group2);
   }
 
@@ -1773,8 +1773,8 @@ export function initRenderer(configData) {
 
     const bed1 = parseInt(configData.bedrooms1F || 0);
     const cr1 = parseInt(configData.crs1F || 0);
-    const bed2 = parseInt(configData.bedrooms2F || 0);
-    const cr2 = parseInt(configData.crs2F || 0);
+    const bed2 = type === "Loft Style" ? Math.min(1, parseInt(configData.bedrooms2F || 0)) : parseInt(configData.bedrooms2F || 0);
+    const cr2 = type === "Loft Style" ? Math.min(1, parseInt(configData.crs2F || 0)) : parseInt(configData.crs2F || 0);
     const wallType =
       configData.wallingTypeAboveChb ||
       configData.wallingMaterialType ||
@@ -2086,7 +2086,7 @@ export function initRenderer(configData) {
       let availableH = wallH;
       if (baseY === 0)
         availableH =
-          window.currentRendererHouseType === "Two Storey" ? H1 : totalH;
+          (window.currentRendererHouseType === "Two Storey" || window.currentRendererHouseType === "Loft Style") ? H1 : totalH;
       const dH = Math.min(2.1, availableH * 0.85);
 
       // Calculate house inner bounds
@@ -2154,13 +2154,19 @@ export function initRenderer(configData) {
           safeCrWidth = Math.max(0.8, Math.min(safeCrWidth, bedWidths[0] * 0.5));
         }
 
+        const isLoft = window.currentRendererHouseType === "Loft Style";
+        let bedStartX = houseLeftX;
+        if (isLoft && crs > 0) {
+          bedStartX += safeCrWidth;
+        }
+
         // Front wall of bedrooms (back wall of hallway)
         // Added +wt to length and adjusted X center to overlap exterior wall and side wall seamlessly
         box(
           totalBedWidth + wt,
           wallH,
           wt,
-          houseLeftX + totalBedWidth / 2,
+          bedStartX + totalBedWidth / 2,
           cy,
           bedFrontZ,
           mat,
@@ -2170,7 +2176,7 @@ export function initRenderer(configData) {
           layer,
         );
 
-        let currentRoomLeftX = houseLeftX;
+        let currentRoomLeftX = bedStartX;
         for (let i = 0; i < beds; i++) {
           const bedWidth = bedWidths[i];
           const roomLeftX = currentRoomLeftX;
@@ -2194,7 +2200,7 @@ export function initRenderer(configData) {
             );
 
           // Side wall for the right-most bedroom (if it doesn't span full width)
-          if (i === beds - 1 && totalBedWidth < flL - wt - 0.1) {
+          if (i === beds - 1 && (bedStartX - houseLeftX + totalBedWidth) < flL - wt - 0.1) {
             box(
               wt,
               wallH,
@@ -2374,8 +2380,9 @@ export function initRenderer(configData) {
 
         if (beds > 0) {
           // safeCrWidth and safeCrDepth were pre-calculated above!
-          // In Loft Style mezzanine, place CR at rear corner so it does not face/block stairs
-          if (layer === 2 && window.currentRendererHouseType === "Loft Style") {
+          // In Loft Style (both 1F and Mezzanine), place CR at rear corner (houseBackZ)
+          // so plumbing stacks vertically and does not face/block the stairs or living room!
+          if (window.currentRendererHouseType === "Loft Style") {
             crPlacements.push({
               type: "common",
               x: houseLeftX + safeCrWidth / 2,
@@ -2415,14 +2422,14 @@ export function initRenderer(configData) {
           let fallbackCrDepth = Math.min(1.8, flW * (flW <= 7 ? 0.25 : 0.2));
           let fallbackCrWidth = Math.min(1.8, (flL - wt) / crs);
           for (let i = 0; i < crs; i++) {
-            const isLoftMezz = layer === 2 && window.currentRendererHouseType === "Loft Style";
+            const isLoft = window.currentRendererHouseType === "Loft Style";
             crPlacements.push({
               type: "common",
               x: houseLeftX + fallbackCrWidth / 2 + i * fallbackCrWidth,
-              z: isLoftMezz ? houseBackZ + fallbackCrDepth / 2 : houseFrontZ - fallbackCrDepth / 2,
+              z: isLoft ? houseBackZ + fallbackCrDepth / 2 : houseFrontZ - fallbackCrDepth / 2,
               width: fallbackCrWidth,
               depth: fallbackCrDepth,
-              doorFacing: isLoftMezz ? "Z" : "X",
+              doorFacing: isLoft ? "Z" : "X",
             });
           }
         }
@@ -2757,15 +2764,18 @@ export function initRenderer(configData) {
         const railThick = 0.08;
 
         // 1. Sleek interior railing overlooking the double-height living area
+        // Leave opening on the +Z side where the stairs reach the mezzanine
+        const stairOpening = Math.min(0.85, (W2 - wt * 2) * 0.28);
         const frontRailX = mezCX + L2 / 2 - railThick / 2;
-        const railZSpan = W2 - wt * 2;
+        const railZSpan = (W2 - wt * 2) - stairOpening;
+        const railCenterZ = mezCZ - stairOpening / 2;
         box(
           railThick,
           railH - 0.05,
           railZSpan,
           frontRailX,
           cyRailing - 0.025,
-          mezCZ,
+          railCenterZ,
           wallMat2,
           wallGroup,
           true,
@@ -2779,7 +2789,7 @@ export function initRenderer(configData) {
           railZSpan,
           frontRailX,
           H1 + 0.09 + railH - 0.025,
-          mezCZ,
+          railCenterZ,
           frameMat,
           wallGroup,
           false,
@@ -3104,9 +3114,10 @@ export function initRenderer(configData) {
       }
     }
     if (type === "Loft Style") {
-      // Stairs are built under the mezzanine edge on the +Z wall.
-      // The mezzanine edge is at -L/2 + L2. We must start the living space AFTER the stairs.
-      livingSideStartX = Math.max(livingSideStartX, -L / 2 + L2);
+      // Stairs are built in the living area on the +Z wall starting at the mezzanine edge.
+      // Must start the living side windows AFTER the stairs.
+      const stairW = Math.min(1.4, Math.max(1.0, (L - L2 - wt) * 0.5));
+      livingSideStartX = Math.max(livingSideStartX, -L / 2 + L2 + stairW);
     }
     const livingSideEndX = frontX - 0.8; // Leave room near the front corner
 
@@ -3602,52 +3613,77 @@ export function initRenderer(configData) {
       const holeW = sw;
       const holeD = landingSize;
 
-      // Inset stairs and stairwell from outer walls so they never poke through exterior CHB
-      const stairInsetZ = wt + 0.04;
-      const stairInsetX = wt + 0.04;
-      const maxStairZ = slZ + W2 / 2 - stairInsetZ;
-      const stairCZ = maxStairZ - sd / 2;
-      const maxStairX = slX + L2 / 2 - stairInsetX;
-      const stairCX = maxStairX - sw / 2;
-
-      // Piece 1: Back slab (Covers everything behind Flight 2, including covering Flight 1 and the landing)
-      const p1D = Math.max(0.05, W2 - holeD - stairInsetZ);
-      if (p1D > 0.05) {
+      if (type === "Loft Style") {
+        // Mezzanine slab is a single contiguous solid floor (clean, open layout)
         box(
           L2,
           0.18,
-          p1D,
+          W2 - wt * 2,
           slX,
           H1,
-          slZ - W2 / 2 + p1D / 2,
+          slZ,
           slabMat2,
           slabGroup,
           true,
           "wall",
           2,
         );
-      }
 
-      // Piece 2: Left slab (Covers the space beside Flight 2 at the front of the house)
-      const p2W = Math.max(0.05, L2 - holeW - stairInsetX);
-      if (p2W > 0.05) {
-        box(
-          p2W,
-          0.18,
-          holeD,
-          slX - L2 / 2 + p2W / 2,
-          H1,
-          stairCZ + sd / 2 - holeD / 2,
-          slabMat2,
-          slabGroup,
-          true,
-          "wall",
-          2,
-        );
-      }
+        // Position stairs in the living area along the +Z wall, leading up to the mezzanine front edge
+        const stairW = Math.min(1.4, Math.max(1.0, (L - L2 - wt) * 0.5));
+        const stairD = Math.min(1.8, (W - wt * 2) * 0.35);
+        const stairCX = slX + L2 / 2 + stairW / 2;
+        const stairCZ = slZ + W2 / 2 - wt - stairD / 2;
 
-      // Generate stairs in the hole (Layer 1 so they only appear in 1st floor view)
-      addStairs(stairCX, stairCZ, sw, sd, H1, slabMat2, 1);
+        addStairs(stairCX, stairCZ, stairW, stairD, H1, slabMat2, 1);
+      } else {
+        // Inset stairs and stairwell from outer walls so they never poke through exterior CHB
+        const stairInsetZ = wt + 0.04;
+        const stairInsetX = wt + 0.04;
+        const maxStairZ = slZ + W2 / 2 - stairInsetZ;
+        const stairCZ = maxStairZ - sd / 2;
+        const maxStairX = slX + L2 / 2 - stairInsetX;
+        const stairCX = maxStairX - sw / 2;
+
+        // Piece 1: Back slab (Covers everything behind Flight 2, including covering Flight 1 and the landing)
+        const p1D = Math.max(0.05, W2 - holeD - stairInsetZ);
+        if (p1D > 0.05) {
+          box(
+            L2,
+            0.18,
+            p1D,
+            slX,
+            H1,
+            slZ - W2 / 2 + p1D / 2,
+            slabMat2,
+            slabGroup,
+            true,
+            "wall",
+            2,
+          );
+        }
+
+        // Piece 2: Left slab (Covers the space beside Flight 2 at the front of the house)
+        const p2W = Math.max(0.05, L2 - holeW - stairInsetX);
+        if (p2W > 0.05) {
+          box(
+            p2W,
+            0.18,
+            holeD,
+            slX - L2 / 2 + p2W / 2,
+            H1,
+            stairCZ + sd / 2 - holeD / 2,
+            slabMat2,
+            slabGroup,
+            true,
+            "wall",
+            2,
+          );
+        }
+
+        // Generate stairs in the hole (Layer 1 so they only appear in 1st floor view)
+        addStairs(stairCX, stairCZ, sw, sd, H1, slabMat2, 1);
+      }
     }
 
     // ---- 6. COLUMNS (structural) ----

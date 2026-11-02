@@ -79,7 +79,7 @@ ARCHITECTURAL PLANNING & DECISION RULES:
      * Second floor: bedrooms2F = "2" (if total < 90 sqm) or "3" (if total 90-140 sqm) or "4" (if total > 140 sqm); crs2F = "1" or "2".
    - For Loft Style houses:
      * Ground floor: bedrooms1F = "1", crs1F = "1".
-     * Mezzanine: bedrooms2F = "1" (or "2" if mezzanine >= 28 sqm); crs2F = "0" (or "1" if mezzanine >= 25 sqm).
+     * Mezzanine: bedrooms2F = "1" (Master Loft Suite, or "0" for open lounge); crs2F = "0" (or "1" if mezzanine >= 28 sqm). Never suggest 2 or more bedrooms on a loft mezzanine.
 
 3. BUDGET REALITY & MATERIAL GRADES:
    - Real Philippine construction benchmark: ~15,000 to 25,000 PHP/sqm for standard construction.
