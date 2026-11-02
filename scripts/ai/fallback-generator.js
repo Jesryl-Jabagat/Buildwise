@@ -158,7 +158,6 @@ export function generateSmartFallback(form, typeKey, setupData) {
         value = options[0];
         reason = `Selected reliable corrugated GI roofing profile matched to budget.`;
       }
-    }
     } else if (name.includes("tileSize")) {
       const budgetPerSqm = budget / (totalFloorArea || 30);
       if (budgetPerSqm >= 22000 || budget >= 1200000) {
