@@ -27,6 +27,7 @@ const mapPaintColor = (theme) => {
 
 export function initRenderer(configData) {
   window.currentRendererHouseType = mapType(configData.typeKey);
+  let currentMezzanineBounds = { x: 0, z: 0, L2: 0, W2: 0 };
 
   // Use a data attribute to reliably prevent double-initialization
   const extContainer = document.getElementById("exterior-container");
@@ -1684,6 +1685,19 @@ export function initRenderer(configData) {
 
     group.position.set(cx, 20, cz);
     blueprintGroup.add(group);
+
+    // Also add a 2D Blueprint Opening symbol on Layer 2 (Mezzanine / 2nd Floor)
+    const group2 = new THREE.Group();
+    const geo2D = new THREE.BoxGeometry(landingSize, 0.01, landingSize);
+    const line2D = new THREE.LineSegments(new THREE.EdgesGeometry(geo2D), fpLineMat);
+    line2D.layers.set(2);
+    group2.add(line2D);
+    const dnText = createTextSprite("STAIRS (DN)", 2);
+    dnText.scale.set(1.4, 0.35, 1);
+    dnText.position.set(0, 0, 0);
+    group2.add(dnText);
+    group2.position.set(cx, 20, cz + sd / 2 - landingSize / 2);
+    blueprintGroup.add(group2);
   }
 
   // ============================================================
@@ -2360,14 +2374,27 @@ export function initRenderer(configData) {
 
         if (beds > 0) {
           // safeCrWidth and safeCrDepth were pre-calculated above!
-          // 1st CR is always Common
-          crPlacements.push({
-            type: "common",
-            x: houseLeftX + safeCrWidth / 2,
-            z: houseFrontZ - safeCrDepth / 2,
-            width: safeCrWidth,
-            depth: safeCrDepth,
-          });
+          // In Loft Style mezzanine, place CR at rear corner so it does not face/block stairs
+          if (layer === 2 && window.currentRendererHouseType === "Loft Style") {
+            crPlacements.push({
+              type: "common",
+              x: houseLeftX + safeCrWidth / 2,
+              z: houseBackZ + safeCrDepth / 2,
+              width: safeCrWidth,
+              depth: safeCrDepth,
+              doorFacing: "Z",
+            });
+          } else {
+            // 1st CR is always Common
+            crPlacements.push({
+              type: "common",
+              x: houseLeftX + safeCrWidth / 2,
+              z: houseFrontZ - safeCrDepth / 2,
+              width: safeCrWidth,
+              depth: safeCrDepth,
+              doorFacing: "X",
+            });
+          }
 
           // 2nd CR and beyond are En-suites distributed among bedrooms starting with Master Bed (i=0)
           for (let i = 1; i < crs; i++) {
@@ -2388,12 +2415,14 @@ export function initRenderer(configData) {
           let fallbackCrDepth = Math.min(1.8, flW * (flW <= 7 ? 0.25 : 0.2));
           let fallbackCrWidth = Math.min(1.8, (flL - wt) / crs);
           for (let i = 0; i < crs; i++) {
+            const isLoftMezz = layer === 2 && window.currentRendererHouseType === "Loft Style";
             crPlacements.push({
               type: "common",
               x: houseLeftX + fallbackCrWidth / 2 + i * fallbackCrWidth,
-              z: houseFrontZ - fallbackCrDepth / 2,
+              z: isLoftMezz ? houseBackZ + fallbackCrDepth / 2 : houseFrontZ - fallbackCrDepth / 2,
               width: fallbackCrWidth,
               depth: fallbackCrDepth,
+              doorFacing: isLoftMezz ? "Z" : "X",
             });
           }
         }
@@ -2463,33 +2492,64 @@ export function initRenderer(configData) {
 
           if (isBaseFloor) {
             const dW = 0.7;
-            const doorX = crRightX;
+            if (cr.doorFacing === "Z") {
+              const doorZ = crFrontZ;
+              const doorX = cr.x;
 
-            box(
-              wt + 0.04,
-              dH,
-              dW,
-              doorX,
-              baseY + dH / 2,
-              cr.z,
-              doorMat,
-              wallGroup,
-              false,
-              "door",
-              layer,
-            );
-            doorknob(
-              0.035,
-              wt + 0.14,
-              doorX,
-              baseY + 1.0,
-              cr.z + dW / 2 - 0.1,
-              knobMat,
-              wallGroup,
-              layer,
-              "X",
-            ); // Knob
-            addBlueprintDoorSymbol(doorX, cr.z, dW, "cr", layer);
+              box(
+                dW,
+                dH,
+                wt + 0.04,
+                doorX,
+                baseY + dH / 2,
+                doorZ,
+                doorMat,
+                wallGroup,
+                false,
+                "door",
+                layer,
+              );
+              doorknob(
+                0.035,
+                wt + 0.14,
+                doorX + dW / 2 - 0.1,
+                baseY + 1.0,
+                doorZ,
+                knobMat,
+                wallGroup,
+                layer,
+                "Z",
+              );
+              addBlueprintDoorSymbol(doorX, doorZ, dW, "front", layer);
+            } else {
+              const doorX = crRightX;
+
+              box(
+                wt + 0.04,
+                dH,
+                dW,
+                doorX,
+                baseY + dH / 2,
+                cr.z,
+                doorMat,
+                wallGroup,
+                false,
+                "door",
+                layer,
+              );
+              doorknob(
+                0.035,
+                wt + 0.14,
+                doorX,
+                baseY + 1.0,
+                cr.z + dW / 2 - 0.1,
+                knobMat,
+                wallGroup,
+                layer,
+                "X",
+              );
+              addBlueprintDoorSymbol(doorX, cr.z, dW, "cr", layer);
+            }
 
             // CR Awning Window (Exterior)
             let winX = null,
@@ -2675,13 +2735,23 @@ export function initRenderer(configData) {
         wallRing(L, W, upper, H1, lightMat, baseLayer);
         buildRooms(bed1, cr1, 0, 0, L, W, upper, H1, lightMat, false, 1);
       }
-    } else {
-      wallRing(L, W, totalH, 0, wallMat, baseLayer);
+    } else if (type === "Loft Style") {
+      // Lower wall ring (Ground Floor, 0 to H1) on baseLayer (Layer 3)
+      wallRing(L, W, H1, 0, wallMat, baseLayer);
       buildRooms(bed1, cr1, 0, 0, L, W, H1, 0, wallMat, true, 1);
 
-      if (type === "Loft Style") {
-        const mezCX = -(L - L2) / 2;
-        const mezCZ = -(W - W2) / 2;
+      // Upper exterior walls (H1 to totalH) on LAYER 2!
+      // This allows X-Ray 2nd Floor toggle to cleanly hide upper walls
+      const upperH = totalH - H1;
+      const cyUpper = H1 + upperH / 2;
+      box(L, upperH, wt, 0, cyUpper, -W / 2 + wt / 2, wallMat2, wallGroup, true, "wall", 2); // back
+      box(L, upperH, wt, 0, cyUpper, W / 2 - wt / 2, wallMat2, wallGroup, true, "wall", 2); // front
+      box(wt, upperH, W - wt * 2, -L / 2 + wt / 2, cyUpper, 0, wallMat2, wallGroup, true, "wall", 2); // left
+      box(wt, upperH, W - wt * 2, L / 2 - wt / 2, cyUpper, 0, wallMat2, wallGroup, true, "wall", 2); // right
+
+      const mezCX = -(L - L2) / 2;
+      const mezCZ = -(W - W2) / 2;
+      currentMezzanineBounds = { x: mezCX, z: mezCZ, L2, W2 };
         const cyRailing = H1 + 0.09 + 0.45; // Sits flush on top of the 0.18m mezzanine slab
         const railH = 0.9;
         const railThick = 0.08;
@@ -2749,9 +2819,11 @@ export function initRenderer(configData) {
           );
         }
 
-        buildRooms(bed2, cr2, mezCX, mezCZ, L2, W2, 1.5, H1, wallMat2, true, 2);
-        addDimensionLabels(L2, W2, mezCX, mezCZ, 2);
-      }
+      buildRooms(bed2, cr2, mezCX, mezCZ, L2, W2, 1.5, H1, wallMat2, true, 2);
+      addDimensionLabels(L2, W2, mezCX, mezCZ, 2);
+    } else {
+      wallRing(L, W, totalH, 0, wallMat, baseLayer);
+      buildRooms(bed1, cr1, 0, 0, L, W, H1, 0, wallMat, true, 1);
     }
 
     // ---- 2. WINDOWS ----
@@ -4350,16 +4422,40 @@ export function initRenderer(configData) {
       if (w2 > 0 && h2 > 0) {
         const a2 = w2 / h2;
         
-        const margin = 1.5;
-        const reqV = (size.z / 2) + margin;
-        const reqH = ((size.x / 2) + margin) / a2;
-        const currentFpD2 = Math.max(reqV, reqH) || 8;
-        
-        cameraFP2.left = -currentFpD2 * a2;
-        cameraFP2.right = currentFpD2 * a2;
-        cameraFP2.top = currentFpD2;
-        cameraFP2.bottom = -currentFpD2;
-        cameraFP2.updateProjectionMatrix();
+        if (houseType === "Loft Style") {
+          // Perfectly center the camera directly over the mezzanine
+          cameraFP2.position.set(currentMezzanineBounds.x, 50, currentMezzanineBounds.z);
+          cameraFP2.lookAt(currentMezzanineBounds.x, 0, currentMezzanineBounds.z);
+          if (controlsFP2) controlsFP2.target.set(currentMezzanineBounds.x, 0, currentMezzanineBounds.z);
+
+          const mezW = currentMezzanineBounds.W2 || size.z;
+          const mezL = currentMezzanineBounds.L2 || size.x;
+          const margin = 1.2;
+          const reqV = (mezW / 2) + margin;
+          const reqH = ((mezL / 2) + margin) / a2;
+          const currentFpD2 = Math.max(reqV, reqH) || 5;
+
+          cameraFP2.left = -currentFpD2 * a2;
+          cameraFP2.right = currentFpD2 * a2;
+          cameraFP2.top = currentFpD2;
+          cameraFP2.bottom = -currentFpD2;
+          cameraFP2.updateProjectionMatrix();
+        } else {
+          cameraFP2.position.set(0, 50, 0);
+          cameraFP2.lookAt(0, 0, 0);
+          if (controlsFP2) controlsFP2.target.set(0, 0, 0);
+
+          const margin = 1.5;
+          const reqV = (size.z / 2) + margin;
+          const reqH = ((size.x / 2) + margin) / a2;
+          const currentFpD2 = Math.max(reqV, reqH) || 8;
+          
+          cameraFP2.left = -currentFpD2 * a2;
+          cameraFP2.right = currentFpD2 * a2;
+          cameraFP2.top = currentFpD2;
+          cameraFP2.bottom = -currentFpD2;
+          cameraFP2.updateProjectionMatrix();
+        }
         rendererFP2.setSize(w2, h2);
       }
       cameraFP2.layers.disableAll();
