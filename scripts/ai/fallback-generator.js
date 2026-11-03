@@ -18,6 +18,7 @@ export function generateSmartFallback(form, typeKey, setupData) {
   const dims = calculateTargetDimensions(typeKey, targetArea);
   const length = dims.length;
   const width = dims.width;
+  const groundArea = length * width;
   const mezzanineLength = dims.mezzanineLength || 0;
   const mezzanineWidth = dims.mezzanineWidth || dims.width;
   const totalFloorArea = dims.totalFloorArea;
@@ -28,7 +29,6 @@ export function generateSmartFallback(form, typeKey, setupData) {
   let suggestedCr1 = recRooms.crs1F;
   let suggestedBed2 = recRooms.bedrooms2F;
   let suggestedCr2 = recRooms.crs2F;
-  }
 
   // Helper to pick exact matching or closest valid option
   function pickOption(select, targetVal) {
