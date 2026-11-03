@@ -64,6 +64,9 @@ export function writeMaterialsTable(materials) {
   const container = document.getElementById("materialsTable");
   if (!container || !materials?.length) return;
 
+  // Ensure pointer events are enabled for clicks
+  container.style.pointerEvents = "auto";
+
   const note = document.getElementById("materialsNote");
   if (note) note.hidden = true;
 
@@ -79,14 +82,14 @@ export function writeMaterialsTable(materials) {
           : "THHN wires, flexible hose, conduit piping, switches, outlets, panel board & breakers";
 
         return `
-        <div class="materials-group package-group" style="background: rgba(31, 122, 92, 0.03); border: 1px solid rgba(31, 122, 92, 0.2); border-radius: 8px; padding: 14px 16px; margin-bottom: 20px;">
+        <div class="materials-group package-group" style="background: rgba(31, 122, 92, 0.04); border: 1px solid rgba(31, 122, 92, 0.25); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <h3 class="materials-category" style="margin: 0; color: #1f7a5c;">${pkgName}</h3>
+                <h3 class="materials-category" style="margin: 0; color: #1f7a5c; border-bottom: none; padding-bottom: 0;">${pkgName}</h3>
                 <span class="badge" style="background: #1f7a5c; color: #fff; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; font-weight: 600; text-transform: uppercase;">Turnkey Package</span>
               </div>
-              <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">${pkgDesc}</p>
+              <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-muted); padding-bottom: 2px;">${pkgDesc}</p>
             </div>
             <div style="text-align: right;">
               <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); display: block;">Package Cost</span>
@@ -94,7 +97,7 @@ export function writeMaterialsTable(materials) {
             </div>
           </div>
 
-          <table class="materials-tbl" style="background: #fff; border-radius: 6px; overflow: hidden; margin-bottom: 10px;">
+          <table class="materials-tbl" style="background: var(--surface, #151515); border: 1px solid var(--border, #2a2a2a); border-radius: 6px; overflow: hidden; margin-bottom: 12px;">
             <thead>
               <tr>
                 <th style="width: 45%;">Scope / Package Item</th>
@@ -113,14 +116,14 @@ export function writeMaterialsTable(materials) {
             </tbody>
           </table>
 
-          <details style="font-size: 0.84rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px;">
-            <summary style="cursor: pointer; font-weight: 600; color: #1f7a5c; outline: none; user-select: none;">
+          <details style="font-size: 0.85rem; background: var(--surface, #151515); border: 1px solid var(--border, #2a2a2a); border-radius: 6px; padding: 10px 14px; cursor: pointer;">
+            <summary style="cursor: pointer; font-weight: 600; color: #1f7a5c; outline: none; user-select: none; padding: 4px 0;">
               📦 View Itemized Package Inclusions (${group.items.length} materials)
             </summary>
             <div style="margin-top: 10px; overflow-x: auto;">
               <table class="materials-tbl" style="margin: 0; font-size: 0.82rem;">
                 <thead>
-                  <tr style="background: #f8fafc;">
+                  <tr style="background: rgba(255, 255, 255, 0.03);">
                     <th>Component Material</th>
                     <th style="text-align: center;">Est. Qty</th>
                     <th>Unit</th>
