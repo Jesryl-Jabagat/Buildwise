@@ -50,8 +50,8 @@ export function getUserInput(form) {
       data[key] = num;
       
       // Safety limits
-      if ((key === "length" || key === "width") && num > 30) {
-        if (!confirm(`Warning: You entered a ${key} of ${num} meters, which is extremely large and may crash the 3D renderer or cause memory issues. Are you sure you want to proceed?`)) {
+      if ((key === "length" || key === "width") && num > 60) {
+        if (!confirm(`Warning: You entered a ${key} of ${num} meters, which is extremely large. Are you sure you want to proceed?`)) {
           return null;
         }
       }
@@ -135,8 +135,17 @@ export function getUserInput(form) {
     return null;
   }
 
-  data.lotArea   = Math.round(l1 * w1);
-  data.floorArea = Math.round((l1 * w1) + (l2 * w2));
+  let userSetupArea = 0;
+  try {
+    const setupRaw = localStorage.getItem("buildwiseSetup");
+    if (setupRaw) {
+      const setup = JSON.parse(setupRaw);
+      userSetupArea = Number(setup.area) || 0;
+    }
+  } catch (e) {}
+
+  data.lotArea   = userSetupArea || Math.round(l1 * w1);
+  data.floorArea = Math.round(((l1 * w1) + (l2 * w2)) * 10) / 10;
 
   /* --- UI Metadata for result.js --------------------------- */
   // Minimum 1 CR safeguard

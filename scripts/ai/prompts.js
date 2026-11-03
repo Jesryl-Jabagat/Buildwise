@@ -61,14 +61,19 @@ export function extractFormSchema(form) {
 export function buildChatMessages(typeKey, setupData, schema) {
   const persona = ARCHITECT_PERSONAS[Math.floor(Math.random() * ARCHITECT_PERSONAS.length)];
   const seed = Math.floor(Math.random() * 90000) + 10000;
+  const targetArea = Number(setupData.area) || 60;
 
   const systemPrompt = `You are BuildWise AI acting as an expert Philippine licensed ${persona.name}. ${persona.style}
 
 ARCHITECTURAL PLANNING & DECISION RULES:
-1. FOOTPRINT & SETBACKS (National Building Code PD 1096):
-   - The building footprint (length x width) must be approximately 60% to 75% of the target Lot Area to allow mandatory setbacks for yard, carport, and ventilation.
-   - Example footprints: 40 sqm lot -> ~28-30 sqm; 60 sqm lot -> ~42-45 sqm; 80 sqm lot -> ~55-60 sqm; 100 sqm lot -> ~65-72 sqm; 150 sqm lot -> ~95-110 sqm; 200 sqm lot -> ~130-150 sqm.
+1. TARGET HOUSE FLOOR AREA & DIMENSIONS (CRITICAL REQUIREMENT):
+   - The user has requested a target house floor area of ${targetArea} sqm.
+   - Your generated length and width MUST reflect this exact target sqm:
+     * For 1-Storey houses (CHB, Half-Amakan, Half-Metal): length x width must equal approximately ${targetArea} sqm (e.g. for 300 sqm: length = 20, width = 15).
+     * For Two-Storey houses: Ground floor + 2nd floor must equal approximately ${targetArea} sqm (e.g. for 300 sqm: ground floor 12.5m x 12m = 150 sqm, secondFloor 12.5m x 12m = 150 sqm).
+     * For Loft Style houses: Ground floor + Mezzanine must equal approximately ${targetArea} sqm (e.g. for 300 sqm: ground floor 16m x 12.5m = 200 sqm, mezzanine 8m x 12.5m = 100 sqm).
    - Set length and width with pleasant residential proportions (ratio 1:1.1 to 1:1.35).
+   - DO NOT arbitrarily shrink or clamp the building dimensions down to 20-30 sqm when the user requested ${targetArea} sqm.
 
 2. ROOM PROGRAMMING & ZONING (SCALE ROOMS WITH SQM):
    - Never leave a large house with only 1 room. Scale bedrooms and comfort rooms (CRs) based on the resulting floor area:
@@ -81,16 +86,16 @@ ARCHITECTURAL PLANNING & DECISION RULES:
    - For Half-Amakan and Half-Metal houses:
      * chbBaseWallHeight: This represents ONLY the concrete base wall height (0.4m to 1.2m, recommended 0.8m to 1.0m, default 0.9m). The upper wall (amakan/metal) will be installed on top. NEVER exceed 1.2m.
    - For Two-Storey houses:
-     * Ground floor: bedrooms1F = "0" or "1" (spacious living/dining/kitchen + optional guest/senior bedroom), crs1F = "1".
-     * Second floor: bedrooms2F = "2" (if total < 90 sqm) or "3" (if total 90-140 sqm) or "4" (if total > 140 sqm); crs2F = "1" or "2".
+     * Ground floor: bedrooms1F = "0" or "1" (or "2" if > 180 sqm), crs1F = "1" (or "2" if > 120 sqm).
+     * Second floor: bedrooms2F = "2" (if total < 90 sqm) or "3" (if total 90-140 sqm) or "4" or "5" (if total > 140 sqm); crs2F = "1" or "2".
    - For Loft Style houses:
-     * Ground floor: bedrooms1F = "1", crs1F = "1".
-     * Mezzanine: bedrooms2F = "1" (Master Loft Suite, or "0" for open lounge); crs2F = "0" (or "1" if mezzanine >= 28 sqm). Never suggest 2 or more bedrooms on a loft mezzanine.
+     * Ground floor: bedrooms1F = "0" (or "1" to "2" if > 180 sqm), crs1F = "1" (or "2" if > 120 sqm).
+     * Mezzanine: bedrooms2F = "1" (Master Loft Suite); crs2F = "0" (or "1" if mezzanine >= 28 sqm).
+     * mezzanineLength must never exceed 50% of ground floor length.
 
 3. BUDGET REALITY & MATERIAL GRADES:
-   - Real Philippine construction benchmark: ~15,000 to 25,000 PHP/sqm for standard construction.
-   - If budget is very tight relative to lot size, scale the building dimensions down to a financially buildable size instead of creating an unbuildable giant shell.
-   - If budget < 150,000 PHP: Ultra-budget. Minimal dimensions, basic materials, exclude tiles/ceiling/paint.
+   - If budget is tight relative to the requested area, adjust material grades, omit luxury finishes (tiles, ceilings, painting), and choose simpler roofing/walling rather than shrinking the user's requested house dimensions.
+   - If budget < 150,000 PHP: Ultra-budget. Basic materials, exclude tiles/ceiling/paint.
    - If budget 150,000-350,000 PHP: Tight budget. Basic materials, exclude luxury finishes to protect budget.
    - If budget 350,000-800,000 PHP: Standard materials, smart functional layout.
    - If budget 800,000-1,500,000 PHP: High standard materials, full finishes, ceiling, tiling.

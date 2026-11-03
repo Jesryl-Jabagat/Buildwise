@@ -5,6 +5,7 @@
    ============================================================ */
 import { houseTypes, currentTypeKey } from '../house-data.js';
 import { setText } from '../utils.js';
+import { calculateTargetDimensions, getRecommendedRooms } from '../utils/dimensions.js';
 
 import { getLoftTemplate }       from './templates/loft.template.js';
 import { getTwoStoreyTemplate }  from './templates/two-storey.template.js';
@@ -112,62 +113,54 @@ function setupConfigPage() {
     } else {
       // Pre-fill smart default dimensions and room counts from setup area
       if (setupData.area && setupData.area > 0) {
-        // Smart footprint coverage (~65% to 75% for building code setbacks)
-        const coverage = setupData.area <= 40 ? 0.75 : setupData.area <= 80 ? 0.70 : 0.65;
-        let targetFootprint = setupData.area * coverage;
-        if (setupData.budget && setupData.budget > 0) {
-          const maxAffordable = setupData.budget / 14000;
-          if (targetFootprint > maxAffordable) targetFootprint = Math.max(25, maxAffordable);
-        }
-        const length = Math.round(Math.sqrt(targetFootprint * 1.25) * 2) / 2;
-        const width = Math.round((targetFootprint / length) * 2) / 2;
+        const dims = calculateTargetDimensions(typeKey, setupData.area);
         
         const l1Input = form.querySelector('[name="length"], [name="groundLength"]');
         const w1Input = form.querySelector('[name="width"], [name="groundWidth"]');
+        const l2Input = form.querySelector('[name="secondFloorLength"]');
+        const w2Input = form.querySelector('[name="secondFloorWidth"]');
+        const mLenInput = form.querySelector('[name="mezzanineLength"]');
+        const mWidInput = form.querySelector('[name="mezzanineWidth"]');
         
         if (l1Input && w1Input) {
-          l1Input.value = length;
-          w1Input.value = width;
+          l1Input.value = dims.length;
+          w1Input.value = dims.width;
           l1Input.dispatchEvent(new Event('input', { bubbles: true }));
           w1Input.dispatchEvent(new Event('input', { bubbles: true }));
           l1Input.dispatchEvent(new Event('change', { bubbles: true }));
           w1Input.dispatchEvent(new Event('change', { bubbles: true }));
         }
 
-        // Pre-fill smart room counts based on footprint
-        const isTwoStorey = typeKey === 'two-storey';
-        const isLoft = typeKey === 'loft';
-
-        let recBed1 = 1;
-        let recCr1 = 1;
-        let recBed2 = 0;
-        let recCr2 = 0;
-
-        if (isTwoStorey) {
-          recBed1 = targetFootprint > 65 ? 1 : 0;
-          recCr1 = 1;
-          recBed2 = targetFootprint > 90 ? 3 : 2;
-          recCr2 = targetFootprint > 70 ? 2 : 1;
-        } else if (isLoft) {
-          recBed1 = 1;
-          recCr1 = 1;
-          recBed2 = targetFootprint >= 45 ? 2 : 1;
-          recCr2 = targetFootprint >= 50 ? 1 : 0;
-        } else {
-          // Single Storey (CHB, Half-Amakan, Half-Metal)
-          recBed1 = targetFootprint <= 36 ? 1 : targetFootprint <= 60 ? 2 : targetFootprint <= 95 ? 3 : targetFootprint <= 140 ? 4 : 5;
-          recCr1 = targetFootprint <= 60 ? 1 : targetFootprint <= 120 ? 2 : 3;
+        if (l2Input && w2Input && dims.secondFloorLength) {
+          l2Input.value = dims.secondFloorLength;
+          w2Input.value = dims.secondFloorWidth;
+          l2Input.dispatchEvent(new Event('input', { bubbles: true }));
+          w2Input.dispatchEvent(new Event('input', { bubbles: true }));
+          l2Input.dispatchEvent(new Event('change', { bubbles: true }));
+          w2Input.dispatchEvent(new Event('change', { bubbles: true }));
         }
+
+        if (mLenInput && mWidInput && dims.mezzanineLength) {
+          mLenInput.value = dims.mezzanineLength;
+          mWidInput.value = dims.mezzanineWidth;
+          mLenInput.dispatchEvent(new Event('input', { bubbles: true }));
+          mWidInput.dispatchEvent(new Event('input', { bubbles: true }));
+          mLenInput.dispatchEvent(new Event('change', { bubbles: true }));
+          mWidInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // Pre-fill smart room counts based on exact target floor area
+        const rec = getRecommendedRooms(typeKey, dims.totalFloorArea);
 
         const b1 = form.querySelector('[name="bedrooms1F"]');
         const c1 = form.querySelector('[name="crs1F"]');
         const b2 = form.querySelector('[name="bedrooms2F"]');
         const c2 = form.querySelector('[name="crs2F"]');
 
-        if (b1) { b1.value = String(recBed1); b1.dispatchEvent(new Event('change', { bubbles: true })); }
-        if (c1) { c1.value = String(recCr1); c1.dispatchEvent(new Event('change', { bubbles: true })); }
-        if (b2) { b2.value = String(recBed2); b2.dispatchEvent(new Event('change', { bubbles: true })); }
-        if (c2) { c2.value = String(recCr2); c2.dispatchEvent(new Event('change', { bubbles: true })); }
+        if (b1 && rec.bedrooms1F !== undefined) { b1.value = String(rec.bedrooms1F); b1.dispatchEvent(new Event('change', { bubbles: true })); }
+        if (c1 && rec.crs1F !== undefined) { c1.value = String(rec.crs1F); c1.dispatchEvent(new Event('change', { bubbles: true })); }
+        if (b2 && rec.bedrooms2F !== undefined) { b2.value = String(rec.bedrooms2F); b2.dispatchEvent(new Event('change', { bubbles: true })); }
+        if (c2 && rec.crs2F !== undefined) { c2.value = String(rec.crs2F); c2.dispatchEvent(new Event('change', { bubbles: true })); }
 
         // Prefill non-spatial settings (materials, finishes) from previous result if any
         prefillFormFromLocalStorage(form, typeKey, true);

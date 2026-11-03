@@ -72,7 +72,7 @@ export function getLoftTemplate() {
           <div class="priority-cost-preview" id="finishesCostPreview1">Est: --</div>
         </div></div>
         <div class="room-picker">
-          <label><span>Number of Bedrooms (1F)</span><select class="form-select" name="bedrooms1F"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label><span>Number of Bedrooms (1F)</span><select class="form-select" name="bedrooms1F"><option selected>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
           <label><span>Mezzanine Bedroom / Studio</span><select class="form-select" name="bedrooms2F"><option value="0">0 (Open Loft Lounge / Studio)</option><option value="1" selected>1 (Master Loft Suite)</option></select></label>
           <label><span>Number of CRs (1F)</span><select class="form-select" name="crs1F"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
           <label><span>Mezzanine CR</span><select class="form-select" name="crs2F"><option value="0" selected>0 (No CR - Open Layout)</option><option value="1">1 (Compact En-suite CR)</option></select></label>

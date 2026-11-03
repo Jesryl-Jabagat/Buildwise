@@ -1,88 +1,33 @@
+import { calculateTargetDimensions, getRecommendedRooms } from "../utils/dimensions.js";
+
 /**
  * Deterministic Rule-Based Fallback Generator.
  * Used as a safety net when cloud API providers are unavailable or timeout.
- * Employs Philippine National Building Code (PD 1096) zoning and realistic cost-per-sqm metrics.
+ * Employs accurate spatial scaling to reflect the exact sqm given by the user.
  */
 export function generateSmartFallback(form, typeKey, setupData) {
-  console.warn("⚠️ Using Deterministic Rule-Based Fallback with Smart Spatial Scaling.");
+  console.warn("⚠️ Using Deterministic Rule-Based Fallback with Exact Spatial Scaling.");
 
   const suggestions = [];
   const budget = Number(setupData.budget) || 800000;
-  const lotArea = Number(setupData.area) || 60;
+  const targetArea = Number(setupData.area) || 60;
   const location = String(setupData.location || "");
   const landType = String(setupData.landType || "Flat");
 
-  // 1. Calculate smart building footprint (~65% to 75% coverage for setbacks/ventilation)
-  let coverageRatio = lotArea <= 40 ? 0.75 : lotArea <= 80 ? 0.70 : 0.65;
-  let targetFootprint = lotArea * coverageRatio;
+  // 1. Calculate dimensions reflecting exact user-specified target sqm
+  const dims = calculateTargetDimensions(typeKey, targetArea);
+  const length = dims.length;
+  const width = dims.width;
+  const mezzanineLength = dims.mezzanineLength || 0;
+  const mezzanineWidth = dims.mezzanineWidth || dims.width;
+  const totalFloorArea = dims.totalFloorArea;
 
-  // Budget reality check: Standard Philippine construction is ~15,000 - 22,000 PHP/sqm
-  if (budget > 0) {
-    const maxAffordableArea = budget / 14000;
-    if (targetFootprint > maxAffordableArea) {
-      targetFootprint = Math.max(25, Math.round(maxAffordableArea * 10) / 10);
-    }
-  }
-
-  // Calculate Length & Width with pleasant 1:1.25 residential ratio
-  const length = Math.round(Math.sqrt(targetFootprint * 1.25) * 2) / 2;
-  const width = Math.round((targetFootprint / length) * 2) / 2;
-  const groundArea = length * width;
-
-  // Floor area calculations based on house type
-  const isTwoStorey = typeKey === "two-storey";
-  const isLoft = typeKey === "loft";
-
-  const mezzanineLength = isLoft ? Math.round(length * 0.5 * 2) / 2 : 0;
-  const mezzanineWidth = width;
-  const mezzanineArea = mezzanineLength * mezzanineWidth;
-
-  const totalFloorArea = isTwoStorey ? groundArea * 2 : isLoft ? groundArea + mezzanineArea : groundArea;
-
-  // 2. Intelligent Room Program (Bedrooms & CRs) based on Floor Area
-  let suggestedBed1 = 1;
-  let suggestedCr1 = Math.max(1, 1);
-  let suggestedBed2 = 0;
-  let suggestedCr2 = 0;
-
-  if (isTwoStorey) {
-    suggestedCr1 = 1;
-    if (totalFloorArea <= 80) {
-      suggestedBed1 = 0; // Ground floor dedicated to living/dining/kitchen
-      suggestedBed2 = 2; // 2 upstairs bedrooms
-      suggestedCr2 = 1;
-    } else if (totalFloorArea <= 130) {
-      suggestedBed1 = 1; // 1 guest/senior bedroom on ground floor
-      suggestedBed2 = 3; // 3 bedrooms upstairs (1 Master + 2)
-      suggestedCr2 = 2; // 1 en-suite + 1 common upstairs
-    } else {
-      suggestedBed1 = 1;
-      suggestedBed2 = 4;
-      suggestedCr2 = 2;
-    }
-  } else if (isLoft) {
-    suggestedBed1 = 1; // 1 bedroom on ground floor
-    suggestedCr1 = 1;  // 1 common CR on ground floor
-    suggestedBed2 = 1; // 1 Master Loft Suite (clean, open layout)
-    suggestedCr2 = mezzanineArea >= 28 ? 1 : 0;
-  } else {
-    // 1-Storey houses (CHB, Half-Amakan, Half-Metal)
-    if (totalFloorArea <= 36) {
-      suggestedBed1 = 1;
-      suggestedCr1 = 1;
-    } else if (totalFloorArea <= 60) {
-      suggestedBed1 = 2;
-      suggestedCr1 = 1;
-    } else if (totalFloorArea <= 95) {
-      suggestedBed1 = 3;
-      suggestedCr1 = 2;
-    } else if (totalFloorArea <= 135) {
-      suggestedBed1 = 4;
-      suggestedCr1 = 2;
-    } else {
-      suggestedBed1 = 5;
-      suggestedCr1 = 3;
-    }
+  // 2. Intelligent Room Program (Bedrooms & CRs) based on exact Floor Area
+  const recRooms = getRecommendedRooms(typeKey, totalFloorArea);
+  let suggestedBed1 = recRooms.bedrooms1F;
+  let suggestedCr1 = recRooms.crs1F;
+  let suggestedBed2 = recRooms.bedrooms2F;
+  let suggestedCr2 = recRooms.crs2F;
   }
 
   // Helper to pick exact matching or closest valid option
@@ -196,21 +141,21 @@ export function generateSmartFallback(form, typeKey, setupData) {
 
     if (name === "length" || name === "groundLength") {
       value = length;
-      reason = `Optimized building length (${value}m) maintaining statutory front/rear setbacks on a ${lotArea} sqm lot.`;
+      reason = `Sized length (${value}m) to reflect target ${targetArea} sqm floor area.`;
     } else if (name === "width" || name === "groundWidth") {
       value = width;
-      reason = `Optimized building width (${value}m) providing adequate side yard easements and daylight clearance.`;
+      reason = `Sized width (${value}m) to reflect target ${targetArea} sqm floor area.`;
     } else if (name === "secondFloorLength") {
-      value = length;
-      reason = `Full structural alignment with ground floor perimeter walls.`;
+      value = dims.secondFloorLength || length;
+      reason = `Aligned 2nd floor length (${value}m) for ${targetArea} sqm total space.`;
     } else if (name === "secondFloorWidth") {
-      value = width;
-      reason = `Aligned 2nd floor footprint for direct vertical column load transfers.`;
+      value = dims.secondFloorWidth || width;
+      reason = `Aligned 2nd floor width (${value}m) for direct column load transfer.`;
     } else if (name === "mezzanineLength") {
-      value = mezzanineLength;
+      value = dims.mezzanineLength || 0;
       reason = `Mezzanine length within code-compliant 50% building footprint limit.`;
     } else if (name === "mezzanineWidth") {
-      value = mezzanineWidth;
+      value = dims.mezzanineWidth || width;
       reason = `Span matching structural framing for cost-effective joist distribution.`;
     } else if (name === "chbBaseWallHeight") {
       value = 0.9;

@@ -144,8 +144,11 @@ function updateMeter(form, typeKey, budget, submitBtn) {
   }
 
   // Derive numeric dimension fields
-  rawData.floorArea = (parseFloat(rawData.length || rawData.groundLength || 0) || 0) *
-                     (parseFloat(rawData.width  || rawData.groundWidth  || 0) || 0);
+  const l1 = parseFloat(rawData.length || rawData.groundLength || 0) || 0;
+  const w1 = parseFloat(rawData.width  || rawData.groundWidth  || 0) || 0;
+  const l2 = parseFloat(rawData.secondFloorLength || rawData.mezzanineLength || 0) || 0;
+  const w2 = parseFloat(rawData.secondFloorWidth  || rawData.mezzanineWidth  || 0) || 0;
+  rawData.floorArea = Math.round(((l1 * w1) + (l2 * w2)) * 10) / 10;
 
   let estimate;
   try {

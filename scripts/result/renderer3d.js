@@ -1714,13 +1714,13 @@ export function initRenderer(configData) {
     const type = mapType(configData.typeKey);
     const fl = configData.floorArea || 80;
     const baseW = Math.max(3, Math.floor(Math.sqrt(fl * 0.75)));
-    const W = parseFloat(configData.width) || baseW;
-    const L = parseFloat(configData.length) || Math.max(4, fl / baseW);
+    const W = parseFloat(configData.width || configData.groundWidth) || baseW;
+    const L = parseFloat(configData.length || configData.groundLength) || Math.max(4, fl / baseW);
     let L2 = L / 2;
     let W2 = W;
     if (type === "Two Storey") {
-      L2 = L;
-      W2 = W;
+      L2 = parseFloat(configData.secondFloorLength) || L;
+      W2 = parseFloat(configData.secondFloorWidth) || W;
     } else if (type === "Loft Style") {
       L2 = parseFloat(configData.mezzanineLength) || L2;
       W2 = parseFloat(configData.mezzanineWidth) || W;
@@ -2774,8 +2774,9 @@ export function initRenderer(configData) {
     } else if (type === "Loft Style") {
       // Lower wall ring (Ground Floor, 0 to H1) on baseLayer (Layer 3)
       wallRing(L, W, H1, 0, wallMat, baseLayer);
-      const loftGroundBeds = Math.max(1, bed1);
-      buildRooms(loftGroundBeds, cr1, 0, 0, L, W, H1, 0, wallMat, true, 1);
+      // In Loft Style, the ground floor is purely open-plan living/dining/kitchen/bath + stairs.
+      // The sleeping suite is situated on the mezzanine (Layer 2). Ground floor has 0 beds to prevent overlap with kitchen.
+      buildRooms(0, cr1, 0, 0, L, W, H1, 0, wallMat, true, 1);
 
       // Upper exterior walls (H1 to totalH) on LAYER 2!
       // This allows X-Ray 2nd Floor toggle to cleanly hide upper walls
@@ -3165,6 +3166,10 @@ export function initRenderer(configData) {
     // --- Dynamic Side Windows for Living/Kitchen (-Z wall) ---
     // The -Z wall has bedrooms starting from the back (-X).
     let livingOtherSideStartX = -L / 2 + wt / 2 + groundFloorTotalBedWidth;
+    if (type === "Loft Style") {
+      const safeCrW = cr1 > 0 ? Math.min(1.4, Math.max(0.8, L * 0.32)) : 1.5;
+      livingOtherSideStartX = Math.max(livingOtherSideStartX, -L / 2 + wt / 2 + (cr1 > 0 ? safeCrW : 0));
+    }
     const availableOtherSideL = livingSideEndX - livingOtherSideStartX;
     if (availableOtherSideL > 1.5) {
       const numOtherWins = Math.max(1, Math.floor(availableOtherSideL / 3.0));
@@ -3347,7 +3352,7 @@ export function initRenderer(configData) {
 
     // ---- 5. FLOOR SLAB & PUBLIC LIVING / DINING / KITCHEN ZONING ----
     let groundBedArea = 0;
-    if (bed1 > 0) {
+    if (bed1 > 0 && type !== "Loft Style") {
       let gBedDepth = Math.min(4.8, W * (W <= 5 ? 0.55 : W <= 7 ? 0.5 : 0.45));
       let gBedW = 0;
       if (bed1 === 1) gBedW = Math.min(L * W >= 55 ? 5.2 : 4.5, (L - wt) * 0.6);

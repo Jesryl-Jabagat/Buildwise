@@ -243,7 +243,7 @@ export function wireFloorAreaDisplay(form) {
     if (setupDataStr) {
       const setupData = JSON.parse(setupDataStr);
       if (setupData.area) {
-        setupAreaHint = `<p class="small mt-2 mb-0 text-muted" style="line-height: 1.2;">📐 Based on your lot area of <strong>${setupData.area} sqm</strong> from Setup.</p>`;
+        setupAreaHint = `<p class="small mt-2 mb-0 text-muted" style="line-height: 1.2;">📐 Target area from Setup: <strong>${setupData.area} sqm</strong>.</p>`;
       }
     }
   } catch (e) {}
