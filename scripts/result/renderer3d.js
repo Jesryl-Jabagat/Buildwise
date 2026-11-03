@@ -2000,6 +2000,7 @@ export function initRenderer(configData) {
       } else {
         estCrWidth = Math.min(1.8, (L - wt) / cr1) * cr1;
       }
+      estCrWidth = Math.min(estCrWidth, Math.min(1.4, L * 0.32));
       const minL2 = estCrWidth + 1.6 + wt; // 1.6 is stairs width, +wt to clear walls safely
       if (L2 < minL2) L2 = Math.min(L - 1.2, minL2);
     }
@@ -2152,6 +2153,9 @@ export function initRenderer(configData) {
           safeCrWidth = Math.min(1.8, (flL - wt) / crs);
           safeCrDepth = Math.max(0.8, Math.min(safeCrDepth, bedDepth * 0.45));
           safeCrWidth = Math.max(0.8, Math.min(safeCrWidth, bedWidths[0] * 0.5));
+          if (window.currentRendererHouseType === "Loft Style") {
+            safeCrWidth = Math.min(safeCrWidth, Math.min(1.4, flL * 0.32));
+          }
         }
 
         const isLoft = window.currentRendererHouseType === "Loft Style";
@@ -2299,8 +2303,10 @@ export function initRenderer(configData) {
               layer,
             );
             addBlueprintDoorSymbol(doorX, doorZ, dW, "bed", layer);
+          }
 
-            // Bedroom Window (Back wall)
+          // Bedroom Window (Back wall)
+          if (isBaseFloor && !isLoft) {
             const maxWinW = 1.2;
             const winH = Math.min(1.2, availableH - 1.2);
             const winY = baseY + winH / 2 + 0.9;
@@ -2342,38 +2348,54 @@ export function initRenderer(configData) {
                   layer,
                 );
             }
-
-            // Add Bed
-            let bedRot = i % 2 === 0 ? Math.PI / 2 : -Math.PI / 2;
-            let bedX = i % 2 === 0 ? roomLeftX + 1.1 : roomLeftX + bedWidth - 1.1;
-            let bedZ = houseBackZ + 0.85;
-            if (isLoft) {
-              // In Loft Style, bed faces forward into the open room/over the mezzanine railing
-              bedRot = 0;
-              bedX = roomCenterX;
-              bedZ = houseBackZ + 1.1;
+          } else if (isLoft) {
+            // For Loft Style back wall window in sleeping area
+            const winH = Math.min(1.1, availableH - 1.2);
+            const winY = baseY + winH / 2 + 0.9;
+            const winW = Math.min(1.4, Math.max(0.8, bedWidth * 0.5));
+            if (winW >= 0.6 && winH >= 0.5) {
+              addWindow(
+                roomCenterX,
+                winY,
+                houseBackZ,
+                winW,
+                winH,
+                "X",
+                layer,
+              );
             }
-            buildFurniture(
-              "bed",
-              bedX,
-              bedZ,
-              bedRot,
-              layer,
-              null,
-              baseY,
-            );
-
-            const area = Math.round(bedWidth * bedDepth * 10) / 10;
-            const roomName = isLoft
-              ? (layer === 2 ? "Mezzanine Loft" : "Loft Sleeping Area")
-              : (i === 0 && (beds > 1 || flL * flW >= 55) ? "Master Bedroom" : `Bedroom ${i + 1}`);
-            const label = createTextSprite(
-              `${roomName}\n(${area} sqm)`,
-              layer,
-            );
-            label.position.set(roomCenterX, 20, houseBackZ + bedDepth / 2);
-            blueprintGroup.add(label);
           }
+
+          // Add Bed
+          let bedRot = i % 2 === 0 ? Math.PI / 2 : -Math.PI / 2;
+          let bedX = i % 2 === 0 ? roomLeftX + 1.1 : roomLeftX + bedWidth - 1.1;
+          let bedZ = houseBackZ + 0.85;
+          if (isLoft) {
+            // In Loft Style, bed faces forward into the open room/over the mezzanine railing
+            bedRot = 0;
+            bedX = roomCenterX;
+            bedZ = houseBackZ + 1.1;
+          }
+          buildFurniture(
+            "bed",
+            bedX,
+            bedZ,
+            bedRot,
+            layer,
+            null,
+            baseY,
+          );
+
+          const area = Math.round(bedWidth * bedDepth * 10) / 10;
+          const roomName = isLoft
+            ? (layer === 2 ? "Mezzanine Loft" : "Loft Sleeping Area")
+            : (i === 0 && (beds > 1 || flL * flW >= 55) ? "Master Bedroom" : `Bedroom ${i + 1}`);
+          const label = createTextSprite(
+            `${roomName}\n(${area} sqm)`,
+            layer,
+          );
+          label.position.set(roomCenterX, 20, houseBackZ + bedDepth / 2);
+          blueprintGroup.add(label);
           currentRoomLeftX += bedWidth;
         }
       }
@@ -2425,6 +2447,9 @@ export function initRenderer(configData) {
         } else {
           let fallbackCrDepth = Math.min(1.8, flW * (flW <= 7 ? 0.25 : 0.2));
           let fallbackCrWidth = Math.min(1.8, (flL - wt) / crs);
+          if (window.currentRendererHouseType === "Loft Style") {
+            fallbackCrWidth = Math.min(fallbackCrWidth, Math.min(1.4, flL * 0.32));
+          }
           for (let i = 0; i < crs; i++) {
             const isLoft = window.currentRendererHouseType === "Loft Style";
             crPlacements.push({
@@ -2749,7 +2774,8 @@ export function initRenderer(configData) {
     } else if (type === "Loft Style") {
       // Lower wall ring (Ground Floor, 0 to H1) on baseLayer (Layer 3)
       wallRing(L, W, H1, 0, wallMat, baseLayer);
-      buildRooms(bed1, cr1, 0, 0, L, W, H1, 0, wallMat, true, 1);
+      const loftGroundBeds = Math.max(1, bed1);
+      buildRooms(loftGroundBeds, cr1, 0, 0, L, W, H1, 0, wallMat, true, 1);
 
       // Upper exterior walls (H1 to totalH) on LAYER 2!
       // This allows X-Ray 2nd Floor toggle to cleanly hide upper walls
@@ -3343,7 +3369,7 @@ export function initRenderer(configData) {
       //  (Applied exclusively to Loft Style; all other types untouched)
       // ============================================================
       const mezEdgeX = -L / 2 + L2;
-      const safeCrW = cr1 > 0 ? Math.min(1.8, Math.max(0.8, (L - wt) / cr1)) : 1.5;
+      const safeCrW = cr1 > 0 ? Math.min(1.4, Math.max(0.8, L * 0.32)) : 1.5;
       const loftKitchenStartX = -L / 2 + wt / 2 + (cr1 > 0 ? safeCrW : 0) + 0.2;
       const availUnderMezzX = Math.max(1.6, mezEdgeX - loftKitchenStartX);
       const loftKitW = Math.min(2.4, Math.max(1.3, availUnderMezzX - 0.6));
@@ -3356,10 +3382,12 @@ export function initRenderer(configData) {
       // Refrigerator next to kitchen (under mezzanine)
       const loftFridgeX = Math.min(mezEdgeX - 0.35, loftKitX + loftKitW / 2 + 0.45);
       const loftFridgeZ = loftKitZ;
-      buildFurniture("fridge", loftFridgeX, loftFridgeZ, 0, layer1F);
+      if (loftFridgeX < mezEdgeX - 0.25) {
+        buildFurniture("fridge", loftFridgeX, loftFridgeZ, 0, layer1F);
+      }
 
       // 2. Dining Table: Placed in the kitchen zone under the mezzanine (never enters living area)
-      const loftDiningX = Math.min(mezEdgeX - 0.3, (loftKitchenStartX + loftFridgeX) / 2);
+      const loftDiningX = Math.min(mezEdgeX - 0.55, (loftKitchenStartX + loftFridgeX) / 2);
       const loftDiningZ = -W / 2 + wt / 2 + 1.6;
       const loftDiningW = Math.min(1.1, Math.max(0.7, (W / 2) * 0.38));
       buildFurniture("dining", loftDiningX, loftDiningZ, 0, layer1F, loftDiningW);
@@ -3367,25 +3395,33 @@ export function initRenderer(configData) {
       // 3. Living Room Lounge (TV, Sofa, Coffee Table): Exclusively in the double-height space
       // Placed safely inside, with guaranteed margins so nothing ever clips through exterior walls
       const loungeAvailX = frontX - mezEdgeX;
-      const finalTvW = Math.min(1.6, Math.max(1.0, loungeAvailX * 0.45));
-      const finalSofaW = Math.min(1.8, Math.max(1.1, loungeAvailX * 0.5));
+      if (loungeAvailX < 1.8) {
+        // Very tight layout (e.g. 20-28 sqm): minimal compact TV along wall, skip sofa to prevent blocking stairs/exit
+        const miniTvW = Math.min(1.0, Math.max(0.7, loungeAvailX - 0.4));
+        const tvX = mezEdgeX + loungeAvailX * 0.5;
+        const tvZ = -W / 2 + wt / 2 + 0.2;
+        buildFurniture("tv", tvX, tvZ, 0, layer1F, miniTvW);
+      } else {
+        const finalTvW = Math.min(1.6, Math.max(1.0, loungeAvailX * 0.45));
+        const finalSofaW = Math.min(1.8, Math.max(1.1, loungeAvailX * 0.5));
 
-      // Center the living lounge safely inside the double-height room
-      const livingCenterX = mezEdgeX + loungeAvailX * 0.52;
-      const tvX = Math.min(frontX - finalTvW / 2 - 0.5, Math.max(mezEdgeX + finalTvW / 2 + 0.4, livingCenterX));
-      const tvZ = -W / 2 + wt / 2 + 0.2;
-      buildFurniture("tv", tvX, tvZ, 0, layer1F, finalTvW);
+        // Center the living lounge safely inside the double-height room
+        const livingCenterX = mezEdgeX + loungeAvailX * 0.52;
+        const tvX = Math.min(frontX - finalTvW / 2 - 0.5, Math.max(mezEdgeX + finalTvW / 2 + 0.4, livingCenterX));
+        const tvZ = -W / 2 + wt / 2 + 0.2;
+        buildFurniture("tv", tvX, tvZ, 0, layer1F, finalTvW);
 
-      // Coffee Table in front of TV
-      const coffeeTableW = Math.min(1.1, Math.max(0.65, finalSofaW * 0.55));
-      const coffeeTableZ = tvZ + 0.95;
-      buildFurniture("coffeetable", tvX, coffeeTableZ, 0, layer1F, coffeeTableW);
+        // Coffee Table in front of TV
+        const coffeeTableW = Math.min(1.1, Math.max(0.65, finalSofaW * 0.55));
+        const coffeeTableZ = tvZ + 0.95;
+        buildFurniture("coffeetable", tvX, coffeeTableZ, 0, layer1F, coffeeTableW);
 
-      // Sofa facing the TV (looking towards -Z), strictly bounded inside the room
-      const sofaX = tvX;
-      const sofaDist = Math.min(1.6, Math.max(1.1, (W / 2 - wt) * 0.55));
-      const sofaZ = Math.min(W / 2 - wt - 1.2, tvZ + sofaDist + 0.4);
-      buildFurniture("sofa", sofaX, sofaZ, Math.PI, layer1F, finalSofaW);
+        // Sofa facing the TV (looking towards -Z), strictly bounded inside the room
+        const sofaX = tvX;
+        const sofaDist = Math.min(1.6, Math.max(1.1, (W / 2 - wt) * 0.55));
+        const sofaZ = Math.min(W / 2 - wt - 1.2, tvZ + sofaDist + 0.4);
+        buildFurniture("sofa", sofaX, sofaZ, Math.PI, layer1F, finalSofaW);
+      }
     } else {
       // Standard furniture layout for other house styles (CHB, Bungalow, Two-Storey, etc.)
       const availSpaceKit = frontX - livingOtherSideStartX;
