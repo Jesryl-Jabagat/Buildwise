@@ -212,12 +212,22 @@ export function generateSmartFallback(form, typeKey, setupData) {
     } else if (name === "mezzanineWidth") {
       value = mezzanineWidth;
       reason = `Span matching structural framing for cost-effective joist distribution.`;
+    } else if (name === "chbBaseWallHeight") {
+      value = 0.9;
+      reason = `Standard 0.9m CHB base wall height for sturdy lower walling and splash protection.`;
     } else if (name.toLowerCase().includes("height")) {
       value = Number(input.value) || 2.7;
       reason = `Standard 2.7m ceiling clearance to promote passive cross-ventilation.`;
     } else {
       value = Number(input.value) || Number(input.min) || 1;
       reason = `Standard engineering parameter.`;
+    }
+
+    if (input.min !== "" && !isNaN(Number(input.min))) {
+      value = Math.max(Number(input.min), value);
+    }
+    if (input.max !== "" && !isNaN(Number(input.max))) {
+      value = Math.min(Number(input.max), value);
     }
 
     suggestions.push({ name, value, reason });

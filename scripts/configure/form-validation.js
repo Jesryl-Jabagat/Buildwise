@@ -120,8 +120,12 @@ export function getUserInput(form) {
   if (data.secondFloorWallHeight && data.secondFloorWallHeight < 2) { alert("Wall height must be at least 2 meters."); return null; }
 
   if (data.chbBaseWallHeight !== undefined && data.chbBaseWallHeight > 1.5) {
-    alert("CHB base wall height cannot exceed 1.5 meters for half-wall construction.");
-    return null;
+    if (form.noValidate || document.getElementById("aiFeed") || document.getElementById("aiProgress")) {
+      data.chbBaseWallHeight = 1.2;
+    } else {
+      alert("CHB base wall height cannot exceed 1.5 meters for half-wall construction.");
+      return null;
+    }
   }
 
   const gfArea   = l1 * w1;

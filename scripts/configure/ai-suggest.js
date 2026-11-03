@@ -100,7 +100,20 @@ async function runAnimationLoop(form, suggestions) {
         toggleCheckbox.dispatchEvent(new Event("change", { bubbles: true }));
       }
     } else {
-      el.value = value;
+      let appliedVal = value;
+      if (el.tagName === "INPUT" && el.type === "number") {
+        let num = parseFloat(value);
+        if (!isNaN(num)) {
+          if (el.min !== "" && !isNaN(Number(el.min))) num = Math.max(Number(el.min), num);
+          if (el.max !== "" && !isNaN(Number(el.max))) num = Math.min(Number(el.max), num);
+          appliedVal = num;
+        }
+      }
+      if (name === "chbBaseWallHeight") {
+        let num = parseFloat(appliedVal);
+        if (isNaN(num) || num > 1.2 || num < 0.4) appliedVal = 0.9;
+      }
+      el.value = appliedVal;
       el.dispatchEvent(new Event("input", { bubbles: true }));
       el.dispatchEvent(new Event("change", { bubbles: true }));
     }
@@ -148,6 +161,11 @@ export async function startAiBuilder(form, typeKey, setupData) {
       await runAnimationLoop(form, suggestions);
 
       // --- Budget Reconciler Loop ---
+      const chbInput = form.querySelector('[name="chbBaseWallHeight"]');
+      if (chbInput && (parseFloat(chbInput.value) > 1.2 || parseFloat(chbInput.value) < 0.4 || isNaN(parseFloat(chbInput.value)))) {
+        chbInput.value = 0.9;
+      }
+
       const targetBudget = Number(setupData.budget) || 0;
       if (targetBudget > 0) {
           let currentData = getUserInput(form);
@@ -425,6 +443,20 @@ async function runAnalyzingLoop(form, suggestions, typeKey) {
       }
 
       // Apply the value to the hidden form instantly
+      let appliedVal = value;
+      if (el.tagName === "INPUT" && el.type === "number") {
+        let num = parseFloat(value);
+        if (!isNaN(num)) {
+          if (el.min !== "" && !isNaN(Number(el.min))) num = Math.max(Number(el.min), num);
+          if (el.max !== "" && !isNaN(Number(el.max))) num = Math.min(Number(el.max), num);
+          appliedVal = num;
+        }
+      }
+      if (name === "chbBaseWallHeight") {
+        let num = parseFloat(appliedVal);
+        if (isNaN(num) || num > 1.2 || num < 0.4) appliedVal = 0.9;
+      }
+
       if (isToggle) {
         const isChecking = value === toggleCheckbox.dataset.on;
         if (toggleCheckbox.checked !== isChecking) {
@@ -432,7 +464,7 @@ async function runAnalyzingLoop(form, suggestions, typeKey) {
           toggleCheckbox.dispatchEvent(new Event("change", { bubbles: true }));
         }
       } else {
-        el.value = value;
+        el.value = appliedVal;
         el.dispatchEvent(new Event("input", { bubbles: true }));
         el.dispatchEvent(new Event("change", { bubbles: true }));
       }
@@ -441,7 +473,7 @@ async function runAnalyzingLoop(form, suggestions, typeKey) {
       const finalName = getFieldDisplayName(name, isTwoFloor);
       
       // Format the value nicely
-      let displayValue = String(value);
+      let displayValue = String(appliedVal);
       if (displayValue === "true") displayValue = "Yes";
       if (displayValue === "false") displayValue = "No";
       displayValue = displayValue.replace(/([A-Z])/g, ' $1').trim();
@@ -543,6 +575,12 @@ function showProceedButton(form) {
       // Disable native validation since form is display: none
       form.noValidate = true;
       
+      // Safety net for half-wall base wall height
+      const chbInput = form.querySelector('[name="chbBaseWallHeight"]');
+      if (chbInput && (parseFloat(chbInput.value) > 1.2 || parseFloat(chbInput.value) < 0.4 || isNaN(parseFloat(chbInput.value)))) {
+        chbInput.value = 0.9;
+      }
+
       const data = getUserInput(form);
       if (!data) {
         // If validation fails inside getUserInput (e.g. via alerts), restore button state

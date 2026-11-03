@@ -15,6 +15,44 @@ const PROVIDERS = {
 };
 
 /**
+ * Sanitizes suggestions from AI against form element constraints.
+ * Clamps numeric inputs to min/max attributes and enforces structural guards.
+ */
+export function sanitizeAiSuggestions(form, suggestions) {
+  if (!suggestions || !Array.isArray(suggestions) || !form) return suggestions;
+
+  for (const item of suggestions) {
+    if (!item || !item.name) continue;
+
+    // Explicit safeguard for half-wall base wall height (Half Amakan / Half Metal)
+    if (item.name === "chbBaseWallHeight") {
+      let rawVal = parseFloat(item.value);
+      if (isNaN(rawVal) || rawVal > 1.2 || rawVal < 0.4) {
+        item.value = 0.9;
+        item.reason = "Standard 0.9m CHB base wall height for structural foundation and moisture protection.";
+      }
+    }
+
+    // Check if there is a number input
+    const numberInput = form.querySelector(`input[type="number"][name="${item.name}"]`);
+    if (numberInput) {
+      let numVal = parseFloat(item.value);
+      if (!isNaN(numVal)) {
+        if (numberInput.min !== "" && !isNaN(Number(numberInput.min))) {
+          numVal = Math.max(Number(numberInput.min), numVal);
+        }
+        if (numberInput.max !== "" && !isNaN(Number(numberInput.max))) {
+          numVal = Math.min(Number(numberInput.max), numVal);
+        }
+        item.value = numVal;
+      }
+    }
+  }
+
+  return suggestions;
+}
+
+/**
  * Main orchestrator for AI generation.
  * Handles cache checks, multi-provider fallback routing, circuit breaking, and smart rule-based fallback.
  */
@@ -26,7 +64,7 @@ export async function generateAiConfiguration(form, typeKey, setupData) {
   
   // 1. Check Cache
   const cached = getCachedSuggestions(cacheKeyStr);
-  if (cached) return cached;
+  if (cached) return sanitizeAiSuggestions(form, cached);
 
   const messages = buildChatMessages(typeKey, setupData, schema);
 
@@ -58,10 +96,13 @@ export async function generateAiConfiguration(form, typeKey, setupData) {
         // Success!
         console.log(`✅ Success with ${providerName}`);
         
+        // Sanitize suggestions to ensure they respect form constraints
+        const sanitized = sanitizeAiSuggestions(form, suggestions);
+
         // Update Cache
-        setCachedSuggestions(cacheKeyStr, suggestions);
+        setCachedSuggestions(cacheKeyStr, sanitized);
         
-        return suggestions;
+        return sanitized;
       } else {
         throw new Error(`Parse failure. Output format invalid from ${providerName}`);
       }
@@ -87,7 +128,7 @@ export async function generateAiConfiguration(form, typeKey, setupData) {
   const fallbackSuggestions = generateSmartFallback(form, typeKey, setupData);
   
   if (fallbackSuggestions && fallbackSuggestions.length > 0) {
-     return fallbackSuggestions;
+     return sanitizeAiSuggestions(form, fallbackSuggestions);
   }
   
   throw lastError || new Error("All configured AI providers and fallback generator failed.");

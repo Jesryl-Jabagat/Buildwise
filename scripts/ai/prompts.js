@@ -37,7 +37,11 @@ export function extractFormSchema(form) {
   });
 
   form.querySelectorAll('input[type="number"][name]').forEach((input) => {
-    schemaLines.push(`${input.name} (number, min:${input.min})`);
+    const constraints = [];
+    if (input.min !== "") constraints.push(`min:${input.min}`);
+    if (input.max !== "") constraints.push(`max:${input.max}`);
+    if (input.step !== "") constraints.push(`step:${input.step}`);
+    schemaLines.push(`${input.name} (number${constraints.length ? `, ${constraints.join(", ")}` : ""})`);
   });
 
   form.querySelectorAll('input[type="hidden"][name]').forEach((hidden) => {
@@ -74,6 +78,8 @@ ARCHITECTURAL PLANNING & DECISION RULES:
      * 61 - 95 sqm floor area: bedrooms1F = "3", crs1F = "2" (Master suite with en-suite CR + 2 bedrooms + common CR).
      * 96 - 135 sqm floor area: bedrooms1F = "3" or "4", crs1F = "2" or "3" (Executive family layout).
      * > 135 sqm floor area: bedrooms1F = "4" or "5", crs1F = "3" (Luxury estate layout).
+   - For Half-Amakan and Half-Metal houses:
+     * chbBaseWallHeight: This represents ONLY the concrete base wall height (0.4m to 1.2m, recommended 0.8m to 1.0m, default 0.9m). The upper wall (amakan/metal) will be installed on top. NEVER exceed 1.2m.
    - For Two-Storey houses:
      * Ground floor: bedrooms1F = "0" or "1" (spacious living/dining/kitchen + optional guest/senior bedroom), crs1F = "1".
      * Second floor: bedrooms2F = "2" (if total < 90 sqm) or "3" (if total 90-140 sqm) or "4" (if total > 140 sqm); crs2F = "1" or "2".
