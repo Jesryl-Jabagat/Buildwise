@@ -1989,18 +1989,7 @@ export function initRenderer(configData) {
 
     // Ensure mezzanine (L2) is large enough to fit the CR and the stairs without overlapping
     if (type === "Loft Style" && cr1 > 0) {
-      let estCrWidth = 0;
-      if (bed1 > 0) {
-        const bedWidth =
-          bed1 === 1
-            ? Math.min(4.5, (L - wt) * 0.6)
-            : Math.min(4.5, (L - wt) / bed1);
-        let safeCrWidth = Math.min(1.8, (L - wt) / cr1);
-        estCrWidth = Math.max(0.8, Math.min(safeCrWidth, bedWidth * 0.5));
-      } else {
-        estCrWidth = Math.min(1.8, (L - wt) / cr1) * cr1;
-      }
-      estCrWidth = Math.min(estCrWidth, Math.min(1.4, L * 0.32));
+      const estCrWidth = cr1 * Math.min(1.4, Math.min(1.8, (L - wt) / cr1));
       const minL2 = estCrWidth + 1.6 + wt; // 1.6 is stairs width, +wt to clear walls safely
       if (L2 < minL2) L2 = Math.min(L - 1.2, minL2);
     }
@@ -2348,8 +2337,8 @@ export function initRenderer(configData) {
                   layer,
                 );
             }
-          } else if (isLoft) {
-            // For Loft Style back wall window in sleeping area
+          } else if (isLoft && layer === 2) {
+            // For Loft Style mezzanine back wall window in sleeping suite
             const winH = Math.min(1.1, availableH - 1.2);
             const winY = baseY + winH / 2 + 0.9;
             const winW = Math.min(1.4, Math.max(0.8, bedWidth * 0.5));
@@ -2376,26 +2365,30 @@ export function initRenderer(configData) {
             bedX = roomCenterX;
             bedZ = houseBackZ + 1.1;
           }
-          buildFurniture(
-            "bed",
-            bedX,
-            bedZ,
-            bedRot,
-            layer,
-            null,
-            baseY,
-          );
+          if (!isLoft || layer === 2) {
+            buildFurniture(
+              "bed",
+              bedX,
+              bedZ,
+              bedRot,
+              layer,
+              null,
+              baseY,
+            );
+          }
 
-          const area = Math.round(bedWidth * bedDepth * 10) / 10;
-          const roomName = isLoft
-            ? (layer === 2 ? "Mezzanine Loft" : "Loft Sleeping Area")
-            : (i === 0 && (beds > 1 || flL * flW >= 55) ? "Master Bedroom" : `Bedroom ${i + 1}`);
-          const label = createTextSprite(
-            `${roomName}\n(${area} sqm)`,
-            layer,
-          );
-          label.position.set(roomCenterX, 20, houseBackZ + bedDepth / 2);
-          blueprintGroup.add(label);
+          if (!isLoft || layer === 2) {
+            const area = Math.round(bedWidth * bedDepth * 10) / 10;
+            const roomName = isLoft
+              ? (layer === 2 ? "Mezzanine Loft" : "Loft Sleeping Area")
+              : (i === 0 && (beds > 1 || flL * flW >= 55) ? "Master Bedroom" : `Bedroom ${i + 1}`);
+            const label = createTextSprite(
+              `${roomName}\n(${area} sqm)`,
+              layer,
+            );
+            label.position.set(roomCenterX, 20, houseBackZ + bedDepth / 2);
+            blueprintGroup.add(label);
+          }
           currentRoomLeftX += bedWidth;
         }
       }
@@ -3126,69 +3119,97 @@ export function initRenderer(configData) {
       layer1F,
     );
 
-    // --- Dynamic Side Windows for Living/Kitchen (+Z wall) ---
-    // The +Z wall spans from X = -L/2 to +L/2. CRs might be at the back-left (-X, +Z corner).
+    // --- Dynamic Side Windows for Living/Kitchen ---
     let livingSideStartX = -L / 2 + wt / 2;
-    if (cr1 > 0) {
-      if (bed1 > 0) {
-        // Only 1 CR is on the living side wall (the common CR)
-        const bedWidth =
-          bed1 === 1
-            ? Math.min(4.5, (L - wt) * 0.6)
-            : Math.min(4.5, (L - wt) / bed1);
-        let safeCrWidth = Math.min(1.8, (L - wt) / cr1);
-        safeCrWidth = Math.max(0.8, Math.min(safeCrWidth, bedWidth * 0.5));
-        livingSideStartX += safeCrWidth; // Skip only the 1 common CR footprint
-      } else {
-        // All CRs are on the living side wall
-        const fallbackCrWidth = Math.min(1.8, (L - wt) / cr1);
-        livingSideStartX += fallbackCrWidth * cr1; // Skip all CR footprints
-      }
-    }
-    if (type === "Loft Style") {
-      // Stairs are built in the living area on the +Z wall starting at the mezzanine edge.
-      // Must start the living side windows AFTER the stairs.
-      const stairW = Math.min(1.4, Math.max(1.0, (L - L2 - wt) * 0.5));
-      livingSideStartX = Math.max(livingSideStartX, -L / 2 + L2 + stairW);
-    }
-    const livingSideEndX = frontX - 0.8; // Leave room near the front corner
-
-    const availableSideL = livingSideEndX - livingSideStartX;
-    if (availableSideL > 1.5) {
-      const numSideWins = Math.max(1, Math.floor(availableSideL / 3.0));
-      const spacing = availableSideL / (numSideWins + 1);
-      for (let i = 1; i <= numSideWins; i++) {
-        const wx = livingSideStartX + spacing * i;
-        addWindow(wx, win1Y, W / 2 - wt / 2, 1.2, win1H, "X", layer1F);
-      }
-    }
-
-    // --- Dynamic Side Windows for Living/Kitchen (-Z wall) ---
-    // The -Z wall has bedrooms starting from the back (-X).
     let livingOtherSideStartX = -L / 2 + wt / 2 + groundFloorTotalBedWidth;
+    const livingSideEndX = frontX - 0.8;
+
     if (type === "Loft Style") {
-      const safeCrW = cr1 > 0 ? Math.min(1.4, Math.max(0.8, L * 0.32)) : 1.5;
-      livingOtherSideStartX = Math.max(livingOtherSideStartX, -L / 2 + wt / 2 + (cr1 > 0 ? safeCrW : 0));
-    }
-    const availableOtherSideL = livingSideEndX - livingOtherSideStartX;
-    if (availableOtherSideL > 1.5) {
-      const numOtherWins = Math.max(1, Math.floor(availableOtherSideL / 3.0));
-      const spacing2 = availableOtherSideL / (numOtherWins + 1);
-      for (let i = 1; i <= numOtherWins; i++) {
-        const wx = livingOtherSideStartX + spacing2 * i;
-        // For the window furthest back, style it as a Kitchen Sink window
-        if (i === 1 && availableOtherSideL > 3.0) {
-          addWindow(
-            wx,
-            win1Y + 0.3,
-            -W / 2 + wt / 2,
-            1.0,
-            win1H - 0.3,
-            "X",
-            layer1F,
-          );
+      const mezEdgeX = -L / 2 + L2;
+      const stairW = Math.min(1.4, Math.max(1.0, (L - L2 - wt) * 0.5));
+      const stairEndX = mezEdgeX + stairW;
+
+      livingSideStartX = stairEndX;
+      const fallbackCrW = cr1 > 0 ? Math.min(1.4, Math.min(1.8, (L - wt) / cr1)) : 0;
+      const totalCrW = cr1 * fallbackCrW;
+      livingOtherSideStartX = -L / 2 + wt / 2 + totalCrW;
+      // 1. +Z Wall (Living Room & Dining under mezzanine)
+      // Dining window under mezzanine (between left wall and stairs):
+      const underMezzAvailL = (mezEdgeX - 0.3) - (-L / 2 + wt / 2 + 0.4);
+      if (underMezzAvailL >= 0.8) {
+        const diningWinX = (-L / 2 + wt / 2 + 0.4 + mezEdgeX - 0.3) / 2;
+        const diningWinW = Math.min(1.2, Math.max(0.7, underMezzAvailL * 0.65));
+        addWindow(diningWinX, win1Y, W / 2 - wt / 2, diningWinW, win1H, "X", layer1F);
+      }
+      // Living room window on +Z in double-height area (past stairs towards front):
+      const livingFrontAvailL = (frontX - 0.5) - (stairEndX + 0.2);
+      if (livingFrontAvailL >= 0.7) {
+        const livingSideWinX = (stairEndX + 0.2 + frontX - 0.5) / 2;
+        const livingSideWinW = Math.min(1.4, Math.max(0.75, livingFrontAvailL * 0.75));
+        addWindow(livingSideWinX, win1Y, W / 2 - wt / 2, livingSideWinW, win1H, "X", layer1F);
+      }
+
+      // 2. -Z Wall (Kitchen Sink window & Living Room window)
+      // Note: Rear CR window is already placed at the back-left corner.
+      const loftKitchenStartX = livingOtherSideStartX + 0.2;
+      const availUnderMezzX = Math.max(1.6, mezEdgeX - loftKitchenStartX);
+      const loftKitW = Math.min(2.4, Math.max(1.3, availUnderMezzX - 0.6));
+      const kitWinX = loftKitchenStartX + loftKitW / 2;
+      addWindow(kitWinX, win1Y + 0.3, -W / 2 + wt / 2, Math.min(1.1, loftKitW * 0.65), win1H - 0.3, "X", layer1F);
+
+      // Living room window on -Z in double-height area:
+      const livingRearAvailL = (frontX - 0.5) - (mezEdgeX + 0.3);
+      if (livingRearAvailL >= 1.2) {
+        const livingRearWinX = (mezEdgeX + 0.3 + frontX - 0.5) / 2;
+        const livingRearWinW = Math.min(1.4, Math.max(0.8, livingRearAvailL * 0.65));
+        addWindow(livingRearWinX, win1Y, -W / 2 + wt / 2, livingRearWinW, win1H, "X", layer1F);
+      }
+    } else {
+      // Standard side windows for other house types (+Z wall)
+      if (cr1 > 0) {
+        if (bed1 > 0) {
+          const bedWidth =
+            bed1 === 1
+              ? Math.min(4.5, (L - wt) * 0.6)
+              : Math.min(4.5, (L - wt) / bed1);
+          let safeCrWidth = Math.min(1.8, (L - wt) / cr1);
+          safeCrWidth = Math.max(0.8, Math.min(safeCrWidth, bedWidth * 0.5));
+          livingSideStartX += safeCrWidth;
         } else {
-          addWindow(wx, win1Y, -W / 2 + wt / 2, 1.2, win1H, "X", layer1F);
+          const fallbackCrWidth = Math.min(1.8, (L - wt) / cr1);
+          livingSideStartX += fallbackCrWidth * cr1;
+        }
+      }
+      const availableSideL = livingSideEndX - livingSideStartX;
+      if (availableSideL > 1.5) {
+        const numSideWins = Math.max(1, Math.floor(availableSideL / 3.0));
+        const spacing = availableSideL / (numSideWins + 1);
+        for (let i = 1; i <= numSideWins; i++) {
+          const wx = livingSideStartX + spacing * i;
+          addWindow(wx, win1Y, W / 2 - wt / 2, 1.2, win1H, "X", layer1F);
+        }
+      }
+
+      // Standard side windows for other house types (-Z wall)
+      const availableOtherSideL = livingSideEndX - livingOtherSideStartX;
+      if (availableOtherSideL > 1.5) {
+        const numOtherWins = Math.max(1, Math.floor(availableOtherSideL / 3.0));
+        const spacing2 = availableOtherSideL / (numOtherWins + 1);
+        for (let i = 1; i <= numOtherWins; i++) {
+          const wx = livingOtherSideStartX + spacing2 * i;
+          if (i === 1 && availableOtherSideL > 3.0) {
+            addWindow(
+              wx,
+              win1Y + 0.3,
+              -W / 2 + wt / 2,
+              1.0,
+              win1H - 0.3,
+              "X",
+              layer1F,
+            );
+          } else {
+            addWindow(wx, win1Y, -W / 2 + wt / 2, 1.2, win1H, "X", layer1F);
+          }
         }
       }
     }
@@ -3386,8 +3407,9 @@ export function initRenderer(configData) {
       //  (Applied exclusively to Loft Style; all other types untouched)
       // ============================================================
       const mezEdgeX = -L / 2 + L2;
-      const safeCrW = cr1 > 0 ? Math.min(1.4, Math.max(0.8, L * 0.32)) : 1.5;
-      const loftKitchenStartX = -L / 2 + wt / 2 + (cr1 > 0 ? safeCrW : 0) + 0.2;
+      const fallbackCrW = cr1 > 0 ? Math.min(1.4, Math.min(1.8, (L - wt) / cr1)) : 0;
+      const totalCrW = cr1 * fallbackCrW;
+      const loftKitchenStartX = -L / 2 + wt / 2 + totalCrW + 0.2;
       const availUnderMezzX = Math.max(1.6, mezEdgeX - loftKitchenStartX);
       kitW = Math.min(2.4, Math.max(1.3, availUnderMezzX - 0.6));
       kitX = loftKitchenStartX + kitW / 2;
